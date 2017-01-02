@@ -1,0 +1,16 @@
+kernel=zImage
+disable_overscan=1
+disable_splash=1
+boot_delay=0
+dtparam=audio=on
+dtparam=spi=on
+
+arm_freq=900
+arm_freq_min=300
+
+gpu_mem=64
+sdram_freq=500
+core_freq=500
+over_voltage=2
+temp_limit=80
+initial_turbo=30

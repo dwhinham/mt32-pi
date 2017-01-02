@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# External USB soundcard is happy with lower buffer of 5 or so,
+# but internal Pi sound device doesn't cope too well
+mt32d -i 10 &
+
+# This needs replacing with some kind of hotplug event handler to
+# attach MIDI devices to MUNT
+sleep 2
+aconnect 20:0 128:0

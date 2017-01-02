@@ -1,0 +1,2 @@
+source "$BR2_EXTERNAL_MT32_PI_PATH/package/libmt32emu/Config.in"
+source "$BR2_EXTERNAL_MT32_PI_PATH/package/mt32d/Config.in"

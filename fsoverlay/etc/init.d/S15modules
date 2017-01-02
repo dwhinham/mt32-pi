@@ -1,0 +1,5 @@
+#!/bin/sh
+
+modprobe snd-seq
+modprobe snd-usb-audio index=1
+modprobe snd-bcm2835

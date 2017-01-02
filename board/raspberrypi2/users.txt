@@ -1,0 +1,1 @@
+pi 8000 wheel -1 =pi /home/pi /bin/sh - Default user

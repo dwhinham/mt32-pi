@@ -1,0 +1,7 @@
+config BR2_PACKAGE_MT32D
+	bool "mt32d"
+	depends on BR2_PACKAGE_LIBMT32EMU
+	help
+	  Daemon to emulate a Roland MT-32 synthesizer module.
+
+	  http://github.com/munt/munt

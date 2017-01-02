@@ -1,0 +1,6 @@
+config BR2_PACKAGE_LIBMT32EMU
+	bool "libmt32emu"
+	help
+	  C/C++ library to emulate (approximately) the Roland MT-32, CM-32L and LAPC-I synthesiser modules.
+
+	  http://github.com/munt/munt
