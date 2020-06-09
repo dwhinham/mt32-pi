@@ -1,0 +1,49 @@
+# Build directories
+build-munt
+sdcard/*
+!sdcard/*.txt
+
+# Kernel files
+*.elf
+*.hex
+*.img
+*.lst
+*.map
+
+#
+# GitHub C/C++ template below 
+# https://raw.githubusercontent.com/github/gitignore/master/C%2B%2B.gitignore
+#
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
