@@ -27,6 +27,12 @@
 
 #include <vector>
 
+#ifdef BAKE_MT32_ROMS
+#define MT32_ROM_FILE MT32Emu::ArrayFile
+#else
+#define MT32_ROM_FILE MT32Emu::FileStream
+#endif
+
 class CKernel : public CStdlibApp, public CPWMSoundBaseDevice, public MT32Emu::ReportHandler
 {
 public:
@@ -41,7 +47,9 @@ protected:
 	CTimer mTimer;
 	CLogger mLogger;
 	CUSBHCIDevice mUSBHCI;
+#ifndef BAKE_MT32_ROMS
 	CEMMCDevice mEMMC;
+#endif
 	FATFS mFileSystem;
 	CConsole mConsole;
 
@@ -71,8 +79,8 @@ private:
 	int mNullLevel;
 	int mHighLevel;
 
-	MT32Emu::FileStream mControlFile;
-	MT32Emu::FileStream mPCMFile;
+	MT32_ROM_FILE mControlFile;
+	MT32_ROM_FILE mPCMFile;
 	const MT32Emu::ROMImage *mControlROMImage;
 	const MT32Emu::ROMImage *mPCMROMImage;
 	MT32Emu::Synth *mSynth;

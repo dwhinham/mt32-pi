@@ -3,7 +3,7 @@
 BOARD=$1
 
 CIRCLE_STDLIB_HOME=external/circle-stdlib
-CIRCLE_BOOT_HOME=$CIRCLE_STDLIB_HOME/libs/circle/boot
+CIRCLE_HOME=$CIRCLE_STDLIB_HOME/libs/circle
 
 if [ "$BOARD" = "pi0" ]; then
     echo "Building for Raspberry Pi 0/1"
@@ -55,15 +55,15 @@ popd
 # Build boot files
 #
 if [ ! -f sdcard/start.elf ]; then
-    make -C $CIRCLE_BOOT_HOME
-    cp  $CIRCLE_BOOT_HOME/bcm2711-rpi-4-b.dtb \
-        $CIRCLE_BOOT_HOME/bootcode.bin \
-        $CIRCLE_BOOT_HOME/COPYING.linux \
-        $CIRCLE_BOOT_HOME/fixup4.dat \
-        $CIRCLE_BOOT_HOME/fixup.dat \
-        $CIRCLE_BOOT_HOME/LICENCE.broadcom \
-        $CIRCLE_BOOT_HOME/start4.elf \
-        $CIRCLE_BOOT_HOME/start.elf \
+    make -C $CIRCLE_HOME/boot
+    cp  $CIRCLE_HOME/boot/bcm2711-rpi-4-b.dtb \
+        $CIRCLE_HOME/boot/bootcode.bin \
+        $CIRCLE_HOME/boot/COPYING.linux \
+        $CIRCLE_HOME/boot/fixup4.dat \
+        $CIRCLE_HOME/boot/fixup.dat \
+        $CIRCLE_HOME/boot/LICENCE.broadcom \
+        $CIRCLE_HOME/boot/start4.elf \
+        $CIRCLE_HOME/boot/start.elf \
         sdcard
 fi
 
@@ -92,6 +92,26 @@ popd
 #
 # Built mt32-pi
 #
+
+if [ "$BAKE_MT32_ROMS" = 1 ]; then
+    echo "Baking MT32 ROMs into kernel"
+    if [[ ! -f MT32_CONTROL.ROM || ! -f MT32_PCM.ROM ]]; then
+        echo "Baking enabled but ROMs not found!"
+        exit 1
+    fi
+
+    # Generate headers
+    if [ ! -f mt32_control.h ]; then
+        xxd -i MT32_CONTROL.ROM > mt32_control.h
+    fi
+
+    if [ ! -f mt32_pcm.h ]; then
+        xxd -i MT32_PCM.ROM > mt32_pcm.h
+    fi
+
+    # Add compiler definition
+    grep -qF "CFLAGS += -D BAKE_MT32_ROMS" $CIRCLE_HOME/Config.mk || echo "CFLAGS += -D BAKE_MT32_ROMS" >> $CIRCLE_HOME/Config.mk
+fi
 
 make
 cp kernel*.img sdcard

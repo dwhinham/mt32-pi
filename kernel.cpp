@@ -29,8 +29,13 @@
 
 #include <mt32emu/mt32emu.h>
 
+#ifdef BAKE_MT32_ROMS
+#include "mt32_control.h"
+#include "mt32_pcm.h"
+#else
 static const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
 static const char MT32PCMROMName[] = "MT32_PCM.ROM";
+#endif
 
 CKernel *CKernel::pThis = nullptr;
 
@@ -42,7 +47,9 @@ CKernel::CKernel(void)
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
 	  mUSBHCI(&mInterrupt, &mTimer),
+#ifndef BAKE_MT32_ROMS
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
+#endif
 	  //mConsole(&mScreen),
 	  mConsole(&mSerial),
 
@@ -53,6 +60,10 @@ CKernel::CKernel(void)
 	  mLEDOn(false),
 	  mLEDOnTime(0),
 
+#ifdef BAKE_MT32_ROMS
+	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
+	  mPCMFile(MT32_PCM_ROM, MT32_PCM_ROM_len),
+#endif
 	  mControlROMImage(nullptr),
 	  mPCMROMImage(nullptr),
 	  mSynth(nullptr)
@@ -97,6 +108,7 @@ bool CKernel::Initialize(void)
 		return false;
 	}
 
+#ifndef BAKE_MT32_ROMS
 	if (!mEMMC.Initialize())
 	{
 		return false;
@@ -109,6 +121,7 @@ bool CKernel::Initialize(void)
 		mLogger.Write(GetKernelName(), LogError, "Cannot mount partition: %s", partitionName);
 		return false;
 	}
+#endif
 
 #if !defined(__aarch64__) || !defined(LEAVE_QEMU_ON_HALT)
 	// The USB driver is not supported under 64-bit QEMU, so
@@ -150,6 +163,7 @@ bool CKernel::onMIDIQueueOverflow()
 
 bool CKernel::initMT32()
 {
+#ifndef BAKE_MT32_ROMS
 	if (!mControlFile.open(MT32ControlROMName))
 	{
 		CLogger::Get()->Write(GetKernelName(), LogError, "Could not open %s", MT32ControlROMName);
@@ -161,6 +175,7 @@ bool CKernel::initMT32()
 		CLogger::Get()->Write(GetKernelName(), LogError, "Could not open %s", MT32PCMROMName);
 		return false;
 	}
+#endif
 
 	mControlROMImage = MT32Emu::ROMImage::makeROMImage(&mControlFile);
 	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
