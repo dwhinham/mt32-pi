@@ -63,13 +63,18 @@ private:
 	virtual bool onMIDIQueueOverflow();
 
 	bool initMT32();
-	void ledOn();
+
 	bool parseSysEx();
+	void updateActiveSense();
+
+	void ledOn();
 
 	// MIDI messages
 	unsigned mSerialState;
 	u8 mSerialMessage[3];
 	std::vector<u8> mSysExMessage;
+	bool mActiveSenseFlag;
+	unsigned mActiveSenseTime;
 
 	bool mShouldReboot;
 	bool mLEDOn;

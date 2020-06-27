@@ -37,6 +37,9 @@ static const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
 static const char MT32PCMROMName[] = "MT32_PCM.ROM";
 #endif
 
+#define LED_TIMEOUT_MILLIS 50
+#define ACTIVE_SENSE_TIMEOUT_MILLIS 300
+
 CKernel *CKernel::pThis = nullptr;
 
 CKernel::CKernel(void)
@@ -55,6 +58,8 @@ CKernel::CKernel(void)
 
 	  mSerialState(0),
 	  mSerialMessage{0},
+	  mActiveSenseFlag(false),
+	  mActiveSenseTime(0),
 
 	  mShouldReboot(false),
 	  mLEDOn(false),
@@ -242,10 +247,25 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 
 	while (true)
 	{
-		if (mLEDOn && (mTimer.GetTicks() - mLEDOnTime) > 5)
+		unsigned ticks = mTimer.GetTicks();
+
+		// Update activity LED
+		if (mLEDOn && (ticks - mLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
 		{
 			mActLED.Off();
 			mLEDOn = false;
+		}
+
+		// Check for active sensing timeout (300 milliseconds)
+		// Based on http://midi.teragonaudio.com/tech/midispec/sense.htm
+		if (mActiveSenseFlag && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
+		{
+			// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
+			for (uint8_t i = 0; i < 8; ++i)
+				mSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
+
+			mActiveSenseFlag = false;
+			pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
 		}
 
 		if (mShouldReboot)
@@ -348,9 +368,17 @@ bool CKernel::parseSysEx()
 	return false;
 }
 
+void CKernel::updateActiveSense()
+{
+	//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "Active sense");
+	mActiveSenseTime = mTimer.GetTicks();
+	mActiveSenseFlag = true;
+}
+
 void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 {
 	assert(pThis != 0);
+	pThis->mActiveSenseTime = pThis->mTimer.GetTicks();
 
 	MT32Emu::Bit32u packet = 0;
 	for (size_t i = 0; i < nLength; ++i)
@@ -375,8 +403,15 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 
 	if (packet)
 	{
+		// Active sensing
+		if (packet == 0xFE)
+		{
+			pThis->mActiveSenseFlag = true;
+			return;
+		}
+
 		// Flash LED on note on or off
-		if (packet & 0x80 == 0x80)
+		if ((packet & 0x80) == 0x80)
 			pThis->ledOn();
 
 		//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", packet);
