@@ -42,8 +42,12 @@ public:
 	TShutdownMode Run(void);
 
 protected:
-	//CScreenDevice mScreen;
+#ifdef HDMI_CONSOLE
+	CScreenDevice mScreen;
+#else
 	CSerialDevice mSerial;
+#endif
+	CConsole mConsole;
 	CTimer mTimer;
 	CLogger mLogger;
 	CUSBHCIDevice mUSBHCI;
@@ -51,7 +55,6 @@ protected:
 	CEMMCDevice mEMMC;
 #endif
 	FATFS mFileSystem;
-	CConsole mConsole;
 
 private:
 	// CPWMSoundBaseDevice

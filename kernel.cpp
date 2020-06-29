@@ -48,15 +48,21 @@ CKernel *CKernel::pThis = nullptr;
 CKernel::CKernel(void)
 	: CStdlibApp("mt32"),
 	  CPWMSoundBaseDevice(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE),
+
+#ifdef HDMI_CONSOLE
+	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
+	  mConsole(&mScreen),
+#else
 	  mSerial(&mInterrupt, true),
+	  mConsole(&mSerial),
+#endif
+
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
 	  mUSBHCI(&mInterrupt, &mTimer),
 #ifndef BAKE_MT32_ROMS
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
 #endif
-	  //mConsole(&mScreen),
-	  mConsole(&mSerial),
 
 	  mSerialState(0),
 	  mSerialMessage{0},
@@ -89,16 +95,17 @@ bool CKernel::Initialize(void)
 		return false;
 	}
 
-	// if (!mScreen.Initialize())
-	// {
-	// 	return false;
-	// }
-
-	//if (!mSerial.Initialize(31250))
+#ifdef HDMI_CONSOLE
+	if (!mScreen.Initialize())
+	{
+		return false;
+	}
+#else
 	if (!mSerial.Initialize(115200))
 	{
 		return false;
 	}
+#endif
 
 	// CDevice *pTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
 	// if (pTarget == 0)
@@ -106,7 +113,13 @@ bool CKernel::Initialize(void)
 	// 	pTarget = &mScreen;
 	// }
 
-	if (!mLogger.Initialize(&mSerial))
+	if (!mLogger.Initialize(
+#ifdef HDMI_CONSOLE
+		&mScreen
+#else
+		&mSerial
+#endif
+	))
 	{
 		return false;
 	}
