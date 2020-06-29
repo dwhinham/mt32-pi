@@ -89,6 +89,7 @@ private:
 	const MT32Emu::ROMImage *mControlROMImage;
 	const MT32Emu::ROMImage *mPCMROMImage;
 	MT32Emu::Synth *mSynth;
+	MT32Emu::SampleRateConverter *mSampleRateConverter;
 
 	static void MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
 	static CKernel *pThis;

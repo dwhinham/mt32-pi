@@ -40,12 +40,14 @@ static const char MT32PCMROMName[] = "MT32_PCM.ROM";
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 300
 
+#define SAMPLE_RATE 48000
+#define CHUNK_SIZE 2048
+
 CKernel *CKernel::pThis = nullptr;
 
 CKernel::CKernel(void)
 	: CStdlibApp("mt32"),
-	  CPWMSoundBaseDevice(&mInterrupt, 32000, 2),
-	  //mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
+	  CPWMSoundBaseDevice(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE),
 	  mSerial(&mInterrupt, true),
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
@@ -71,7 +73,8 @@ CKernel::CKernel(void)
 #endif
 	  mControlROMImage(nullptr),
 	  mPCMROMImage(nullptr),
-	  mSynth(nullptr)
+	  mSynth(nullptr),
+	  mSampleRateConverter(nullptr)
 {
 	pThis = this;
 	mLowLevel = GetRangeMin();
@@ -185,7 +188,13 @@ bool CKernel::initMT32()
 	mControlROMImage = MT32Emu::ROMImage::makeROMImage(&mControlFile);
 	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
 	mSynth = new MT32Emu::Synth(this);
-	return mSynth->open(*mControlROMImage, *mPCMROMImage);
+	if (mSynth->open(*mControlROMImage, *mPCMROMImage))
+	{
+		mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, SAMPLE_RATE, MT32Emu::SamplerateConversionQuality_GOOD);
+		return true;
+	}
+
+	return false;
 }
 
 void CKernel::ledOn()
@@ -198,23 +207,22 @@ void CKernel::ledOn()
 unsigned int CKernel::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
 	unsigned nResult = nChunkSize;
-	if (!mSynth)
-		return nResult;
-
-	// MT32Emu::Bit16s samples[nChunkSize];
-	// mSynth->render(samples, nChunkSize / 2);
 
 	float samples[nChunkSize];
-	mSynth->render(samples, nChunkSize / 2);
+	mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{
-		// unsigned nValue = samples[i];
-		// nValue = (nValue + 0x8000) & 0xFFFF;
-		// nValue >>= 4;
-		//*pBuffer++ = nValue;
-
-		*pBuffer++ = static_cast<u32>(samples[i] * mHighLevel / 2 + mNullLevel);
+		int level = static_cast<int>(samples[i] * mHighLevel / 2 + mNullLevel);
+		if (level > mHighLevel)
+		{
+			level = mHighLevel;
+		}
+		else if (level < 0)
+		{
+			level = 0;
+		}
+		*pBuffer++ = static_cast<u32>(level);
 	}
 
 	return nResult;
