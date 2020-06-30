@@ -29,8 +29,18 @@ CIRCLE_STDLIB_LIBS=$(NEWLIBDIR)/lib/libm.a \
 				   $(NEWLIBDIR)/lib/libc.a \
 				   $(NEWLIBDIR)/lib/libcirclenewlib.a
 
+BOOTHOME=$(CIRCLEHOME)/boot
+BOOT_FILES=$(BOOTHOME)/bcm2711-rpi-4-b.dtb \
+		   $(BOOTHOME)/bootcode.bin \
+		   $(BOOTHOME)/COPYING.linux \
+		   $(BOOTHOME)/fixup4.dat \
+		   $(BOOTHOME)/fixup.dat \
+		   $(BOOTHOME)/LICENCE.broadcom \
+		   $(BOOTHOME)/start4.elf \
+		   $(BOOTHOME)/start.elf
+
 MT32EMUHOME=$(realpath external/munt/mt32emu)
 MT32EMUBUILDDIR=build-munt
 MT32EMULIB=$(MT32EMUBUILDDIR)/libmt32emu.a
 
-include $(CIRCLE_STDLIB_CONFIG)
+-include $(CIRCLE_STDLIB_CONFIG)
