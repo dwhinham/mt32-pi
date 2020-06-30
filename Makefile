@@ -18,13 +18,13 @@ ifeq ($(BOARD), pi0)
 else ifeq ($(BOARD), pi2)
 	echo "Configuring for Raspberry Pi 2"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=2
-else ifeq ($(BOARD), pi0)
+else ifeq ($(BOARD), pi3)
 	echo "Configuring for Raspberry Pi 3"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=3
 else ifeq ($(BOARD), pi4)
 	echo "Configuring for Raspberry Pi 4"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=4
-else ifeq ($(BOARD), pi4)
+else ifeq ($(BOARD), pi4-64)
 	echo "Configuring for Raspberry Pi 4"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=4 --prefix=aarch64-none-elf
 else
