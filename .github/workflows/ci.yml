@@ -5,6 +5,11 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: build-${{ matrix.board }}
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [pi3, pi4]
     env:
       toolchain-version: 9.2-2019.12
 
@@ -15,11 +20,9 @@ jobs:
 
     - name: Cache ARM toolchain
       uses: actions/cache@v2
-      env:
-        cache-name: cache-arm-toolchain
       with:
         path: ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.toolchain-version }}
+        key: cache-arm-toolchain-${{ env.toolchain-version }}
 
     - name: Install toolchain if not retrieved from cache
       run: |
@@ -32,12 +35,57 @@ jobs:
     - name: Update PATH
       run: echo "::add-path::$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin"
 
-    - name: Build for Raspberry Pi 4
-      run: make BOARD=pi4
+    - name: Build
+      run: make BOARD=${{ matrix.board }}
 
     - name: Upload built kernel
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
-        name: kernel
-        path: kernel7l.img
+        name: kernels
+        path: kernel*.img
 
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      boot-home: external/circle-stdlib/libs/circle/boot
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    
+    - name: Cache boot files
+      uses: actions/cache@v2
+      with:
+        path: |
+          sdcard
+          !sdcard/kernel*.img
+        key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
+
+    - name: Download boot files if not retrieved from cache
+      run: |
+        if [ ! -f sdcard/bootcode.bin ]; then
+          make -C ${{ env.boot-home }}
+          cp  ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
+              ${{ env.boot-home }}/bootcode.bin \
+              ${{ env.boot-home }}/COPYING.linux \
+              ${{ env.boot-home }}/fixup.dat \
+              ${{ env.boot-home }}/fixup4.dat \
+              ${{ env.boot-home }}/LICENCE.broadcom \
+              ${{ env.boot-home }}/start.elf \
+              ${{ env.boot-home }}/start4.elf \
+              sdcard
+        fi
+
+    - name: Retrieve built kernels
+      uses: actions/download-artifact@v2
+      with:
+        name: kernels
+        path: sdcard
+
+    - name: Upload SD card package
+      uses: actions/upload-artifact@v2
+      with:
+        name: sdcard
+        path: sdcard
