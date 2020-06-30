@@ -1,0 +1,43 @@
+name: mt32-pi CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      toolchain-version: 9.2-2019.12
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Cache ARM toolchain
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-arm-toolchain
+      with:
+        path: ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.toolchain-version }}
+
+    - name: Install toolchain if not retrieved from cache
+      run: |
+        if [ ! -d ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi ]; then
+          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-a/${{ env.toolchain-version }}/binrel/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz
+          tar -xf gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz -C ~
+          rm gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz
+        fi
+
+    - name: Update PATH
+      run: echo "::add-path::$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin"
+
+    - name: Build for Raspberry Pi 4
+      run: make BOARD=pi4
+
+    - name: Upload built kernel
+      uses: actions/upload-artifact@v1
+      with:
+        name: kernel
+        path: kernel7l.img
+
