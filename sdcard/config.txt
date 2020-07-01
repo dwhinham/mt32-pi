@@ -1,0 +1,3 @@
+# Ensure that the Pi 4 doesn't try to boot the Pi 3-optimized kernel (kernel8-32.img)
+[pi4]
+kernel=kernel7l.img
