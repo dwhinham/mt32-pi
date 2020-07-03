@@ -155,12 +155,12 @@ bool CKernel::Initialize(void)
 		return false;
 	}
 
-#ifdef I2C_DAC_PCM5242
+#if I2C_DAC_PCM5242
 	InitPCM5242();
-#endif
-
 	mSynth = new CMT32SynthI2S(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
-	//mSynth = new CMT32SynthPWM(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+#else
+	mSynth = new CMT32SynthPWM(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+#endif
 	if (!mSynth->Initialize())
 	{
 		return false;
