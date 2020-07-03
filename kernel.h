@@ -20,20 +20,16 @@
 #ifndef _kernel_h
 #define _kernel_h
 
+#include <circle/cputhrottle.h>
+#include <circle/i2cmaster.h>
+#include <circle/i2ssoundbasedevice.h>
 #include <circle_stdlib_app.h>
-#include <circle/pwmsounddevice.h>
-
-#include <mt32emu/mt32emu.h>
 
 #include <vector>
 
-#ifdef BAKE_MT32_ROMS
-#define MT32_ROM_FILE MT32Emu::ArrayFile
-#else
-#define MT32_ROM_FILE MT32Emu::FileStream
-#endif
+#include "mt32synth.h"
 
-class CKernel : public CStdlibApp, public CPWMSoundBaseDevice, public MT32Emu::ReportHandler
+class CKernel : public CStdlibApp
 {
 public:
 	CKernel(void);
@@ -42,6 +38,7 @@ public:
 	TShutdownMode Run(void);
 
 protected:
+	CCPUThrottle mCPUThrottle;
 #ifdef HDMI_CONSOLE
 	CScreenDevice mScreen;
 #else
@@ -56,16 +53,10 @@ protected:
 #endif
 	FATFS mFileSystem;
 
+	CI2CMaster mI2CMaster;
+
 private:
-	// CPWMSoundBaseDevice
-	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
-
-	// ReportHandler
-	virtual void printDebug(const char *fmt, va_list list);
-	virtual void showLCDMessage(const char *message);
-	virtual bool onMIDIQueueOverflow();
-
-	bool initMT32();
+	bool InitPCM5242();
 
 	bool parseSysEx();
 	void updateActiveSense();
@@ -83,16 +74,8 @@ private:
 	bool mLEDOn;
 	unsigned mLEDOnTime;
 
-	int mLowLevel;
-	int mNullLevel;
-	int mHighLevel;
-
-	MT32_ROM_FILE mControlFile;
-	MT32_ROM_FILE mPCMFile;
-	const MT32Emu::ROMImage *mControlROMImage;
-	const MT32Emu::ROMImage *mPCMROMImage;
-	MT32Emu::Synth *mSynth;
-	MT32Emu::SampleRateConverter *mSampleRateConverter;
+	// Synthesizer
+	CMT32SynthBase* mSynth;
 
 	static void MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
 	static CKernel *pThis;

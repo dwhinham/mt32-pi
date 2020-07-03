@@ -4,7 +4,7 @@
 
 include Config.mk
 
-OBJS=main.o kernel.o
+OBJS=main.o kernel.o mt32synth.o
 
 include $(CIRCLEHOME)/Rules.mk
 

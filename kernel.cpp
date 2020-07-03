@@ -27,27 +27,23 @@
 #include <circle/usb/usbmidi.h>
 #include <circle/startup.h>
 
-#include <mt32emu/mt32emu.h>
-
-#ifdef BAKE_MT32_ROMS
-#include "mt32_control.h"
-#include "mt32_pcm.h"
-#else
-static const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
-static const char MT32PCMROMName[] = "MT32_PCM.ROM";
-#endif
-
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 300
 
-#define SAMPLE_RATE 48000
-#define CHUNK_SIZE 2048
+#define SAMPLE_RATE 96000
+#define CHUNK_SIZE 512				// Min = 32 for I2S
+
+#define I2C_MASTER_DEVICE	1		// 0 on Raspberry Pi 1 Rev. 1 boards, 1 otherwise
+#define I2C_MASTER_CONFIG	0		// 0 or 1 on Raspberry Pi 4, 0 otherwise
+#define I2C_FAST_MODE		TRUE	// standard mode (100 Kbps) or fast mode (400 Kbps)
+
+#define I2C_DAC_PCM5242		0
+#define I2C_DAC_ADDRESS		0x4C	// standard mode (100 Kbps) or fast mode (400 Kbps)
 
 CKernel *CKernel::pThis = nullptr;
 
 CKernel::CKernel(void)
 	: CStdlibApp("mt32"),
-	  CPWMSoundBaseDevice(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE),
 
 #ifdef HDMI_CONSOLE
 	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
@@ -64,6 +60,8 @@ CKernel::CKernel(void)
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
 #endif
 
+	  mI2CMaster(I2C_MASTER_DEVICE, I2C_FAST_MODE, I2C_MASTER_CONFIG),
+
 	  mSerialState(0),
 	  mSerialMessage{0},
 	  mActiveSenseFlag(false),
@@ -73,19 +71,9 @@ CKernel::CKernel(void)
 	  mLEDOn(false),
 	  mLEDOnTime(0),
 
-#ifdef BAKE_MT32_ROMS
-	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
-	  mPCMFile(MT32_PCM_ROM, MT32_PCM_ROM_len),
-#endif
-	  mControlROMImage(nullptr),
-	  mPCMROMImage(nullptr),
-	  mSynth(nullptr),
-	  mSampleRateConverter(nullptr)
+	  mSynth(nullptr)
 {
 	pThis = this;
-	mLowLevel = GetRangeMin();
-	mHighLevel = GetRangeMax();
-	mNullLevel = (mHighLevel + mLowLevel) / 2;
 }
 
 bool CKernel::Initialize(void)
@@ -162,52 +150,54 @@ bool CKernel::Initialize(void)
 	// Initialize newlib stdio with a reference to Circle's file system and console
 	CGlueStdioInit(mFileSystem, mConsole);
 
+	if (!mI2CMaster.Initialize())
+	{
+		return false;
+	}
+
+#ifdef I2C_DAC_PCM5242
+	InitPCM5242();
+#endif
+
+	mSynth = new CMT32SynthI2S(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+	//mSynth = new CMT32SynthPWM(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+	if (!mSynth->Initialize())
+	{
+		return false;
+	}
+
 	mLogger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
+	CCPUThrottle::Get()->DumpStatus();
+
 	return true;
 }
 
-void CKernel::printDebug(const char *fmt, va_list list)
+// TODO: Generic configurable DAC init class
+// TODO: Probably works on PCM5122 too
+bool CKernel::InitPCM5242()
 {
-	mLogger.WriteV(GetKernelName(), LogNotice, fmt, list);
-}
-
-void CKernel::showLCDMessage(const char *message)
-{
-	mLogger.Write("lcd", LogNotice, message);
-}
-
-bool CKernel::onMIDIQueueOverflow()
-{
-	mLogger.Write("midi", LogError, "MIDI queue overflow");
-	return false;
-}
-
-bool CKernel::initMT32()
-{
-#ifndef BAKE_MT32_ROMS
-	if (!mControlFile.open(MT32ControlROMName))
+	unsigned char initBytes[][2] =
 	{
-		CLogger::Get()->Write(GetKernelName(), LogError, "Could not open %s", MT32ControlROMName);
-		return false;
+		// Set PLL reference clock to BCK (set SREF to 001b)
+		{ 0x0d, 0x10 },
+
+		// Ignore clock halt detection (set IDCH to 1)
+		{ 0x25, 0x08 },
+
+		// Disable auto mute
+		{ 0x41, 0x04 }
+	};
+
+	for (auto& command : initBytes)
+	{
+		if (mI2CMaster.Write(I2C_DAC_ADDRESS, &command, sizeof(command)) != sizeof(command))
+		{
+			CLogger::Get()->Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
+			return false;
+		}
 	}
 
-	if (!mPCMFile.open(MT32PCMROMName))
-	{
-		CLogger::Get()->Write(GetKernelName(), LogError, "Could not open %s", MT32PCMROMName);
-		return false;
-	}
-#endif
-
-	mControlROMImage = MT32Emu::ROMImage::makeROMImage(&mControlFile);
-	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
-	mSynth = new MT32Emu::Synth(this);
-	if (mSynth->open(*mControlROMImage, *mPCMROMImage))
-	{
-		mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, SAMPLE_RATE, MT32Emu::SamplerateConversionQuality_GOOD);
-		return true;
-	}
-
-	return false;
+	return true;
 }
 
 void CKernel::ledOn()
@@ -217,41 +207,9 @@ void CKernel::ledOn()
 	mLEDOn = true;
 }
 
-unsigned int CKernel::GetChunk(u32 *pBuffer, unsigned nChunkSize)
-{
-	unsigned nResult = nChunkSize;
-
-	float samples[nChunkSize];
-	mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
-
-	for (size_t i = 0; i < nChunkSize; ++i)
-	{
-		int level = static_cast<int>(samples[i] * mHighLevel / 2 + mNullLevel);
-		if (level > mHighLevel)
-		{
-			level = mHighLevel;
-		}
-		else if (level < 0)
-		{
-			level = 0;
-		}
-		*pBuffer++ = static_cast<u32>(level);
-	}
-
-	return nResult;
-}
-
 CStdlibApp::TShutdownMode CKernel::Run(void)
 {
 	mLogger.Write(GetKernelName(), LogNotice, "Starting up...");
-
-	if (!initMT32())
-		return ShutdownHalt;
-
-	// Start PWM audio
-	Start();
-
-	mLogger.Write(GetKernelName(), LogNotice, "Audio output range: lo=%d null=%d hi=%d", mLowLevel, mNullLevel, mHighLevel);
 
 	CUSBMIDIDevice *pMIDIDevice = static_cast<CUSBMIDIDevice *>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
@@ -265,6 +223,9 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		mLogger.Write(GetKernelName(), LogError, "No USB MIDI device detected - please connect and restart.");
 		return ShutdownHalt;
 	}
+
+	// Start audio
+	//mSynth->Start();
 
 	while (true)
 	{
@@ -281,90 +242,18 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		// Based on http://midi.teragonaudio.com/tech/midispec/sense.htm
 		if (mActiveSenseFlag && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
 		{
-			// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
-			for (uint8_t i = 0; i < 8; ++i)
-				mSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
-
+			mSynth->AllSoundOff();
 			mActiveSenseFlag = false;
-			pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
+			mLogger.Write(GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
 		}
 
 		if (mShouldReboot)
 		{
 			// Stop audio and reboot
-			Cancel();
+			//mSynth->Cancel();
 			return ShutdownReboot;
 		}
 	}
-
-	// while (true)
-	// {
-	// 	// Read serial MIDI data
-	// 	u8 Buffer[100];
-	// 	int nResult = mSerial.Read(Buffer, sizeof Buffer);
-	// 	if (nResult <= 0)
-	// 	{
-	// 		continue;
-	// 	}
-
-	// 	// Process MIDI messages
-	// 	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
-	// 	for (int i = 0; i < nResult; i++)
-	// 	{
-	// 		u8 uchData = Buffer[i];
-
-	// 		switch (mSerialState)
-	// 		{
-	// 		case 0:
-	// 			// Channel message
-	// 			MIDIRestart:
-	// 			if (uchData >= 0x80 && uchData <= 0xEF)
-	// 			{
-	// 				mSerialMessage[mSerialState++] = uchData;
-	// 			}
-	// 			// // SysEx
-	// 			// else if (uchData == 0xF0)
-	// 			// {
-	// 			// 	mSerialState = 4;
-	// 			// 	mSysExMessage.push_back(uchData);
-	// 			// }
-	// 			break;
-
-	// 		case 1:
-	// 		case 2:
-	// 			if (uchData & 0x80) // got status when parameter expected
-	// 			{
-	// 				mSerialState = 0;
-	// 				goto MIDIRestart;
-	// 			}
-
-	// 			mSerialMessage[mSerialState++] = uchData;
-
-	// 			// MIDI message is complete
-	// 			if (mSerialState == 3)
-	// 			{
-	// 				MIDIPacketHandler(0, mSerialMessage, sizeof mSerialMessage);
-
-	// 				mSerialState = 0;
-	// 			}
-	// 			break;
-
-	// 		// case 4:
-	// 		// 	mSysExMessage.push_back(uchData);
-	// 		// 	if (uchData == 0xF7)
-	// 		// 	{
-	// 		// 		mSynth->playSysex(mSysExMessage.data(), mSysExMessage.size());
-	// 		// 		mSysExMessage.clear();
-	// 		// 		mSerialState = 0;
-	// 		// 	}
-	// 		// 	break;
-
-	// 		default:
-	// 			assert(0);
-	// 			break;
-	// 		}
-	// 	}
-	// }
 
 	return ShutdownHalt;
 }
@@ -381,8 +270,8 @@ bool CKernel::parseSysEx()
 	// Reboot (F0 7F 00 F7)
 	if (mSysExMessage[2] == 0x00)
 	{
-		pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi: Reboot command received");
-		pThis->mShouldReboot = true;
+		mLogger.Write(GetKernelName(), LogNotice, "midi: Reboot command received");
+		mShouldReboot = true;
 		return true;
 	}
 
@@ -391,7 +280,7 @@ bool CKernel::parseSysEx()
 
 void CKernel::updateActiveSense()
 {
-	//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "Active sense");
+	//mLogger.Write(GetKernelName(), LogNotice, "Active sense");
 	mActiveSenseTime = mTimer.GetTicks();
 	mActiveSenseFlag = true;
 }
@@ -401,7 +290,7 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 	assert(pThis != 0);
 	pThis->mActiveSenseTime = pThis->mTimer.GetTicks();
 
-	MT32Emu::Bit32u packet = 0;
+	u32 packet = 0;
 	for (size_t i = 0; i < nLength; ++i)
 	{
 		// SysEx message
@@ -412,7 +301,7 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 			{
 				// If we don't consume the SysEx message, forward it to mt32emu
 				if (!pThis->parseSysEx())
-					pThis->mSynth->playSysex(pThis->mSysExMessage.data(), pThis->mSysExMessage.size());
+					pThis->mSynth->HandleMIDISysExMessage(pThis->mSysExMessage.data(), pThis->mSysExMessage.size());
 				pThis->mSysExMessage.clear();
 				packet = 0;
 			}
@@ -436,6 +325,6 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 			pThis->ledOn();
 
 		//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", packet);
-		pThis->mSynth->playMsg(packet);
+		pThis->mSynth->HandleMIDIControlMessage(packet);
 	}
 }
