@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 #include "kernel.h"
 
 #include <stdio.h>
@@ -64,6 +65,7 @@ CKernel::CKernel(void)
 
 	  mSerialState(0),
 	  mSerialMessage{0},
+
 	  mActiveSenseFlag(false),
 	  mActiveSenseTime(0),
 
@@ -200,13 +202,6 @@ bool CKernel::InitPCM5242()
 	return true;
 }
 
-void CKernel::ledOn()
-{
-	mActLED.On();
-	mLEDOnTime = mTimer.GetTicks();
-	mLEDOn = true;
-}
-
 CStdlibApp::TShutdownMode CKernel::Run(void)
 {
 	mLogger.Write(GetKernelName(), LogNotice, "Starting up...");
@@ -258,16 +253,16 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	return ShutdownHalt;
 }
 
-bool CKernel::parseSysEx()
+bool CKernel::ParseSysEx()
 {
 	if (mSysExMessage.size() < 4)
 		return false;
 
-	// 'Educational' manufactuer
+	// 'Educational' manufacturer
 	if (mSysExMessage[1] != 0x7D)
 		return false;
 
-	// Reboot (F0 7F 00 F7)
+	// Reboot (F0 7D 00 F7)
 	if (mSysExMessage[2] == 0x00)
 	{
 		mLogger.Write(GetKernelName(), LogNotice, "midi: Reboot command received");
@@ -278,11 +273,18 @@ bool CKernel::parseSysEx()
 	return false;
 }
 
-void CKernel::updateActiveSense()
+void CKernel::UpdateActiveSense()
 {
 	//mLogger.Write(GetKernelName(), LogNotice, "Active sense");
 	mActiveSenseTime = mTimer.GetTicks();
 	mActiveSenseFlag = true;
+}
+
+void CKernel::LEDOn()
+{
+	mActLED.On();
+	mLEDOnTime = mTimer.GetTicks();
+	mLEDOn = true;
 }
 
 void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
@@ -300,7 +302,7 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 			if (pPacket[i] == 0xF7)
 			{
 				// If we don't consume the SysEx message, forward it to mt32emu
-				if (!pThis->parseSysEx())
+				if (!pThis->ParseSysEx())
 					pThis->mSynth->HandleMIDISysExMessage(pThis->mSysExMessage.data(), pThis->mSysExMessage.size());
 				pThis->mSysExMessage.clear();
 				packet = 0;
@@ -322,7 +324,7 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 
 		// Flash LED on note on or off
 		if ((packet & 0x80) == 0x80)
-			pThis->ledOn();
+			pThis->LEDOn();
 
 		//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", packet);
 		pThis->mSynth->HandleMIDIControlMessage(packet);

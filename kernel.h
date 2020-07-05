@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 #ifndef _kernel_h
 #define _kernel_h
 
@@ -58,10 +59,10 @@ protected:
 private:
 	bool InitPCM5242();
 
-	bool parseSysEx();
-	void updateActiveSense();
+	bool ParseSysEx();
 
-	void ledOn();
+	void UpdateActiveSense();
+	void LEDOn();
 
 	// MIDI messages
 	unsigned mSerialState;
