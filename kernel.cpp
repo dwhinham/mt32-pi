@@ -46,13 +46,8 @@ CKernel *CKernel::pThis = nullptr;
 CKernel::CKernel(void)
 	: CStdlibApp("mt32"),
 
-#ifdef HDMI_CONSOLE
-	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
-	  mConsole(&mScreen),
-#else
 	  mSerial(&mInterrupt, true),
-	  mConsole(&mSerial),
-#endif
+	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
 
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
@@ -63,8 +58,9 @@ CKernel::CKernel(void)
 
 	  mI2CMaster(I2C_MASTER_DEVICE, I2C_FAST_MODE, I2C_MASTER_CONFIG),
 
-	  mSerialState(0),
-	  mSerialMessage{0},
+	  mSerialMIDIEnabled(false),
+	  mSerialMIDIState(0),
+	  mSerialMIDIMessage{0},
 
 	  mActiveSenseFlag(false),
 	  mActiveSenseTime(0),
@@ -81,49 +77,29 @@ CKernel::CKernel(void)
 bool CKernel::Initialize(void)
 {
 	if (!CStdlibApp::Initialize())
-	{
 		return false;
-	}
 
-#ifdef HDMI_CONSOLE
 	if (!mScreen.Initialize())
-	{
 		return false;
-	}
-#else
-	if (!mSerial.Initialize(115200))
-	{
-		return false;
-	}
-#endif
 
-	// CDevice *pTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
-	// if (pTarget == 0)
-	// {
-	// 	pTarget = &mScreen;
-	// }
+	CDevice *pLogTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
+	if (!pLogTarget)
+		pLogTarget = &mScreen;
 
-	if (!mLogger.Initialize(
-#ifdef HDMI_CONSOLE
-		&mScreen
-#else
-		&mSerial
-#endif
-	))
-	{
+	// Init serial for GPIO MIDI if not being used for logging
+	mSerialMIDIEnabled = pLogTarget != &mSerial;
+	if (!mSerial.Initialize(mSerialMIDIEnabled ? 31250 : 115200))
 		return false;
-	}
+
+	if (!mLogger.Initialize(pLogTarget))
+		return false;
 
 	if (!mTimer.Initialize())
-	{
 		return false;
-	}
 
 #ifndef BAKE_MT32_ROMS
 	if (!mEMMC.Initialize())
-	{
 		return false;
-	}
 
 	char const *partitionName = "SD:";
 
@@ -139,23 +115,14 @@ bool CKernel::Initialize(void)
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
 	if (!mUSBHCI.Initialize())
-	{
 		return false;
-	}
 #endif
 
-	if (!mConsole.Initialize())
-	{
-		return false;
-	}
-
-	// Initialize newlib stdio with a reference to Circle's file system and console
-	CGlueStdioInit(mFileSystem, mConsole);
+	// Initialize newlib stdio with a reference to Circle's file system
+	CGlueStdioInit(mFileSystem);
 
 	if (!mI2CMaster.Initialize())
-	{
 		return false;
-	}
 
 #if I2C_DAC_PCM5242
 	InitPCM5242();
@@ -164,9 +131,7 @@ bool CKernel::Initialize(void)
 	mSynth = new CMT32SynthPWM(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
 #endif
 	if (!mSynth->Initialize())
-	{
 		return false;
-	}
 
 	mLogger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
 	CCPUThrottle::Get()->DumpStatus();
@@ -211,12 +176,17 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	{
 		pMIDIDevice->RegisterPacketHandler(MIDIPacketHandler);
 		mLogger.Write(GetKernelName(), LogNotice, "Using USB MIDI interface");
+		mSerialMIDIEnabled = false;
 	}
 	else
 	{
-		//mLogger.Write(GetKernelName(), LogNotice, "Using serial MIDI interface");
-		mLogger.Write(GetKernelName(), LogError, "No USB MIDI device detected - please connect and restart.");
-		return ShutdownHalt;
+		if (mSerialMIDIEnabled)
+			mLogger.Write(GetKernelName(), LogNotice, "Using serial MIDI interface");
+		else
+		{
+			mLogger.Write(GetKernelName(), LogError, "No USB MIDI device detected and serial port in use - please restart.");
+			return ShutdownHalt;
+		}
 	}
 
 	// Start audio
@@ -225,6 +195,10 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	while (true)
 	{
 		unsigned ticks = mTimer.GetTicks();
+
+		// Update serial GPIO MIDI
+		if (mSerialMIDIEnabled)
+			UpdateSerialMIDI();
 
 		// Update activity LED
 		if (mLEDOn && (ticks - mLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
@@ -271,6 +245,77 @@ bool CKernel::ParseSysEx()
 	}
 
 	return false;
+}
+
+void CKernel::UpdateSerialMIDI()
+{
+	// Read serial MIDI data
+	u8 buffer[1024];
+	int nResult = mSerial.Read(buffer, sizeof(buffer));
+	if (nResult <= 0)
+		return;
+
+	// Process MIDI messages
+	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
+	for (int i = 0; i < nResult; i++)
+	{
+		u8 data = buffer[i];
+		switch (mSerialMIDIState)
+		{
+			case 0:
+				// Channel voice message
+				MIDIRestart:
+				if (data >= 0x80 && data <= 0xEF)
+					mSerialMIDIMessage[mSerialMIDIState++] = data;
+
+				// System real-time message - single byte, handle immediately
+				else if (data >= 0xF8 && data <= 0xFF)
+					MIDIPacketHandler(0, &data, 1);
+
+				// SysEx
+				else if (data == 0xF0)
+				{
+					mSerialMIDIState = 4;
+					mSysExMessage.push_back(data);
+				}
+				break;
+
+			case 1:
+			case 2:
+			 	// Expected a parameter, but received a status
+				if (data & 0x80)
+				{
+					mSerialMIDIState = 0;
+					goto MIDIRestart;
+				}
+
+				mSerialMIDIMessage[mSerialMIDIState++] = data;
+
+				// MIDI message is complete if we receive 3 bytes, or 2 bytes if it was a Control/Program change
+				if (mSerialMIDIState == 3 || ((mSerialMIDIMessage[0] >= 0xC0 && mSerialMIDIMessage[0] <= 0xDF) && mSerialMIDIState == 2))
+				{
+					MIDIPacketHandler(0, mSerialMIDIMessage, sizeof(mSerialMIDIMessage));
+					mSerialMIDIState = 0;
+				}
+				break;
+
+			case 4:
+				mSysExMessage.push_back(data);
+				if (data == 0xF7)
+				{
+					// If we don't consume the SysEx message, forward it to mt32emu
+					if (!ParseSysEx())
+						mSynth->HandleMIDISysExMessage(mSysExMessage.data(), mSysExMessage.size());
+					mSysExMessage.clear();
+					mSerialMIDIState = 0;
+				}
+				break;
+
+			default:
+				assert(0);
+				break;
+		}
+	}
 }
 
 void CKernel::UpdateActiveSense()

@@ -40,12 +40,8 @@ public:
 
 protected:
 	CCPUThrottle mCPUThrottle;
-#ifdef HDMI_CONSOLE
-	CScreenDevice mScreen;
-#else
 	CSerialDevice mSerial;
-#endif
-	CConsole mConsole;
+	CScreenDevice mScreen;
 	CTimer mTimer;
 	CLogger mLogger;
 	CUSBHCIDevice mUSBHCI;
@@ -61,12 +57,15 @@ private:
 
 	bool ParseSysEx();
 
+	void UpdateSerialMIDI();
 	void UpdateActiveSense();
 	void LEDOn();
 
-	// MIDI messages
-	unsigned mSerialState;
-	u8 mSerialMessage[3];
+	// Serial GPIO MIDI
+	bool mSerialMIDIEnabled;
+	unsigned mSerialMIDIState;
+	u8 mSerialMIDIMessage[3];
+
 	std::vector<u8> mSysExMessage;
 	bool mActiveSenseFlag;
 	unsigned mActiveSenseTime;
