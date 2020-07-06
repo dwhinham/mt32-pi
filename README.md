@@ -14,6 +14,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 * PWM headphone jack audio.
   + Quality is known to be poor (aliasing/distortion on quieter sounds).
   + It is not currently known whether this can be improved or not.
+* USB or GPIO MIDI interface.
 * I2S Hi-Fi DAC support is **almost ready** (feel free to open an issue if you have a DAC HAT and want to test!).
 * LCD status screen support (for MT-32 SysEx messages and status information) is **in progress**.
 
@@ -23,25 +24,21 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
   + If you are updating an old version, you can alternatively download the `kernels` archive instead, and just replace the kernels. The other boot files will not change often.
 * Extract contents to a blank FAT32-formatted SD card.
 * Add `MT32_CONTROL.ROM` and `MT32_PCM.ROM` to the root of the SD card - you have to provide these for copyright reasons.
-* Plug a USB MIDI interface into the Pi, and connect some speakers to the headphone jack.
-* Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and vice versa.
+* Connect a [USB MIDI interface](#confirmed-working-usb-midi-interfaces) or [GPIO MIDI circuit](#gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
+* Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
 
 ## MIDI connection examples
 
-The USB MIDI interface connected to the Pi can be any standard class-compliant USB MIDI interface. If it works on Windows or Linux without any drivers, there's a high chance of it working. See [the following section](#confirmed-working-usb-midi-interfaces) for known-good devices.
-
-Connection examples:
-
 ``` 
-[ Pi ] --> [ USB MIDI ] <===> [ USB MIDI ] <-- [ Modern PC ]
-[ Pi ] --> [ USB MIDI ] <===> [ Gameport MIDI cable ] <-- [ Vintage PC ]
-[ Pi ] --> [ USB MIDI ] <===> [ Atari ST or other machine with built-in MIDI ]
-[ Pi ] --> [ USB MIDI ] <===> [ Synthesizer keyboard or controller ]
+[ Pi ] --> [ USB/GPIO MIDI ] <===> [ USB MIDI ] <-- [ Modern PC ]
+[ Pi ] --> [ USB/GPIO MIDI ] <===> [ Gameport MIDI cable ] <-- [ Vintage PC ]
+[ Pi ] --> [ USB/GPIO MIDI ] <===> [ Atari ST or other machine with built-in MIDI ]
+[ Pi ] --> [ USB/GPIO MIDI ] <===> [ Synthesizer keyboard or controller ]
 ```
 
 ## Confirmed working USB MIDI interfaces
 
-Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work fine with `mt32-pi` .
+Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi` .
 
 **Beware**: cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
 
@@ -51,6 +48,16 @@ If you're shopping for a USB MIDI interface, the following devices have been con
 |--------------|------------------------------------------------------------------|--------------------------------------------------------|
 | M-Audio      | [Uno](https://m-audio.com/products/view/uno)                     | 1 in, 1 out; male DIN plugs. Tested by @dwhinham.      |
 | M-Audio      | [MIDISport 1x1](https://m-audio.com/products/view/midisport-1x1) | 1 in, 1 out; female DIN sockets. Tested by @nswaldman. |
+
+## GPIO MIDI interface
+
+You can build a simple circuit based on an opto-isolator, a diode, and a few resistors. If `mt32-pi` does not detect any USB MIDI devices present on startup, it will expect to receive input on the UART RX pin (pin 10).
+
+### Schematic
+![](docs/gpio_midi_schem.svg)
+
+### Breadboard example
+![](docs/gpio_midi_bb.svg)
 
 ## Disclaimer
 
