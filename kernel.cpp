@@ -47,7 +47,9 @@ CKernel::CKernel(void)
 	: CStdlibApp("mt32"),
 
 	  mSerial(&mInterrupt, true),
+#ifdef HDMI_CONSOLE
 	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
+#endif
 
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
@@ -79,12 +81,15 @@ bool CKernel::Initialize(void)
 	if (!CStdlibApp::Initialize())
 		return false;
 
+#ifdef HDMI_CONSOLE
 	if (!mScreen.Initialize())
 		return false;
+#endif
 
 	CDevice *pLogTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
+
 	if (!pLogTarget)
-		pLogTarget = &mScreen;
+		pLogTarget = &mNull;
 
 	// Init serial for GPIO MIDI if not being used for logging
 	mSerialMIDIEnabled = pLogTarget != &mSerial;

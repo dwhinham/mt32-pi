@@ -8,6 +8,7 @@ ARM_HOME?=$(HOME)/gcc-arm-9.2-2019.12-x86_64-arm-none-eabi
 # Valid options: pi0, pi2, pi3, pi4, pi4-64
 BOARD?=pi4
 BAKE_MT32_ROMS?=0
+HDMI_CONSOLE?=0
 
 # Serial bootloader config
 SERIALPORT?=/dev/ttyUSB0
