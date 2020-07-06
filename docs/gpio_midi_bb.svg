@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!-- Created with Fritzing (http://www.fritzing.org/) -->
 <svg xmlns:svg='http://www.w3.org/2000/svg' xmlns='http://www.w3.org/2000/svg' version='1.2' baseProfile='tiny' x='0in' y='0in' width='3.41622in' height='4.70512in' viewBox='0 0 245.968 338.769' >
-<g partID='59830'><g transform='translate(7.01734,187.569)' ><g transform="matrix(1, 0, 0, 1, 0.199995, 1.63829e-06)">
+<g partID='59830'><g transform='translate(7.01719,187.569)' ><g transform="matrix(1, 0, 0, 1, 0.199995, 1.63829e-06)">
  <g  id="breadboardbreadboard">
   <rect  height="151.2" y="-0.00038177" fill="#d9d9d9" id="rect5" x="2.22043e-17" width="233.726"/>
   <rect  height="0.4" y="20.9316" fill="#b3b0b0" id="rect8" x="-0.199995" width="228.753"/>
@@ -4530,7 +4530,7 @@
   </g>
  </g>
 </g>
-</g></g></g><g partID='59670'><g transform='translate(70.183,248.108)' ><g transform='matrix(-1,0,0,-1,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
+</g></g></g><g partID='59670'><g transform='translate(70.1828,248.108)' ><g transform='matrix(-1,0,0,-1,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
  <circle xmlns="http://www.w3.org/2000/svg" cx="30.392" cy="10.139" fill="none" r="2.612" id="connector0pin"/>
  <circle xmlns="http://www.w3.org/2000/svg" cx="51.595" cy="10.139" fill="none" r="2.612" id="connector2pin"/>
  <circle xmlns="http://www.w3.org/2000/svg" cx="9.047" cy="10.139" fill="none" r="2.612" id="connector1pin"/>
@@ -4665,9 +4665,9 @@
  </g>
  <polygon xmlns="http://www.w3.org/2000/svg" fill="#CCCCCC" points="0.436,65.069,0.147,65.429,0.147,10.5,0.436,10.5"/>
 </g>
-</g></g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M53.936,280.122L53.936,281.169' />
-<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M53.936,253.412L53.936,252.364' />
-<g partID='62440'><g transform='translate(50.3036,282.217)' ><g transform='matrix(0,-1,1,0,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
+</g></g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M53.9359,280.122L53.9359,281.169' />
+<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M53.9359,253.412L53.9359,252.364' />
+<g partID='62440'><g transform='translate(50.3035,282.217)' ><g transform='matrix(0,-1,1,0,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector0pin" x="0.36" width="0.72"/>
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector1pin" x="29.8202" width="0.72"/>
  <line xmlns="http://www.w3.org/2000/svg" y1="3.6324" stroke-width="2.0952" stroke-linecap="round" y2="3.6324" fill="none" id="connector0leg" x1="1.0476" x2="2.0952" stroke="#8C8C8C"/>
@@ -4685,9 +4685,9 @@
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="1.62" y="0.42336" fill="#FFFF33" id="Reflex_gold" x="22.019" width="0.70272"/>
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="0.7488" y="0.78336" fill="#FFFFFF" id="Reflex_extra" x="22.019" width="0.70272"/>
 </g>
-</g></g></g><path stroke='#8c8c8c' stroke-width='2.094' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M51.874,288.309L52.921,288.309' />
-<path stroke='#8c8c8c' stroke-width='2.094' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M26.183,288.309L25.136,288.309' />
-<g partID='65090'><g transform='translate(53.968,291.939)' ><g transform='matrix(-1,0,0,-1,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
+</g></g></g><path stroke='#8c8c8c' stroke-width='2.094' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M51.8738,288.309L52.9208,288.309' />
+<path stroke='#8c8c8c' stroke-width='2.094' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M26.1828,288.309L25.1358,288.309' />
+<g partID='65090'><g transform='translate(53.9678,291.939)' ><g transform='matrix(-1,0,0,-1,0,0)'  ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
  <rect xmlns="http://www.w3.org/2000/svg" height="1" y="2.583" fill="none" id="connector0pin" x="0.011" width="1"/>
  <rect xmlns="http://www.w3.org/2000/svg" height="1" y="2.583" fill="none" id="connector1pin" x="25.576" width="1"/>
  <g xmlns="http://www.w3.org/2000/svg" y1="3.63" stroke-width="2.094" stroke-linecap="round" y2="3.63" fill="none" id="connector0leg" x1="1.047" x2="2.094" stroke="#8C8C8C"/>
@@ -4700,7 +4700,7 @@
   <path xmlns="http://www.w3.org/2000/svg" opacity="0.4" d="M22.822,7.194c-0.727,0.014,-1.438,0,-2.156,0c-0.902,0,-12.942,0,-13.667,0c-0.091,0,-0.202,-0.723,-0.182,-0.723c1.293,0,1.613,0,2.336,0c0.723,0,10.789,0,11.509,0c0.721,0,1.67,0,2.393,0C23.076,6.471,22.969,7.192,22.822,7.194z" enable-background="new    " id="Shaddow_1_"/>
  </g>
 </g>
-</g></g></g><g partID='72960'><g transform='translate(71.936,251.289)' ><g id="breadboard" xmlns="http://www.w3.org/2000/svg">
+</g></g></g><g partID='72960'><g transform='translate(71.9358,251.289)' ><g id="breadboard" xmlns="http://www.w3.org/2000/svg">
 <rect height="19.44" y="2.16" fill="#303030" id="middle" xmlns="http://www.w3.org/2000/svg" x="0" width="28.8"/>
 <rect height="1.7712" y="2.16" fill="#3D3D3D" id="top" xmlns="http://www.w3.org/2000/svg" x="0" width="28.8"/>
 <rect height="1.7712" y="19.8288" fill="#000000" id="bottom" xmlns="http://www.w3.org/2000/svg" x="0" width="28.8"/>
@@ -4737,9 +4737,9 @@
 <g height="2.16" y="21.6" fill="#8C8C8C" id="connector2terminal" xmlns="http://www.w3.org/2000/svg" x="16.92" width="2.16"/>
 <polygon fill="#8C8C8C" points="15.48,20.6352,15.48,21.4128,16.92,22.0752,19.08,22.0752,20.52,21.4128,20.52,20.6352" xmlns="http://www.w3.org/2000/svg"/>
 </g>
-</g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M83.7836,237.969L82.736,237.969' />
-<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M110.493,237.969L111.541,237.969' />
-<g partID='74400'><g transform='translate(81.6884,234.337)' ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
+</g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M83.7837,237.969L82.7361,237.969' />
+<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M110.494,237.969L111.541,237.969' />
+<g partID='74400'><g transform='translate(81.6885,234.337)' ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector0pin" x="0.36" width="0.72"/>
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector1pin" x="29.8202" width="0.72"/>
  <line xmlns="http://www.w3.org/2000/svg" y1="3.6324" stroke-width="2.0952" stroke-linecap="round" y2="3.6324" fill="none" id="connector0leg" x1="1.0476" x2="2.0952" stroke="#8C8C8C"/>
@@ -4757,9 +4757,9 @@
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="1.62" y="0.42336" fill="#FFFF33" id="Reflex_gold" x="22.019" width="0.70272"/>
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="0.7488" y="0.78336" fill="#FFFFFF" id="Reflex_extra" x="22.019" width="0.70272"/>
 </g>
-</g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M90.9836,245.169L89.936,245.169' />
-<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M117.693,245.169L118.741,245.169' />
-<g partID='74430'><g transform='translate(88.8884,241.537)' ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
+</g></g><path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M90.9837,245.169L89.9361,245.169' />
+<path stroke='#8c8c8c' stroke-width='2.0952' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M117.694,245.169L118.741,245.169' />
+<g partID='74430'><g transform='translate(88.8885,241.537)' ><g xmlns="http://www.w3.org/2000/svg" id="breadboard">
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector0pin" x="0.36" width="0.72"/>
  <rect xmlns="http://www.w3.org/2000/svg" height="0.72" y="2.5848" fill="none" id="connector1pin" x="29.8202" width="0.72"/>
  <line xmlns="http://www.w3.org/2000/svg" y1="3.6324" stroke-width="2.0952" stroke-linecap="round" y2="3.6324" fill="none" id="connector0leg" x1="1.0476" x2="2.0952" stroke="#8C8C8C"/>
@@ -4777,4 +4777,4 @@
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="1.62" y="0.42336" fill="#FFFF33" id="Reflex_gold" x="22.019" width="0.70272"/>
  <rect xmlns="http://www.w3.org/2000/svg" opacity="0.5" height="0.7488" y="0.78336" fill="#FFFFFF" id="Reflex_extra" x="22.019" width="0.70272"/>
 </g>
-</g></g><g partID='62620'><line stroke-linecap='round' stroke='#7a3a73' x1='82.737' y1='295.569' x2='53.9371' y2='295.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='82.737' y1='295.569' x2='53.9371' y2='295.569' stroke-width='1.6' /></g><g partID='62800'><line stroke-linecap='round' stroke='#7a3a73' x1='25.1372' y1='302.769' x2='89.9369' y2='302.769' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='25.1372' y1='302.769' x2='89.9369' y2='302.769' stroke-width='1.6' /></g><g partID='73150'><line stroke-linecap='round' stroke='#7a3a73' x1='25.1372' y1='273.969' x2='25.1372' y2='252.369' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='25.1372' y1='273.969' x2='25.1372' y2='252.369' stroke-width='1.6' /></g><g partID='74610'><line stroke-linecap='round' stroke='#8c0000' x1='118.737' y1='223.569' x2='114.217' y2='201.969' stroke-width='3.2' /><line stroke-linecap='round' stroke='#cc1414' x1='118.737' y1='223.569' x2='114.217' y2='201.969' stroke-width='1.6' /></g><g partID='75080'><line stroke-linecap='round' stroke='#1b5bb3' x1='107.017' y1='194.769' x2='111.537' y2='223.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#418dd9' x1='107.017' y1='194.769' x2='111.537' y2='223.569' stroke-width='1.6' /></g><g partID='75110'><line stroke-linecap='round' stroke='#8c0000' x1='78.2169' y1='201.969' x2='75.537' y2='223.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#cc1414' x1='78.2169' y1='201.969' x2='75.537' y2='223.569' stroke-width='1.6' /></g><g partID='75530'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#8c0000' d='M222.216,201.969C222.216,201.969, 255.475,176.468 222.216,151.569' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#cc1414' d='M222.216,201.969C222.216,201.969, 255.475,176.468 222.216,151.569' /></g><g partID='75950'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#1b5bb3' d='M222.216,194.769C222.216,194.769, 234.022,174.395 207.816,158.768' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#418dd9' d='M222.216,194.769C222.216,194.769, 234.022,174.395 207.816,158.768' /></g><g partID='76210'><line stroke-linecap='round' stroke='#1b5bb3' x1='111.537' y1='230.769' x2='97.1369' y2='230.769' stroke-width='3.2' /><line stroke-linecap='round' stroke='#418dd9' x1='111.537' y1='230.769' x2='97.1369' y2='230.769' stroke-width='1.6' /></g><g partID='76690'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#00a527' d='M89.9369,223.569C89.9369,223.569, 85.8681,190.519 107.283,180.369' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#25cc35' d='M89.9369,223.569C89.9369,223.569, 85.8681,190.519 107.283,180.369' /></g><g partID='76800'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#00a527' d='M107.283,180.369C122.683,171.931, 191.15,185.064 193.416,158.768' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#25cc35' d='M107.283,180.369C122.683,171.931, 191.15,185.064 193.416,158.768' /></g></svg>
+</g></g><g partID='62620'><line stroke-linecap='round' stroke='#7a3a73' x1='82.7365' y1='295.569' x2='53.9366' y2='295.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='82.7365' y1='295.569' x2='53.9366' y2='295.569' stroke-width='1.6' /></g><g partID='62800'><line stroke-linecap='round' stroke='#7a3a73' x1='25.1371' y1='302.769' x2='89.9368' y2='302.769' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='25.1371' y1='302.769' x2='89.9368' y2='302.769' stroke-width='1.6' /></g><g partID='73150'><line stroke-linecap='round' stroke='#7a3a73' x1='25.1371' y1='273.969' x2='25.1371' y2='252.369' stroke-width='3.2' /><line stroke-linecap='round' stroke='#ab58a2' x1='25.1371' y1='273.969' x2='25.1371' y2='252.369' stroke-width='1.6' /></g><g partID='74610'><line stroke-linecap='round' stroke='#8c0000' x1='118.736' y1='223.569' x2='114.216' y2='201.969' stroke-width='3.2' /><line stroke-linecap='round' stroke='#cc1414' x1='118.736' y1='223.569' x2='114.216' y2='201.969' stroke-width='1.6' /></g><g partID='75080'><line stroke-linecap='round' stroke='#1b5bb3' x1='107.016' y1='194.769' x2='111.537' y2='223.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#418dd9' x1='107.016' y1='194.769' x2='111.537' y2='223.569' stroke-width='1.6' /></g><g partID='75110'><line stroke-linecap='round' stroke='#8c0000' x1='78.2168' y1='201.969' x2='75.5369' y2='223.569' stroke-width='3.2' /><line stroke-linecap='round' stroke='#cc1414' x1='78.2168' y1='201.969' x2='75.5369' y2='223.569' stroke-width='1.6' /></g><g partID='75530'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#8c0000' d='M222.216,201.969C222.216,201.969, 255.475,176.467 222.215,151.569' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#cc1414' d='M222.216,201.969C222.216,201.969, 255.475,176.467 222.215,151.569' /></g><g partID='75950'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#1b5bb3' d='M222.216,194.769C222.216,194.769, 234.022,174.395 207.815,158.768' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#418dd9' d='M222.216,194.769C222.216,194.769, 234.022,174.395 207.815,158.768' /></g><g partID='76210'><line stroke-linecap='round' stroke='#1b5bb3' x1='111.536' y1='230.769' x2='97.1366' y2='230.769' stroke-width='3.2' /><line stroke-linecap='round' stroke='#418dd9' x1='111.536' y1='230.769' x2='97.1366' y2='230.769' stroke-width='1.6' /></g><g partID='76800'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#00a527' d='M107.283,180.369C122.683,171.931, 191.149,185.064 193.415,158.768' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#25cc35' d='M107.283,180.369C122.683,171.931, 191.149,185.064 193.415,158.768' /></g><g partID='76690'><path stroke-linecap='round' fill='none' stroke-width='3.2' stroke='#00a527' d='M89.9365,223.569C89.9365,223.569, 85.8676,190.519 107.283,180.369' /><path stroke-linecap='round' fill='none' stroke-width='1.6' stroke='#25cc35' d='M89.9365,223.569C89.9365,223.569, 85.8676,190.519 107.283,180.369' /></g></svg>
