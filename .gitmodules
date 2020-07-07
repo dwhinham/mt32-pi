@@ -4,3 +4,6 @@
 [submodule "external/munt"]
 	path = external/munt
 	url = https://github.com/munt/munt.git
+[submodule "external/inih"]
+	path = external/inih
+	url = https://github.com/benhoyt/inih.git
