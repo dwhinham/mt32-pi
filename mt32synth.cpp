@@ -43,6 +43,8 @@ CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResampler
 	  mResamplerQuality(pResamplerQuality),
 	  mSampleRateConverter(nullptr),
 
+	  mLCDMessageHandler(nullptr),
+
 #ifdef BAKE_MT32_ROMS
 	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
 	  mPCMFile(MT32_PCM_ROM, MT32_PCM_ROM_len),
@@ -129,6 +131,27 @@ void CMT32SynthBase::HandleMIDISysExMessage(u8* pData, size_t pSize)
 	mSynth->playSysex(pData, pSize);
 }
 
+u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const
+{
+	u8 keys[MT32Emu::DEFAULT_MAX_PARTIALS];
+	u8 velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
+	u32 playingNotes = mSynth->getPlayingNotes(pPart, keys, velocities);
+
+	u8 maxVelocity = velocities[0];
+	for (u32 i = 1; i < playingNotes; ++i)
+		if (velocities[i] > maxVelocity)
+			maxVelocity = velocities[i];
+	
+	return maxVelocity;
+}
+
+u8 CMT32SynthBase::GetMasterVolume() const
+{
+	u8 volume;
+	mSynth->readMemory(0x40016, 1, &volume);
+	return volume;
+}
+
 void CMT32SynthBase::AllSoundOff()
 {
 	// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
@@ -144,6 +167,8 @@ void CMT32SynthBase::printDebug(const char *fmt, va_list list)
 void CMT32SynthBase::showLCDMessage(const char *message)
 {
 	CLogger::Get()->Write("lcd", LogNotice, message);
+	if (mLCDMessageHandler)
+		mLCDMessageHandler(message);
 }
 
 bool CMT32SynthBase::onMIDIQueueOverflow()

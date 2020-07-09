@@ -10,9 +10,12 @@ CFG_A(audio,	chunk_size,				int,						mAudioChunkSize,			512								)
 CFG_A(audio,	i2c_dac_init,			AudioI2CDACInit,			mAudioI2CDACInit,			AudioI2CDACInit::PCM51xx		)
 CFG_A(mt32emu,	resampler_quality,		MT32EmuResamplerQuality,	mMT32EmuResamplerQuality,	MT32EmuResamplerQuality::Good	)
 CFG_A(lcd,		type,					LCDType,					mLCDType,					LCDType::None					)
+CFG_A(lcd,		width,					int,						mLCDWidth,					20								)
+CFG_A(lcd,		height,					int,						mLCDHeight,					2								)
 
 // Special handling for hex string -> int conversion
 CFG_S(audio,	i2c_dac_address,		int,						mAudioI2CDACAddress,		0x4c							)
+CFG_S(lcd,		i2c_lcd_address,		int,						mLCDI2CLCDAddress,			0x3c							)
 
 #undef CFG_A
 #undef CFG_S

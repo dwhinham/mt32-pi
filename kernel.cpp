@@ -21,17 +21,21 @@
 #include "kernel.h"
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
 #include <time.h>
 
 #include <circle/usb/usbmidi.h>
 #include <circle/startup.h>
 
+#include "hd44780.h"
+#include "ssd1306.h"
+
 #ifndef MT32_PI_VERSION
 #define MT32_PI_VERSION "<unknown>"
 #endif
 
+#define LCD_UPDATE_PERIOD_MILLIS 16
+#define LCD_LOG_TIME_MILLIS 2000
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 300
 
@@ -56,7 +60,11 @@ CKernel::CKernel(void)
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
 #endif
 
-	  mI2CMaster(I2C_MASTER_DEVICE, I2C_FAST_MODE, I2C_MASTER_CONFIG),
+	  mI2CMaster(1, true),
+	  mLCD(nullptr),
+
+	  mLCDLogTime(0),
+	  mLCDUpdateTime(0),
 
 	  mSerialMIDIEnabled(false),
 	  mSerialMIDIState(0),
@@ -117,26 +125,50 @@ bool CKernel::Initialize(void)
 	if (!mConfig.Initialize("mt32-pi.cfg"))
 		mLogger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
 
+	if (!mI2CMaster.Initialize())
+		return false;
+
+	if (mConfig.mLCDType == CConfig::LCDType::HD44780FourBit)
+		mLCD = new CHD44780FourBit(mConfig.mLCDWidth, mConfig.mLCDHeight);
+	else if (mConfig.mLCDType == CConfig::LCDType::HD44780I2C)
+		mLCD = new CHD44780I2C(&mI2CMaster, mConfig.mLCDI2CLCDAddress, mConfig.mLCDWidth, mConfig.mLCDHeight);
+	else if (mConfig.mLCDType == CConfig::LCDType::SSD1306I2C)
+		mLCD = new CSSD1306(&mI2CMaster, mConfig.mLCDI2CLCDAddress, mConfig.mLCDHeight);
+	
+	if (mLCD)
+	{
+		if (mLCD->Initialize())
+			mLCD->Print("mt32-pi " MT32_PI_VERSION, 0, 0, false, true);
+		else
+		{
+			mLogger.Write(GetKernelName(), LogWarning, "LCD init failed; invalid dimensions?");
+			delete mLCD;
+			mLCD = nullptr;
+		}
+	}
+
 #if !defined(__aarch64__) || !defined(LEAVE_QEMU_ON_HALT)
 	// The USB driver is not supported under 64-bit QEMU, so
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
+	LCDLog("Init USB");
 	if (mConfig.mMIDIUSB && !mUSBHCI.Initialize())
 		return false;
 #endif
 
-	if (!mI2CMaster.Initialize())
-		return false;
-
 	if (mConfig.mAudioOutputDevice == CConfig::AudioOutputDevice::I2SDAC)
 	{
+		LCDLog("Init mt32emu (I2S)");
 		if (mConfig.mAudioI2CDACInit == CConfig::AudioI2CDACInit::PCM51xx)
 			InitPCM51xx(mConfig.mAudioI2CDACAddress);
 
 		mSynth = new CMT32SynthI2S(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
 	}
 	else
+	{
+		LCDLog("Init mt32emu (PWM)");
 		mSynth = new CMT32SynthPWM(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+	}
 
 	if (!mSynth->Initialize())
 		return false;
@@ -195,8 +227,11 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		}
 	}
 
+	mSynth->SetLCDMessageHandler(LCDMessageHandler);
+
 	// Start audio
 	//mSynth->Start();
+	LCDLog("Ready.");
 
 	while (true)
 	{
@@ -213,6 +248,24 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 			mLEDOn = false;
 		}
 
+		// Update LCD
+		if (mLCD)
+		{
+			if (mLCDLogTime)
+			{
+				if ((ticks - mLCDLogTime) >= MSEC2HZ(LCD_LOG_TIME_MILLIS))
+				{
+					mLCDLogTime = 0;
+					mLCD->Clear();
+				}
+			}
+			else if ((ticks - mLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
+			{
+				mLCD->Update(mSynth);
+				mLCDUpdateTime = ticks;
+			}
+		}
+
 		// Check for active sensing timeout (300 milliseconds)
 		// Based on http://midi.teragonaudio.com/tech/midispec/sense.htm
 		if (mActiveSenseFlag && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
@@ -226,6 +279,11 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		{
 			// Stop audio and reboot
 			//mSynth->Cancel();
+
+			// Clear screen
+			if (mLCD)
+				mLCD->Clear();
+
 			return ShutdownReboot;
 		}
 	}
@@ -338,9 +396,20 @@ void CKernel::LEDOn()
 	mLEDOn = true;
 }
 
+void CKernel::LCDLog(const char* pMessage)
+{
+	if (!mLCD)
+		return;
+
+	mLCDLogTime = mTimer.GetTicks();
+
+	mLCD->Print("~", 0, 1);
+	mLCD->Print(pMessage, 2, 1, true, true);
+}
+
 void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 {
-	assert(pThis != 0);
+	assert(pThis != nullptr);
 	pThis->mActiveSenseTime = pThis->mTimer.GetTicks();
 
 	u32 packet = 0;
@@ -380,4 +449,11 @@ void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 		//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", packet);
 		pThis->mSynth->HandleMIDIControlMessage(packet);
 	}
+}
+
+void CKernel::LCDMessageHandler(const char* pMessage)
+{
+	assert(pThis != nullptr);
+	if (pThis->mLCD)
+		pThis->mLCD->SetMessage(pMessage);
 }

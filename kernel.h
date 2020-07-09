@@ -24,10 +24,12 @@
 #include <circle/cputhrottle.h>
 #include <circle/i2cmaster.h>
 #include <circle/i2ssoundbasedevice.h>
+#include <circle/sched/scheduler.h>
 #include <circle_stdlib_app.h>
 
 #include <vector>
 
+#include "clcd.h"
 #include "config.h"
 #include "mt32synth.h"
 
@@ -48,11 +50,13 @@ protected:
 #endif
 	CTimer mTimer;
 	CLogger mLogger;
+	CScheduler mScheduler;
 	CUSBHCIDevice mUSBHCI;
 	CEMMCDevice mEMMC;
 	FATFS mFileSystem;
 
 	CI2CMaster mI2CMaster;
+	CCharacterLCD* mLCD;
 
 private:
 	bool InitPCM51xx(u8 pAddress);
@@ -62,9 +66,13 @@ private:
 	void UpdateSerialMIDI();
 	void UpdateActiveSense();
 	void LEDOn();
+	void LCDLog(const char* pMessage);
 
 	// Configuration
 	CConfig mConfig;
+
+	unsigned mLCDLogTime;
+	unsigned mLCDUpdateTime;
 
 	// Serial GPIO MIDI
 	bool mSerialMIDIEnabled;
@@ -83,6 +91,7 @@ private:
 	CMT32SynthBase* mSynth;
 
 	static void MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
+	static void LCDMessageHandler(const char* pMessage);
 	static CKernel *pThis;
 };
 

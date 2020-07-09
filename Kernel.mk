@@ -4,7 +4,7 @@
 
 include Config.mk
 
-OBJS=main.o kernel.o config.o mt32synth.o
+OBJS=main.o kernel.o config.o mt32synth.o hd44780.o hd44780fourbit.o hd44780i2c.o ssd1306.o
 
 #
 # inih

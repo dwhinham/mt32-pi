@@ -18,10 +18,10 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
   + This is the recommended audio output method for the best quality audio.
 * [USB](#-usb-midi-interfaces) or [GPIO](#-gpio-midi-interface) MIDI interface.
 * [Config file](#-configuration-file) for selecting hardware options and fine tuning.
-* LCD status screen support (for MT-32 SysEx messages and status information) is **almost ready**.
-* Control buttons, rotary encoder etc. is planned.
-* A port of FluidSynth is planned.
-* Network MIDI and auto-update is planned.
+* [LCD status screen support](#-lcd-and-oled-displays) (for MT-32 SysEx messages and status information).
+* Control buttons, rotary encoder etc. is _planned_.
+* A port of FluidSynth is _planned_.
+* Network MIDI and auto-update is _planned_.
 
 ## ✨ Quick-start guide
 
@@ -134,6 +134,67 @@ If your DAC does not appear in the compatibility table above, you can help by ca
 * In this example, the address is **4d**. Make a note of this and set `i2c_dac_address` in `mt32-pi.cfg`.
 * If your DAC now works, open an issue to let us know, and we can add it to the table! Otherwise, open an issue anyway, and we can try to work out how to support it.
 
+## 📺 LCD and OLED displays
+
+`mt32-pi` supports various LCD and OLED displays, both traditional character displays like the original MT-32, and modern graphical displays.
+
+The MT-32 had a single row, 20 column display, but these are hard to find nowadays. 20x2 and 20x4 displays are common however, and `mt32-pi` can use the extra rows to display additional information.
+
+To enable a display, you will need to edit `mt32-pi.cfg` accordingly, and correctly connect your display to the Raspberry Pi. There are currently three different LCD drivers, which are detailed in the following sections.
+
+### Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)
+
+[<img width="280rem" align="right" src="docs/hd44780_20x4.jpg">](docs/hd44780_20x4.jpg)
+
+This driver is for connecting a traditional HD44780 or compatible (e.g. Winstar WS0010/Raystar RS0010) character display directly to the Pi's GPIO pins in 4-bit mode.
+Currently, only 20x2 and 20x4 displays have been tested. In theory, other widths should work, but there is currently no special handling/scrolling for narrower displays.
+
+Consult your display's datasheet to determine the correct LCD pins to connect to the GPIOs. The current pinout is as follows:
+
+| LCD signal | Physical Raspberry Pi pin | BCM pin |
+|------------|---------------------------|---------|
+| `RS`       | 19                        | 10      |
+| `RW`       | 21                        | 9       |
+| `EN`       | 23                        | 11      |
+| `D4`       | 27                        | 0       |
+| `D5`       | 29                        | 5       |
+| `D6`       | 31                        | 6       |
+| `D7`       | 33                        | 13      |
+
+You will also need to connect a power source and ground to your display. Consult its datasheet to see if it requires 3.3V or 5V. You should be able to use the Pi's 3.3V, 5V, and ground pins as necessary, but **check the datasheet** to ensure the display doesn't draw more current than the Pi can deliver safely.
+
+> **Note:** The GPIO assignment could change in later versions as more functionality is added, so **BE WARNED** if you are thinking about designing hardware.
+
+### Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)
+
+[<img width="280rem" align="right" src="docs/hd44780_20x2.jpg">](docs/hd44780_20x2.jpg)
+
+This driver is functionally equivalent to the 4-bit driver, but instead of using GPIOs to drive the LCD's data signals directly, the Pi communicates with the display via an I2C-connected I/O expander. Some vendors refer to these as an "[I2C backpack]".
+
+These displays are very convenient as they only need 4 wires to connect to the Pi. Your display will connect to the Pi's `SDA` and `SCL` lines (pins 3 and 5 respectively), as well as power and ground. As always, **check your display's datasheet** for power requirements.
+
+As with all I2C devices, you must know the LCD's I2C address in order for it to work. You should be able to find its address on the datasheet, or the "backpack" may have jumpers to configure the address. In case of doubt, you can connect the display and use Linux to discover your display using the [same procedure described in the DAC section](#-finding-the-i2c-address-of-your-DAC).
+
+### SSD1306 I2C driver (`ssd1306_i2c`)
+
+[<img width="280rem" align="right" src="docs/ssd1306_128x32.jpg">](docs/ssd1306_128x32.jpg)
+
+The SSD1306 controller is found in mini 128x32 and 128x64 OLED displays, which are well-known for their use in FlashFloppy/Gotek devices. They can be found for very little money on eBay and AliExpress.
+
+Currently, only the 32-pixel high version is supported, although if someone were to send me a 64-pixel high model, I'd be glad to test it and add support!
+
+These displays usually have an I2C address of `0x3c`. 
+
+### Compatibility
+
+The following displays and configurations have been confirmed as working by our testers. Please note the necessary configuration file options.
+
+| Manufacturer   | Device          | Config file options                                                        | Comments                                                                                                     |
+|----------------|-----------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| BuyDisplay.com | [2002-1 Series] | `type = hd44780_i2c`, `width = 20`, `height = 2`, `i2c_lcd_address = 27`   | Very bright and inexpensive 20x2 LCD. Tested by @dwhinham.                                                   |
+| Generic        | [128x32 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 32`, `i2c_lcd_address = 3c` | Extremely cheap yet nice and bright mini OLED. Widely available on AliExpress and eBay. Tested by @dwhinham. |
+| Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                        |
+
 ## 🔩 Custom hardware
 
 [<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
@@ -161,6 +222,8 @@ Please note that these commands are subject to change until the project reaches 
 
 ## ❓ FAQ
 
+* **Q:** Why do I only see a rainbow on my HDMI-connected monitor or television? Doesn't this normally mean the Pi has failed to boot?  
+  **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
 * **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
   **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
 
@@ -176,15 +239,19 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 * The [inih] project for a nice, lightweight config file parser.
 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
+[128x32 OLED]: https://www.aliexpress.com/item/32661842518.html?spm=a2g0s.9042311.0.0.27424c4dSo7J9L
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
+[2002-1 Series]: https://www.buydisplay.com/character-lcd-display-module/20x2-character
 [Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
 [GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
+[I2C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
 [PI-MIDI]: https://www.arananet.net/pedidos/product/pi-midi-a-baremetal-mt32-emulator-using-raspberry-pi3
+[REC002004B]: https://www.raystar-optronics.com/oled-character-display-module/REC002004B.html
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest

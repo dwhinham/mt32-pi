@@ -22,9 +22,10 @@
 #define _mt32synth_h
 
 #include <circle/i2ssoundbasedevice.h>
-#include <circle/pwmsoundbasedevice.h>
 #include <circle/interrupt.h>
 #include <circle/logger.h>
+#include <circle/pwmsoundbasedevice.h>
+#include <circle/types.h>
 
 #include <mt32emu/mt32emu.h>
 
@@ -49,6 +50,12 @@ public:
 	virtual bool Initialize();
 	void HandleMIDIControlMessage(u32 pMessage);
 	void HandleMIDISysExMessage(u8* pData, size_t pSize);
+	void SetLCDMessageHandler(void(*pHandler)(const char* pMessage)){ mLCDMessageHandler = pHandler; }
+
+	u32 GetPartStates() const { return mSynth->getPartStates(); }
+	u8 GetVelocityForPart(u8 pPart) const;
+	u8 GetMasterVolume() const;
+
 	void AllSoundOff();
 
 protected:
@@ -70,6 +77,8 @@ private:
 	virtual void printDebug(const char *fmt, va_list list);
 	virtual void showLCDMessage(const char *message);
 	virtual bool onMIDIQueueOverflow();
+
+	void(*mLCDMessageHandler)(const char* pMessage);
 
 	MT32_ROM_FILE mControlFile;
 	MT32_ROM_FILE mPCMFile;

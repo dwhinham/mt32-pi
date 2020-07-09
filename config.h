@@ -42,8 +42,9 @@ public:
 	enum class LCDType
 	{
 		None,
-		HD44780,
-		SSD1306
+		HD44780FourBit,
+		HD44780I2C,
+		SSD1306I2C
 	};
 
 	CConfig();

@@ -65,6 +65,8 @@ int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, co
 	// Handle special cases
 	if (MATCH("audio", "i2c_dac_address"))
 		ParseOption(pValue, &config->mAudioI2CDACAddress, true);
+	else if (MATCH("lcd", "i2c_lcd_address"))
+		ParseOption(pValue, &config->mLCDI2CLCDAddress, true);
 
 	// Handle auto cases
 	#include "config.def"
@@ -154,5 +156,26 @@ bool CConfig::ParseOption(const char* pString, MT32EmuResamplerQuality* pOut)
 
 bool CConfig::ParseOption(const char* pString, LCDType* pOut)
 {
-	return true;
+	if (!strcmp(pString, "none"))
+	{
+		*pOut = LCDType::None;
+		return true;
+	}
+	else if (!strcmp(pString, "hd44780_4bit"))
+	{
+		*pOut = LCDType::HD44780FourBit;
+		return true;
+	}
+	else if (!strcmp(pString, "hd44780_i2c"))
+	{
+		*pOut = LCDType::HD44780I2C;
+		return true;
+	}
+	else if (!strcmp(pString, "ssd1306_i2c"))
+	{
+		*pOut = LCDType::SSD1306I2C;
+		return true;
+	}
+
+	return false;
 }
