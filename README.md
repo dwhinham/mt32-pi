@@ -20,9 +20,9 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 ## Quick-start guide
 
-* Get the latest build by going to [Actions] --> Click top-most commit in list --> Click `sdcard` in the artifacts list.
-  + If you are updating an old version, you can alternatively download the `kernels` archive instead, and just replace the kernels. The other boot files will not change often.
+* Download the latest release from the [Releases] section.
 * Extract contents to a blank FAT32-formatted SD card.
+  + If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
 * Add `MT32_CONTROL.ROM` and `MT32_PCM.ROM` to the root of the SD card - you have to provide these for copyright reasons.
 * Connect a [USB MIDI interface](#confirmed-working-usb-midi-interfaces) or [GPIO MIDI circuit](#gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
 * Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
@@ -38,7 +38,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 ## Confirmed working USB MIDI interfaces
 
-Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi` .
+Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
 
 **Beware**: cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
 
@@ -59,6 +59,11 @@ You can build a simple circuit based on an opto-isolator, a diode, and a few res
 ### Breadboard example
 ![](docs/gpio_midi_bb.svg)
 
+## FAQ
+
+* **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
+  **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildro) branch.
+
 ## Disclaimer
 
 This project, just like [Munt], has no affiliation with Roland Corporation. Use of "Roland" or other registered trademarks is purely for informational purposes only, and implies no endorsement by or affiliation with thheir respective owners.
@@ -71,7 +76,8 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
-[Actions]: https://github.com/dwhinham/mt32-pi/actions
+[Releases]: https://github.com/dwhinham/mt32-pi/releases/latest
+[Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [Circle]: https://github.com/rsta2/circle
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Munt]: https://github.com/munt/munt
