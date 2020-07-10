@@ -84,8 +84,29 @@ jobs:
         name: kernels
         path: sdcard
 
+    - name: Get version (git tag)
+      id: get_version
+      run: echo ::set-output name=version::${GITHUB_REF#refs/tags/}
+
+    - name: Create SD card package
+      run: cd sdcard; zip -r ../mt32-pi-${{ steps.get_version.outputs.version }}.zip *
+
     - name: Upload SD card package
       uses: actions/upload-artifact@v2
       with:
         name: sdcard
-        path: sdcard
+        path: mt32-pi-*.zip
+
+    - name: Release
+      uses: docker://antonyurchenko/git-release:latest
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DRAFT_RELEASE: "false"
+        PRE_RELEASE: "false"
+        CHANGELOG_FILE: "CHANGELOG.md"
+        ALLOW_EMPTY_CHANGELOG: "false"
+        ALLOW_TAG_PREFIX: "true"
+      with:
+        args: |
+            mt32-pi-*.zip
