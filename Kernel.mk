@@ -31,6 +31,14 @@ INCLUDE		+= -I $(MT32EMUBUILDDIR)/include
 EXTRALIBS	+= $(MT32EMULIB)
 
 #
+# Generate version string from git tag
+#
+VERSION=$(shell git describe --tags --dirty 2>/dev/null)
+ifneq ($(VERSION),)
+DEFINE		+= -D MT32_PI_VERSION=\"$(VERSION)\"
+endif
+
+#
 # Convert MT32 ROMs to C headers if baking into kernel
 #
 ifeq ($(BAKE_MT32_ROMS), 1)

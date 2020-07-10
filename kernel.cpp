@@ -28,6 +28,10 @@
 #include <circle/usb/usbmidi.h>
 #include <circle/startup.h>
 
+#ifndef MT32_PI_VERSION
+#define MT32_PI_VERSION "<unknown>"
+#endif
+
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 300
 
@@ -44,7 +48,7 @@
 CKernel *CKernel::pThis = nullptr;
 
 CKernel::CKernel(void)
-	: CStdlibApp("mt32"),
+	: CStdlibApp("mt32-pi"),
 
 	  mSerial(&mInterrupt, true),
 #ifdef HDMI_CONSOLE
@@ -138,6 +142,7 @@ bool CKernel::Initialize(void)
 	if (!mSynth->Initialize())
 		return false;
 
+	mLogger.Write(GetKernelName(), LogNotice, "mt32-pi " MT32_PI_VERSION);
 	mLogger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
 	CCPUThrottle::Get()->DumpStatus();
 
@@ -174,8 +179,6 @@ bool CKernel::InitPCM5242()
 
 CStdlibApp::TShutdownMode CKernel::Run(void)
 {
-	mLogger.Write(GetKernelName(), LogNotice, "Starting up...");
-
 	CUSBMIDIDevice *pMIDIDevice = static_cast<CUSBMIDIDevice *>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
 	{
