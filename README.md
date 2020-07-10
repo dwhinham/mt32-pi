@@ -62,7 +62,7 @@ You can build a simple circuit based on an opto-isolator, a diode, and a few res
 ## FAQ
 
 * **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
-  **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildro) branch.
+  **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
 
 ## Disclaimer
 
