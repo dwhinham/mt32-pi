@@ -59,6 +59,21 @@ You can build a simple circuit based on an opto-isolator, a diode, and a few res
 ### Breadboard example
 ![](docs/gpio_midi_bb.svg)
 
+## Custom System Exclusive messages
+
+`mt32-pi` responds to MT-32 SysEx messages as you would expect, but it can also respond to its own commands. `mt32-pi` listens for manufacturer ID `0x7D`, or the "non-commercial/educational use" special ID. Therefore, a complete `mt32-pi` SysEx message looks like:
+
+```
+F0 7D { command } F7
+```
+
+Currently there is only one implemented command, although more will probably be added in the future.
+Please note that these commands are subject to change until the project reaches a mature state.
+
+| Command | Description              |
+|---------|--------------------------|
+| `00`    | Reboot the Raspberry Pi. |
+
 ## FAQ
 
 * **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
