@@ -277,7 +277,7 @@ void CKernel::UpdateSerialMIDI()
 					mSerialMIDIMessage[mSerialMIDIState++] = data;
 
 				// System real-time message - single byte, handle immediately
-				else if (data >= 0xF8 && data <= 0xFF)
+				else if (data >= 0xF8)
 					MIDIPacketHandler(0, &data, 1);
 
 				// SysEx

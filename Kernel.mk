@@ -8,6 +8,8 @@ OBJS=main.o kernel.o mt32synth.o
 
 include $(CIRCLEHOME)/Rules.mk
 
+CFLAGS +=	-Werror -Wextra -Wno-unused-parameter
+
 CFLAGS +=	-I "$(NEWLIBDIR)/include" \
 			-I $(STDDEF_INCPATH) \
 			-I $(CIRCLESTDLIBHOME)/include
