@@ -1,6 +1,7 @@
 # Build directories
 build-munt
 sdcard/*
+!sdcard/*.cfg
 !sdcard/*.txt
 
 # Kernel files
@@ -9,6 +10,12 @@ sdcard/*
 *.img
 *.lst
 *.map
+
+# ROM files
+mt32_control.h
+mt32_pcm.h
+MT32_CONTROL.ROM
+MT32_PCM.ROM
 
 #
 # GitHub C/C++ template below 
