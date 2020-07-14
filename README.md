@@ -149,7 +149,7 @@ Please note that these commands are subject to change until the project reaches 
 
 ## ⚖️ Disclaimer
 
-This project, just like [Munt], has no affiliation with Roland Corporation. Use of "Roland" or other registered trademarks is purely for informational purposes only, and implies no endorsement by or affiliation with thheir respective owners.
+This project, just like [Munt], has no affiliation with Roland Corporation. Use of "Roland" or other registered trademarks is purely for informational purposes only, and implies no endorsement by or affiliation with their respective owners.
 
 ## 🙌 Acknowledgments
 
