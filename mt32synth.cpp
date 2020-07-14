@@ -41,6 +41,7 @@ CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResampler
 
 	  mSampleRate(pSampleRate),
 	  mResamplerQuality(pResamplerQuality),
+	  mSampleRateConverter(nullptr),
 
 #ifdef BAKE_MT32_ROMS
 	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
