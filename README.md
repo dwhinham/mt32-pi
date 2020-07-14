@@ -96,10 +96,11 @@ Feel free to open an issue if you'd like to help us support your DAC, or even ju
 
 The following models of DAC have been confirmed as working by our testers. Please note the necessary configuration file options.
 
-| Manufacturer | Device            | DAC chip | Config file options                              | Comments                                          |
-|--------------|-------------------|----------|--------------------------------------------------|---------------------------------------------------|
-| Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.     |
-| IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham. |
+| Manufacturer | Device            | DAC chip | Config file options                              | Comments                                                                                    |
+|--------------|-------------------|----------|--------------------------------------------------|---------------------------------------------------------------------------------------------|
+| Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham. |
+| Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                               |
+| IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                           |
 
 ### Finding the I2C address of your DAC
 
@@ -164,6 +165,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
+[GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
 [inih]: https://github.com/benhoyt/inih
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
