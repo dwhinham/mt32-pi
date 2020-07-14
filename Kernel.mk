@@ -4,7 +4,15 @@
 
 include Config.mk
 
-OBJS=main.o kernel.o mt32synth.o
+OBJS=main.o kernel.o config.o mt32synth.o
+
+#
+# inih
+#
+OBJS		+= $(INIHHOME)/ini.o
+INCLUDE		+= -I $(INIHHOME)
+EXTRACLEAN	+= $(INIHHOME)/ini.d \
+			   $(INIHHOME)/ini.o
 
 include $(CIRCLEHOME)/Rules.mk
 

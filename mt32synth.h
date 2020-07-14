@@ -37,21 +37,33 @@
 class CMT32SynthBase : public MT32Emu::ReportHandler
 {
 public:
+	enum class ResamplerQuality
+	{
+		None,
+		Fastest,
+		Fast,
+		Good,
+		Best
+	};
+
 	virtual bool Initialize();
 	void HandleMIDIControlMessage(u32 pMessage);
 	void HandleMIDISysExMessage(u8* pData, size_t pSize);
 	void AllSoundOff();
 
 protected:
-	CMT32SynthBase();
-	virtual ~CMT32SynthBase() = default;
+	CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality);
+	virtual ~CMT32SynthBase();
 
-	CLogger* mLogger;
 	MT32Emu::Synth *mSynth;
 
 	int mLowLevel;
 	int mNullLevel;
 	int mHighLevel;
+
+	unsigned int mSampleRate;
+	ResamplerQuality mResamplerQuality;
+	MT32Emu::SampleRateConverter *mSampleRateConverter;
 
 private:
 	// ReportHandler
@@ -68,11 +80,9 @@ private:
 class CMT32SynthI2S : public CMT32SynthBase, public CI2SSoundBaseDevice
 {
 public:
-	CMT32SynthI2S(CInterruptSystem *pInterrupt, unsigned pSampleRate, unsigned pChunkSize)
-	: CMT32SynthBase(),
-	  CI2SSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize),
-	  mSampleRate(pSampleRate),
-	  mSampleRateConverter(nullptr)
+	CMT32SynthI2S(CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
+	: CMT32SynthBase(pSampleRate, pResamplerQuality),
+	  CI2SSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
 	{
 		mLowLevel = GetRangeMin();
 		mHighLevel = GetRangeMax();
@@ -80,41 +90,27 @@ public:
 		CLogger::Get()->Write("mt32synthi2s", LogNotice, "Audio output range: lo=%d null=%d hi=%d", mLowLevel, mNullLevel, mHighLevel);
 	}
 
-	virtual ~CMT32SynthI2S()
-	{
-		if (mSampleRateConverter)
-			delete mSampleRateConverter;
-	}
-
 	virtual bool Initialize()
 	{
-		if (CMT32SynthBase::Initialize())
-		{
-			mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, MT32Emu::SamplerateConversionQuality_GOOD);
-			Start();
-			return true;
-		}
+		if (!CMT32SynthBase::Initialize())
+			return false;
 
-		return false;
+		Start();
+		return true;
 	}
 
 private:
 	// CSoundBaseDevice
 	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
-
-	unsigned mSampleRate;
-	MT32Emu::SampleRateConverter *mSampleRateConverter;
 };
 
 // TODO: Remove duplicate code/decide on better inheritance hierarchy
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
 {
 public:
-	CMT32SynthPWM(CInterruptSystem *pInterrupt, unsigned pSampleRate, unsigned pChunkSize)
-	: CMT32SynthBase(),
-	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize),
-	  mSampleRate(pSampleRate),
-	  mSampleRateConverter(nullptr)
+	CMT32SynthPWM(CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
+	: CMT32SynthBase(pSampleRate, pResamplerQuality),
+	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
 	{
 		mLowLevel = GetRangeMin();
 		mHighLevel = GetRangeMax();
@@ -122,30 +118,18 @@ public:
 		CLogger::Get()->Write("mt32synthpwm", LogNotice, "Audio output range: lo=%d null=%d hi=%d", mLowLevel, mNullLevel, mHighLevel);
 	}
 
-	virtual ~CMT32SynthPWM()
-	{
-		if (mSampleRateConverter)
-			delete mSampleRateConverter;
-	}
-
 	virtual bool Initialize()
 	{
-		if (CMT32SynthBase::Initialize())
-		{
-			mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, MT32Emu::SamplerateConversionQuality_GOOD);
-			Start();
-			return true;
-		}
+		if (!CMT32SynthBase::Initialize())
+			return false;
 
-		return false;
+		Start();
+		return true;
 	}
 
 private:
 	// CSoundBaseDevice
 	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
-
-	unsigned mSampleRate;
-	MT32Emu::SampleRateConverter *mSampleRateConverter;
 };
 
 #endif

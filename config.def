@@ -1,0 +1,18 @@
+// Config option definition file.
+// Format: CFG_{A|S}(<INI section>, <INI name>, <type>, <class member name>, <default>)
+//
+// CFG_A (auto) means this option needs no special handling, CFG_S (special) needs additional parsing logic.
+
+CFG_A(midi,		usb,					bool,						mMIDIUSB,					true							)
+CFG_A(audio,	output_device,			AudioOutputDevice,			mAudioOutputDevice,			AudioOutputDevice::PWM			)
+CFG_A(audio,	sample_rate,			int,						mAudioSampleRate,			96000							)
+CFG_A(audio,	chunk_size,				int,						mAudioChunkSize,			512								)
+CFG_A(audio,	i2c_dac_init,			AudioI2CDACInit,			mAudioI2CDACInit,			AudioI2CDACInit::PCM51xx		)
+CFG_A(mt32emu,	resampler_quality,		MT32EmuResamplerQuality,	mMT32EmuResamplerQuality,	MT32EmuResamplerQuality::Good	)
+CFG_A(lcd,		type,					LCDType,					mLCDType,					LCDType::None					)
+
+// Special handling for hex string -> int conversion
+CFG_S(audio,	i2c_dac_address,		int,						mAudioI2CDACAddress,		0x4c							)
+
+#undef CFG_A
+#undef CFG_S

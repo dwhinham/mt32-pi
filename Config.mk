@@ -43,4 +43,6 @@ MT32EMUHOME=$(realpath external/munt/mt32emu)
 MT32EMUBUILDDIR=build-munt
 MT32EMULIB=$(MT32EMUBUILDDIR)/libmt32emu.a
 
+INIHHOME=$(realpath external/inih)
+
 -include $(CIRCLE_STDLIB_CONFIG)

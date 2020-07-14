@@ -35,15 +35,9 @@
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 300
 
-#define SAMPLE_RATE 96000
-#define CHUNK_SIZE 512				// Min = 32 for I2S
-
 #define I2C_MASTER_DEVICE	1		// 0 on Raspberry Pi 1 Rev. 1 boards, 1 otherwise
 #define I2C_MASTER_CONFIG	0		// 0 or 1 on Raspberry Pi 4, 0 otherwise
 #define I2C_FAST_MODE		TRUE	// standard mode (100 Kbps) or fast mode (400 Kbps)
-
-#define I2C_DAC_PCM5242		0
-#define I2C_DAC_ADDRESS		0x4C	// standard mode (100 Kbps) or fast mode (400 Kbps)
 
 CKernel *CKernel::pThis = nullptr;
 
@@ -106,7 +100,6 @@ bool CKernel::Initialize(void)
 	if (!mTimer.Initialize())
 		return false;
 
-#ifndef BAKE_MT32_ROMS
 	if (!mEMMC.Initialize())
 		return false;
 
@@ -117,28 +110,34 @@ bool CKernel::Initialize(void)
 		mLogger.Write(GetKernelName(), LogError, "Cannot mount partition: %s", partitionName);
 		return false;
 	}
-#endif
+
+	// Initialize newlib stdio with a reference to Circle's file system
+	CGlueStdioInit(mFileSystem);
+
+	if (!mConfig.Initialize("mt32-pi.cfg"))
+		mLogger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
 
 #if !defined(__aarch64__) || !defined(LEAVE_QEMU_ON_HALT)
 	// The USB driver is not supported under 64-bit QEMU, so
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
-	if (!mUSBHCI.Initialize())
+	if (mConfig.mMIDIUSB && !mUSBHCI.Initialize())
 		return false;
 #endif
-
-	// Initialize newlib stdio with a reference to Circle's file system
-	CGlueStdioInit(mFileSystem);
 
 	if (!mI2CMaster.Initialize())
 		return false;
 
-#if I2C_DAC_PCM5242
-	InitPCM5242();
-	mSynth = new CMT32SynthI2S(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
-#else
-	mSynth = new CMT32SynthPWM(&mInterrupt, SAMPLE_RATE, CHUNK_SIZE);
-#endif
+	if (mConfig.mAudioOutputDevice == CConfig::AudioOutputDevice::I2SDAC)
+	{
+		if (mConfig.mAudioI2CDACInit == CConfig::AudioI2CDACInit::PCM51xx)
+			InitPCM51xx(mConfig.mAudioI2CDACAddress);
+
+		mSynth = new CMT32SynthI2S(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+	}
+	else
+		mSynth = new CMT32SynthPWM(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+
 	if (!mSynth->Initialize())
 		return false;
 
@@ -150,8 +149,7 @@ bool CKernel::Initialize(void)
 }
 
 // TODO: Generic configurable DAC init class
-// TODO: Probably works on PCM5122 too
-bool CKernel::InitPCM5242()
+bool CKernel::InitPCM51xx(u8 pAddress)
 {
 	unsigned char initBytes[][2] =
 	{
@@ -167,7 +165,7 @@ bool CKernel::InitPCM5242()
 
 	for (auto& command : initBytes)
 	{
-		if (mI2CMaster.Write(I2C_DAC_ADDRESS, &command, sizeof(command)) != sizeof(command))
+		if (mI2CMaster.Write(pAddress, &command, sizeof(command)) != sizeof(command))
 		{
 			CLogger::Get()->Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
 			return false;

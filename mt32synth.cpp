@@ -32,12 +32,15 @@ static const char MT32PCMROMName[] = "MT32_PCM.ROM";
 
 static const char MT32SynthName[] = "mt32synth";
 
-CMT32SynthBase::CMT32SynthBase()
+CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality)
 	: mSynth(nullptr),
 
 	  mLowLevel(0),
 	  mNullLevel(0),
 	  mHighLevel(0),
+
+	  mSampleRate(pSampleRate),
+	  mResamplerQuality(pResamplerQuality),
 
 #ifdef BAKE_MT32_ROMS
 	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
@@ -46,6 +49,15 @@ CMT32SynthBase::CMT32SynthBase()
 	  mControlROMImage(nullptr),
 	  mPCMROMImage(nullptr)
 {
+}
+
+CMT32SynthBase::~CMT32SynthBase()
+{
+	if (mSynth)
+		delete mSynth;
+
+	if (mSampleRateConverter)
+		delete mSampleRateConverter;
 }
 
 bool CMT32SynthBase::Initialize()
@@ -67,8 +79,39 @@ bool CMT32SynthBase::Initialize()
 	mControlROMImage = MT32Emu::ROMImage::makeROMImage(&mControlFile);
 	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
 	mSynth = new MT32Emu::Synth(this);
+
 	if (mSynth->open(*mControlROMImage, *mPCMROMImage))
+	{
+		if (mResamplerQuality != ResamplerQuality::None)
+		{
+			auto quality = MT32Emu::SamplerateConversionQuality_GOOD;
+			switch (mResamplerQuality)
+			{
+				case ResamplerQuality::Fastest:
+					quality = MT32Emu::SamplerateConversionQuality_FASTEST;
+					break;
+
+				case ResamplerQuality::Fast:
+					quality = MT32Emu::SamplerateConversionQuality_FAST;
+					break;
+				
+				case ResamplerQuality::Good:
+					quality = MT32Emu::SamplerateConversionQuality_GOOD;
+					break;
+
+				case ResamplerQuality::Best:
+					quality = MT32Emu::SamplerateConversionQuality_BEST;
+					break;
+
+				default:
+					break;
+			}
+			
+			mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, quality);
+		}
+
 		return true;
+	}
 
 	return false;
 }
@@ -114,7 +157,10 @@ bool CMT32SynthBase::onMIDIQueueOverflow()
 unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
 	float samples[nChunkSize];
-	mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	if (mSampleRateConverter)
+		mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	else
+		mSynth->render(samples, nChunkSize / 2);
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{
@@ -131,7 +177,10 @@ unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 unsigned int CMT32SynthPWM::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
 	float samples[nChunkSize];
-	mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	if (mSampleRateConverter)
+		mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	else
+		mSynth->render(samples, nChunkSize / 2);
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{

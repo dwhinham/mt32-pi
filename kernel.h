@@ -28,6 +28,7 @@
 
 #include <vector>
 
+#include "config.h"
 #include "mt32synth.h"
 
 class CKernel : public CStdlibApp
@@ -48,21 +49,22 @@ protected:
 	CTimer mTimer;
 	CLogger mLogger;
 	CUSBHCIDevice mUSBHCI;
-#ifndef BAKE_MT32_ROMS
 	CEMMCDevice mEMMC;
-#endif
 	FATFS mFileSystem;
 
 	CI2CMaster mI2CMaster;
 
 private:
-	bool InitPCM5242();
+	bool InitPCM51xx(u8 pAddress);
 
 	bool ParseSysEx();
 
 	void UpdateSerialMIDI();
 	void UpdateActiveSense();
 	void LEDOn();
+
+	// Configuration
+	CConfig mConfig;
 
 	// Serial GPIO MIDI
 	bool mSerialMIDIEnabled;
