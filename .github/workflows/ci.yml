@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [pi3, pi4]
+        board: [pi2, pi3, pi4]
     env:
       toolchain-version: 9.2-2019.12
 
