@@ -1,6 +1,6 @@
 name: mt32-pi CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
