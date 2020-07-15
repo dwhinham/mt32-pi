@@ -8,8 +8,8 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 ## ✔️ Project status
 
-* Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model B+.
-  + It's _possible_ that the Pi 2 may be good enough, but I don't have one for testing. Can you help?
+* Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model B & B+.
+  + Pi 2 works, but only with concessions on playback quality.
   + Pi 0 and 1 are unfortunately too slow, even with an overclock.
 * PWM headphone jack audio.
   + Quality is known to be poor (aliasing/distortion on quieter sounds).
@@ -58,6 +58,7 @@ If you're shopping for a USB MIDI interface, the following devices have been con
 |--------------|------------------------------------------------------------------|--------------------------------------------------------|
 | M-Audio      | [Uno](https://m-audio.com/products/view/uno)                     | 1 in, 1 out; male DIN plugs. Tested by @dwhinham.      |
 | M-Audio      | [MIDISport 1x1](https://m-audio.com/products/view/midisport-1x1) | 1 in, 1 out; female DIN sockets. Tested by @nswaldman. |
+| Roland       | [UM-ONE mk2](https://www.roland.com/global/products/um-one_mk2/) | 1 in, 1 out; male DIN plugs. Tested by @nswaldman. |
 
 ## 🎹 GPIO MIDI interface
 
