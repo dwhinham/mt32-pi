@@ -6,33 +6,77 @@
 A work-in-progress baremetal Roland MT-32 emulator for the Raspberry Pi 3 or above, based on [Munt] and [Circle].
 Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module](https://en.wikipedia.org/wiki/Roland_MT-32) used by countless classic MS-DOS and Sharp X68000 games, that starts up in seconds!
 
+## 🔖 Table of contents
+
+<!-- Generated with jonschlinkert/markdown-toc -->
+<!-- Needs manual emoji fixup because of https://github.com/jonschlinkert/markdown-toc/issues/119 -->
+
+<!-- toc -->
+
+- [✔️ Project status](#-project-status)
+- [✨ Quick-start guide](#-quick-start-guide)
+- [📝 Configuration file](#-configuration-file)
+- [🎹 MIDI connectivity](#-midi-connectivity)
+  * [USB MIDI interfaces](#usb-midi-interfaces)
+    + [Compatibility](#compatibility)
+  * [GPIO MIDI interface](#gpio-midi-interface)
+    + [Schematic](#schematic)
+    + [Breadboard example](#breadboard-example)
+- [🔊 I2S DAC support](#-i2s-dac-support)
+  * [Setup](#setup)
+  * [Compatibility](#compatibility-1)
+  * [Finding the I2C address of your DAC](#finding-the-i2c-address-of-your-dac)
+- [📺 LCD and OLED displays](#-lcd-and-oled-displays)
+  * [Drivers](#drivers)
+    + [Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)](#hitachi-hd44780-compatible-4-bit-driver-hd44780_4bit)
+    + [Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-i2c-driver-hd44780_i2c)
+    + [SSD1306 I2C driver (`ssd1306_i2c`)](#ssd1306-i2c-driver-ssd1306_i2c)
+  * [Compatibility](#compatibility-2)
+- [🔩 Custom hardware](#-custom-hardware)
+- [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
+- [❓ FAQ](#-faq)
+- [⚖️ Disclaimer](#-disclaimer)
+- [🙌 Acknowledgments](#-acknowledgments)
+
+<!-- tocstop -->
+
 ## ✔️ Project status
 
-* Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model B & B+.
-  + Pi 2 works, but only with concessions on playback quality.
-  + Pi 0 and 1 are unfortunately too slow, even with an overclock.
-* PWM headphone jack audio.
-  + Quality is known to be poor (aliasing/distortion on quieter sounds).
-  + It is not currently known whether this can be improved or not.
-* [I2S Hi-Fi DAC support](#-i2s-dac-support).
-  + This is the recommended audio output method for the best quality audio.
-* [USB](#-usb-midi-interfaces) or [GPIO](#-gpio-midi-interface) MIDI interface.
-* [Config file](#-configuration-file) for selecting hardware options and fine tuning.
-* [LCD status screen support](#-lcd-and-oled-displays) (for MT-32 SysEx messages and status information).
-* Control buttons, rotary encoder etc. is _planned_.
-* A port of FluidSynth is _planned_.
-* Network MIDI and auto-update is _planned_.
+- Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model B & B+.
+  * Pi 2 works, but only with concessions on playback quality.
+  * Pi 0 and 1 are unfortunately too slow, even with an overclock.
+- PWM headphone jack audio.
+  * Quality is known to be poor (aliasing/distortion on quieter sounds).
+  * It is not currently known whether this can be improved or not.
+- [I2S Hi-Fi DAC support](#-i2s-dac-support).
+  * This is the recommended audio output method for the best quality audio.
+- [USB](#usb-midi-interfaces) or [GPIO](#gpio-midi-interface) MIDI interface.
+- [Config file](#-configuration-file) for selecting hardware options and fine tuning.
+- [LCD status screen support](#-lcd-and-oled-displays) (for MT-32 SysEx messages and status information).
+- Control buttons, rotary encoder etc. is _planned_.
+- A port of FluidSynth is _planned_.
+- Network MIDI and auto-update is _planned_.
 
 ## ✨ Quick-start guide
 
-* Download the latest release from the [Releases] section.
-* Extract contents to a blank FAT32-formatted SD card.
-  + If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
-* Add `MT32_CONTROL.ROM` and `MT32_PCM.ROM` to the root of the SD card - you have to provide these for copyright reasons.
-* Connect a [USB MIDI interface](#-usb-midi-interfaces) or [GPIO MIDI circuit](#-gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
-* Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
+- Download the latest release from the [Releases] section.
+- Extract contents to a blank FAT32-formatted SD card.
+  * If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
+- Add `MT32_CONTROL.ROM` and `MT32_PCM.ROM` to the root of the SD card - you have to provide these for copyright reasons.
+- Connect a [USB MIDI interface](#usb-midi-interfaces) or [GPIO MIDI circuit](#gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
+- Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
 
-## 🎹 MIDI connection examples
+## 📝 Configuration file
+
+`mt32-pi` tries to read a configuration file from the root of the SD card named `mt32-pi.cfg`. Please read the file for a description of all the available options. 
+
+> **Note:** Don't confuse this file with `config.txt` or `cmdline.txt` - they are for configuring the Raspberry Pi itself, and you should not need to alter these when using `mt32-pi`.
+
+## 🎹 MIDI connectivity
+
+The simplest way to get MIDI data into `mt32-pi` is with a [USB MIDI interface](#usb-midi-interfaces). More advanced users or electronics enthusiasts may wish to build a [GPIO MIDI interface](#gpio-midi-interface).
+
+Here are some typical connection examples:
 
 ``` 
 [ Pi ] --> [ USB/GPIO MIDI ] <===> [ USB MIDI ] <-- [ Modern PC ]
@@ -41,19 +85,13 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 [ Pi ] --> [ USB/GPIO MIDI ] <===> [ Synthesizer keyboard or controller ]
 ```
 
-## 📝 Configuration file
-
-`mt32-pi` tries to read a configuration file from the root of the SD card named `mt32-pi.cfg`. Please read the file for a description of all the available options. 
-
-> **Note:** Don't confuse this file with `config.txt` or `cmdline.txt` - they are for configuring the Raspberry Pi itself, and you should not need to alter these when using `mt32-pi`.
-
-## 🎹 USB MIDI interfaces
+### USB MIDI interfaces
 
 Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
 
 > **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
 
-### Compatibility
+#### Compatibility
 
 If you're shopping for a USB MIDI interface, the following devices have been confirmed as working properly by our testers. Feel free to contribute test results with your own MIDI interfaces and we can list known working ones!
  
@@ -63,16 +101,16 @@ If you're shopping for a USB MIDI interface, the following devices have been con
 | M-Audio      | [MIDISport 1x1](https://m-audio.com/products/view/midisport-1x1) | 1 in, 1 out; female DIN sockets. Tested by @nswaldman. |
 | Roland       | [UM-ONE mk2](https://www.roland.com/global/products/um-one_mk2/) | 1 in, 1 out; male DIN plugs. Tested by @nswaldman.     |
 
-## 🎹 GPIO MIDI interface
+### GPIO MIDI interface
 
 You can build a simple circuit based on an opto-isolator, a diode, and a few resistors. If `mt32-pi` does not detect any USB MIDI devices present on startup, it will expect to receive input on the UART RX pin (pin 10).
 
 > **Tip:** You can disable detection of USB MIDI interfaces by setting `usb = off` in the config file. This can shave off a couple of seconds of boot time as USB initialization is then skipped on startup.
 
-### Schematic
+#### Schematic
 ![](docs/gpio_midi_schem.svg)
 
-### Breadboard example
+#### Breadboard example
 ![](docs/gpio_midi_bb.svg)
 
 ## 🔊 I2S DAC support
@@ -85,8 +123,8 @@ Luckily, a plethora of inexpensive DAC ([digital-to-analog converter]) hardware 
 
 ### Setup
 
-* `mt32-pi` defaults to PWM (headphone) output. Edit `mt32-pi.cfg` and change `output_device` to `i2s` to enable the I2S DAC driver.
-* If your DAC requires software configuration, you may need to edit the `i2c_dac_address` and `i2c_dac_init` options to suit your particular DAC. Continue reading for further details.
+- `mt32-pi` defaults to PWM (headphone) output. Edit `mt32-pi.cfg` and change `output_device` to `i2s` to enable the I2S DAC driver.
+- If your DAC requires software configuration, you may need to edit the `i2c_dac_address` and `i2c_dac_init` options to suit your particular DAC. Continue reading for further details.
 
 ### Compatibility
 
@@ -114,12 +152,12 @@ The `i2c_dac_address` configuration file option determines what address on the I
 
 If your DAC does not appear in the compatibility table above, you can help by carrying out the following:
 
-* Connect the DAC to your Raspberry Pi.
-* Insert an SD card containing the latest version of Raspberry Pi OS (aka. Raspbian) and boot the Pi.
-* Run the command `sudo raspi-config`.
-* Select "Interfacing Options", followed by "I2C" and "Yes" to enable the I2C kernel modules.
-* Exit `raspi-config`, and run the command `sudo apt-get install i2c-tools` to install some I2C utilities.
-* Run the command `i2cdetect -y 1`. The output should be like the following:
+- Connect the DAC to your Raspberry Pi.
+- Insert an SD card containing the latest version of Raspberry Pi OS (aka. Raspbian) and boot the Pi.
+- Run the command `sudo raspi-config`.
+- Select "Interfacing Options", followed by "I2C" and "Yes" to enable the I2C kernel modules.
+- Exit `raspi-config`, and run the command `sudo apt-get install i2c-tools` to install some I2C utilities.
+- Run the command `i2cdetect -y 1`. The output should be like the following:
   ```
        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
   00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
@@ -131,8 +169,8 @@ If your DAC does not appear in the compatibility table above, you can help by ca
   60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
   70: -- -- -- -- -- -- -- --          
   ```
-* In this example, the address is **4d**. Make a note of this and set `i2c_dac_address` in `mt32-pi.cfg`.
-* If your DAC now works, open an issue to let us know, and we can add it to the table! Otherwise, open an issue anyway, and we can try to work out how to support it.
+- In this example, the address is **4d**. Make a note of this and set `i2c_dac_address` in `mt32-pi.cfg`.
+- If your DAC now works, open an issue to let us know, and we can add it to the table! Otherwise, open an issue anyway, and we can try to work out how to support it.
 
 ## 📺 LCD and OLED displays
 
@@ -140,9 +178,13 @@ If your DAC does not appear in the compatibility table above, you can help by ca
 
 The MT-32 had a single row, 20 column display, but these are hard to find nowadays. 20x2 and 20x4 displays are common however, and `mt32-pi` can use the extra rows to display additional information.
 
-To enable a display, you will need to edit `mt32-pi.cfg` accordingly, and correctly connect your display to the Raspberry Pi. There are currently three different LCD drivers, which are detailed in the following sections.
+To enable a display, you will need to edit `mt32-pi.cfg` accordingly, and correctly connect your display to the Raspberry Pi.
 
-### Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)
+### Drivers
+
+There are currently three different LCD drivers, which are detailed in the following sections.
+
+#### Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)
 
 [<img width="280rem" align="right" src="docs/hd44780_20x4.jpg">](docs/hd44780_20x4.jpg)
 
@@ -165,7 +207,7 @@ You will also need to connect a power source and ground to your display. Consult
 
 > **Note:** The GPIO assignment could change in later versions as more functionality is added, so **BE WARNED** if you are thinking about designing hardware.
 
-### Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)
+#### Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)
 
 [<img width="280rem" align="right" src="docs/hd44780_20x2.jpg">](docs/hd44780_20x2.jpg)
 
@@ -175,7 +217,7 @@ These displays are very convenient as they only need 4 wires to connect to the P
 
 As with all I2C devices, you must know the LCD's I2C address in order for it to work. You should be able to find its address on the datasheet, or the "backpack" may have jumpers to configure the address. In case of doubt, you can connect the display and use Linux to discover your display using the [same procedure described in the DAC section](#-finding-the-i2c-address-of-your-DAC).
 
-### SSD1306 I2C driver (`ssd1306_i2c`)
+#### SSD1306 I2C driver (`ssd1306_i2c`)
 
 [<img width="280rem" align="right" src="docs/ssd1306_128x32.jpg">](docs/ssd1306_128x32.jpg)
 
@@ -222,9 +264,9 @@ Please note that these commands are subject to change until the project reaches 
 
 ## ❓ FAQ
 
-* **Q:** Why do I only see a rainbow on my HDMI-connected monitor or television? Doesn't this normally mean the Pi has failed to boot?  
+- **Q:** Why do I only see a rainbow on my HDMI-connected monitor or television? Doesn't this normally mean the Pi has failed to boot?  
   **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
-* **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
+- **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
   **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
 
 ## ⚖️ Disclaimer
@@ -233,10 +275,10 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 
 ## 🙌 Acknowledgments
 
-* Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
-* The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
-* The [Circle] and [circle-stdlib] projects for providing the best C++ baremetal framework for the Raspberry Pi.
-* The [inih] project for a nice, lightweight config file parser.
+- Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
+- The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
+- The [Circle] and [circle-stdlib] projects for providing the best C++ baremetal framework for the Raspberry Pi.
+- The [inih] project for a nice, lightweight config file parser.
 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
 [128x32 OLED]: https://www.aliexpress.com/item/32661842518.html?spm=a2g0s.9042311.0.0.27424c4dSo7J9L
