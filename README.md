@@ -134,6 +134,16 @@ If your DAC does not appear in the compatibility table above, you can help by ca
 * In this example, the address is **4d**. Make a note of this and set `i2c_dac_address` in `mt32-pi.cfg`.
 * If your DAC now works, open an issue to let us know, and we can add it to the table! Otherwise, open an issue anyway, and we can try to work out how to support it.
 
+## 🔩 Custom hardware
+
+[<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
+
+The community has been designing some excellent custom hardware for use with `mt32-pi`. The [PI-MIDI] by @arananet is the first example, which provides an OLED display, MIDI input, and a DAC for a complete plug 'n' play experience!
+
+If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
+
+> **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
+
 ## 💬 Custom System Exclusive messages
 
 `mt32-pi` responds to MT-32 SysEx messages as you would expect, but it can also respond to its own commands. `mt32-pi` listens for manufacturer ID `0x7D`, or the "non-commercial/educational use" special ID. Therefore, a complete `mt32-pi` SysEx message looks like:
@@ -153,16 +163,6 @@ Please note that these commands are subject to change until the project reaches 
 
 * **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
   **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
-
-## 🔩 Custom hardware
-
-[<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
-
-The community has been designing some excellent custom hardware for use with `mt32-pi`. The [PI-MIDI] by @arananet is the first example, which provides an OLED display, MIDI input, and a DAC for a complete plug 'n' play experience!
-
-If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
-
-> **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
 
 ## ⚖️ Disclaimer
 
