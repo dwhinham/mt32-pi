@@ -1,9 +1,12 @@
 [submodule "external/circle-stdlib"]
 	path = external/circle-stdlib
 	url = https://github.com/smuehlst/circle-stdlib
+	ignore = dirty
 [submodule "external/munt"]
 	path = external/munt
 	url = https://github.com/munt/munt.git
+	ignore = dirty
 [submodule "external/inih"]
 	path = external/inih
 	url = https://github.com/benhoyt/inih.git
+	ignore = dirty
