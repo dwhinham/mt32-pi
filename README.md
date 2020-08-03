@@ -18,7 +18,10 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
   + This is the recommended audio output method for the best quality audio.
 * [USB](#-usb-midi-interfaces) or [GPIO](#-gpio-midi-interface) MIDI interface.
 * [Config file](#-configuration-file) for selecting hardware options and fine tuning.
-* LCD status screen support (for MT-32 SysEx messages and status information) is **in progress**.
+* LCD status screen support (for MT-32 SysEx messages and status information) is **almost ready**.
+* Control buttons, rotary encoder etc. is planned.
+* A port of FluidSynth is planned.
+* Network MIDI and auto-update is planned.
 
 ## ✨ Quick-start guide
 
@@ -58,7 +61,7 @@ If you're shopping for a USB MIDI interface, the following devices have been con
 |--------------|------------------------------------------------------------------|--------------------------------------------------------|
 | M-Audio      | [Uno](https://m-audio.com/products/view/uno)                     | 1 in, 1 out; male DIN plugs. Tested by @dwhinham.      |
 | M-Audio      | [MIDISport 1x1](https://m-audio.com/products/view/midisport-1x1) | 1 in, 1 out; female DIN sockets. Tested by @nswaldman. |
-| Roland       | [UM-ONE mk2](https://www.roland.com/global/products/um-one_mk2/) | 1 in, 1 out; male DIN plugs. Tested by @nswaldman. |
+| Roland       | [UM-ONE mk2](https://www.roland.com/global/products/um-one_mk2/) | 1 in, 1 out; male DIN plugs. Tested by @nswaldman.     |
 
 ## 🎹 GPIO MIDI interface
 
@@ -88,8 +91,9 @@ Luckily, a plethora of inexpensive DAC ([digital-to-analog converter]) hardware 
 ### Compatibility
 
 Currently, we have been targeting DACs based on the Texas Instruments PCM5xxx series of chips due to their popularity, but other DACs could be supported quite easily.
+The NXP UDA1334 is also reportedly working well.
 
-Some more advanced DACs are configured by software (usually a Linux driver), whereas others need no configuration as they are preconfigured in hardware. This will vary between manufacturers, and so some editing of `mt32-pi.cfg` may be required.
+Some more advanced DACs are configured by software (normally a Linux driver), whereas others need no configuration as they are preconfigured in hardware. This will vary between manufacturers, and so some editing of `mt32-pi.cfg` may be required.
 
 > **Note:** If a DAC requires software configuration, they will not produce any sound until they have been properly initialized. This initialization is done by sending it a special sequence of commands over the I2C (not I2S) bus. For the PCM5xxx family, you can set `i2c_dac_init = pcm51xx` to enable this.
 
@@ -99,6 +103,7 @@ The following models of DAC have been confirmed as working by our testers. Pleas
 
 | Manufacturer | Device            | DAC chip | Config file options                              | Comments                                                                                    |
 |--------------|-------------------|----------|--------------------------------------------------|---------------------------------------------------------------------------------------------|
+| Arananet     | [PI-MIDI]         | UDA1334  | None required                                    | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.  |
 | Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham. |
 | Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                               |
 | IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                           |
@@ -149,6 +154,16 @@ Please note that these commands are subject to change until the project reaches 
 * **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
   **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
 
+## 🔩 Custom hardware
+
+[<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
+
+The community has been designing some excellent custom hardware for use with `mt32-pi`. The [PI-MIDI] by @arananet is the first example, which provides an OLED display, MIDI input, and a DAC for a complete plug 'n' play experience!
+
+If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
+
+> **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
+
 ## ⚖️ Disclaimer
 
 This project, just like [Munt], has no affiliation with Roland Corporation. Use of "Roland" or other registered trademarks is purely for informational purposes only, and implies no endorsement by or affiliation with their respective owners.
@@ -171,4 +186,5 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
+[PI-MIDI]: https://www.arananet.net/pedidos/product/pi-midi-a-baremetal-mt32-emulator-using-raspberry-pi3
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest
