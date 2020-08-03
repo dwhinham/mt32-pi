@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2020-08-03
+
+### Added
+
+- Initial support for HD44780 (4-bit direct and I2C) character LCDs and SSD1306 128x32 graphical OLEDs.
+  * Configuration file changes required - please check documentation.
+
 ## [0.2.1] - 2020-07-14
 
 ### Fixed
@@ -26,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/dwhinham/mt32-pi/compare/v0.2.1..v0.3.0
 [0.2.1]: https://github.com/dwhinham/mt32-pi/compare/v0.2.0..v0.2.1
 [0.2.0]: https://github.com/dwhinham/mt32-pi/compare/v0.1.0..v0.2.0
 [0.1.0]: https://github.com/dwhinham/mt32-pi/releases/tag/v0.1.0
