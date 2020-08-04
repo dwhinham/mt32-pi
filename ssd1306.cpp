@@ -302,7 +302,7 @@ void CSSD1306::DrawPartLevels()
 
 void CSSD1306::Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine, bool pImmediate)
 {
-	while (*pText && pCursorX < 128 / 6)
+	while (*pText && pCursorX < 20)
 	{
 		DrawChar(*pText++, pCursorX, pCursorY);
 		++pCursorX;
@@ -310,7 +310,7 @@ void CSSD1306::Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLin
 
 	if (pClearLine)
 	{
-		while (pCursorX < 128 / 6)
+		while (pCursorX < 20)
 			DrawChar(' ', pCursorX++, pCursorY);
 	}
 
