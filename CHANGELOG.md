@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incorrect `-dirty` suffix on version string on clean builds.
 - Possibility of overflowing text in SSD1306 Print() function.
+- Rhythm part on SSD1306 was inverted on activity instead of being blocked out.
 
 ## [0.3.0] - 2020-08-03
 

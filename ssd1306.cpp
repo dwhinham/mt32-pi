@@ -233,7 +233,7 @@ void CSSD1306::DrawStatusLine(const CMT32SynthBase* pSynth)
 	}
 
 	// Rhythm
-	DrawChar('R', 10, 0, (partStates >> 8));
+	DrawChar((partStates >> 8) ? 0x80 : 'R', 10, 0);
 
 	// Volume
 	sprintf(buf, "|vol:%3d", pSynth->GetMasterVolume());
