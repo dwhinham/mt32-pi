@@ -59,8 +59,14 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          sdcard
-          !sdcard/kernel*.img
+          sdcard/bcm2711-rpi-4-b.dtb
+          sdcard/bootcode.bin
+          sdcard/COPYING.linux
+          sdcard/fixup.dat
+          sdcard/fixup4.dat
+          sdcard/LICENCE.broadcom
+          sdcard/start.elf
+          sdcard/start4.elf
         key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
 
     - name: Download boot files if not retrieved from cache
