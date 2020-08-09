@@ -27,8 +27,8 @@
 #include <circle/usb/usbmidi.h>
 #include <circle/startup.h>
 
-#include "hd44780.h"
-#include "ssd1306.h"
+#include "lcd/hd44780.h"
+#include "lcd/ssd1306.h"
 
 #ifndef MT32_PI_VERSION
 #define MT32_PI_VERSION "<unknown>"

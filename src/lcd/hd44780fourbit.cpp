@@ -23,7 +23,7 @@
 #include <circle/logger.h>
 #include <circle/sched/scheduler.h>
 
-#include "hd44780.h"
+#include "lcd/hd44780.h"
 
 CHD44780FourBit::CHD44780FourBit(u8 pColumns, u8 pRows)
 	: CHD44780Base(pColumns, pRows),

@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "clcd.h"
+#include "lcd/clcd.h"
 #include "config.h"
 #include "mt32synth.h"
 

@@ -22,9 +22,8 @@
 #include <cmath>
 #include <type_traits>
 
-#include "font6x8.h"
-#include "mt32synth.h"
-#include "ssd1306.h"
+#include "lcd/font6x8.h"
+#include "lcd/ssd1306.h"
 
 // Compile-time (constexpr) font conversion functions.
 // The SSD1306 stores pixel data in columns, but our source font data is stored as rows.
@@ -294,7 +293,7 @@ void CSSD1306::DrawPartLevels()
 
 		for (u8 j = 0; j < 12; ++j)
 		{
-			mFramebuffer[256 + i * 14 + j + 3] = topVal;
+			mFramebuffer[256 + i * 14 + j + 3] = topVal;	
 			mFramebuffer[256 + i * 14 + j + 128 + 3] = bottomVal;
 		}
 	}

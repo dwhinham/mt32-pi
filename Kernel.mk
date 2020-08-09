@@ -4,48 +4,59 @@
 
 include Config.mk
 
-OBJS=main.o kernel.o config.o mt32synth.o hd44780.o hd44780fourbit.o hd44780i2c.o ssd1306.o
+OBJS		:=	src/main.o \
+				src/kernel.o \
+				src/config.o \
+				src/mt32synth.o \
+				src/lcd/hd44780.o \
+				src/lcd/hd44780fourbit.o \
+				src/lcd/hd44780i2c.o \
+				src/lcd/ssd1306.o
+
+EXTRACLEAN	+=	src/*.d src/*.o \
+				src/lcd/*.d src/lcd/*.o
 
 #
 # inih
 #
-OBJS		+= $(INIHHOME)/ini.o
-INCLUDE		+= -I $(INIHHOME)
-EXTRACLEAN	+= $(INIHHOME)/ini.d \
-			   $(INIHHOME)/ini.o
+OBJS		+=	$(INIHHOME)/ini.o
+INCLUDE		+=	-I $(INIHHOME)
+EXTRACLEAN	+=	$(INIHHOME)/ini.d \
+				$(INIHHOME)/ini.o
 
 include $(CIRCLEHOME)/Rules.mk
 
-CFLAGS +=	-Werror -Wextra -Wno-unused-parameter
+CFLAGS		+=	-Werror -Wextra -Wno-unused-parameter
 
-CFLAGS +=	-I "$(NEWLIBDIR)/include" \
-			-I $(STDDEF_INCPATH) \
-			-I $(CIRCLESTDLIBHOME)/include
+CFLAGS		+=	-I "$(NEWLIBDIR)/include" \
+				-I $(STDDEF_INCPATH) \
+				-I $(CIRCLESTDLIBHOME)/include \
+				-I include
 
-LIBS :=		$(CIRCLE_STDLIB_LIBS) \
-			$(CIRCLEHOME)/addon/SDCard/libsdcard.a \
-			$(CIRCLEHOME)/lib/usb/libusb.a \
-			$(CIRCLEHOME)/lib/input/libinput.a \
-			$(CIRCLEHOME)/addon/fatfs/libfatfs.a \
-			$(CIRCLEHOME)/lib/fs/libfs.a \
-			$(CIRCLEHOME)/lib/sched/libsched.a \
-			$(CIRCLEHOME)/lib/libcircle.a
+LIBS 		:=	$(CIRCLE_STDLIB_LIBS) \
+				$(CIRCLEHOME)/addon/SDCard/libsdcard.a \
+				$(CIRCLEHOME)/lib/usb/libusb.a \
+				$(CIRCLEHOME)/lib/input/libinput.a \
+				$(CIRCLEHOME)/addon/fatfs/libfatfs.a \
+				$(CIRCLEHOME)/lib/fs/libfs.a \
+				$(CIRCLEHOME)/lib/sched/libsched.a \
+				$(CIRCLEHOME)/lib/libcircle.a
 
 ifeq ($(HDMI_CONSOLE), 1)
-DEFINE		+= -D HDMI_CONSOLE
+DEFINE		+=	-D HDMI_CONSOLE
 endif
 
 -include $(DEPS)
 
-INCLUDE		+= -I $(MT32EMUBUILDDIR)/include
-EXTRALIBS	+= $(MT32EMULIB)
+INCLUDE		+=	-I $(MT32EMUBUILDDIR)/include
+EXTRALIBS	+=	$(MT32EMULIB)
 
 #
 # Generate version string from git tag
 #
 VERSION=$(shell git describe --tags --dirty 2>/dev/null)
 ifneq ($(VERSION),)
-DEFINE		+= -D MT32_PI_VERSION=\"$(VERSION)\"
+DEFINE		+=	-D MT32_PI_VERSION=\"$(VERSION)\"
 endif
 
 #
@@ -59,6 +70,6 @@ mt32_pcm.h: MT32_PCM.ROM
 $(MT32_ROM_HEADERS):
 	xxd -i $< > $@
 
-DEFINE		+= -D BAKE_MT32_ROMS
-EXTRACLEAN	+= $(MT32_ROM_HEADERS)
+DEFINE		+=	-D BAKE_MT32_ROMS
+EXTRACLEAN	+=	$(MT32_ROM_HEADERS)
 endif

@@ -25,7 +25,7 @@
 #include <circle/i2cmaster.h>
 #include <circle/types.h>
 
-#include "clcd.h"
+#include "lcd/clcd.h"
 #include "mt32synth.h"
 
 class CHD44780Base : public CCharacterLCD

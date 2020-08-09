@@ -24,7 +24,8 @@
 #include <circle/i2cmaster.h>
 #include <circle/types.h>
 
-#include "clcd.h"
+#include "lcd/clcd.h"
+#include "mt32synth.h"
 
 class CSSD1306 : public CCharacterLCD
 {

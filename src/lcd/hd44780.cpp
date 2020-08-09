@@ -23,7 +23,7 @@
 #include <circle/logger.h>
 #include <circle/sched/scheduler.h>
 
-#include "hd44780.h"
+#include "lcd/hd44780.h"
 
 // Custom characters for drawing bar graphs
 // Empty (0x20) and full blocks (0xFF) already exist in the character set

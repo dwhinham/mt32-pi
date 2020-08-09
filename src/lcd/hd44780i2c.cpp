@@ -20,7 +20,7 @@
 
 #include <circle/sched/scheduler.h>
 
-#include "hd44780.h"
+#include "lcd/hd44780.h"
 
 #define LCD_MODE_DATA		0
 #define LCD_MODE_COMMAND	1
