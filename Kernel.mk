@@ -31,7 +31,8 @@ CFLAGS		+=	-Werror -Wextra -Wno-unused-parameter
 CFLAGS		+=	-I "$(NEWLIBDIR)/include" \
 				-I $(STDDEF_INCPATH) \
 				-I $(CIRCLESTDLIBHOME)/include \
-				-I include
+				-I include \
+				-I .
 
 LIBS 		:=	$(CIRCLE_STDLIB_LIBS) \
 				$(CIRCLEHOME)/addon/SDCard/libsdcard.a \

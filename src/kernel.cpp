@@ -56,9 +56,7 @@ CKernel::CKernel(void)
 	  mTimer(&mInterrupt),
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
 	  mUSBHCI(&mInterrupt, &mTimer),
-#ifndef BAKE_MT32_ROMS
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
-#endif
 
 	  mI2CMaster(1, true),
 	  mLCD(nullptr),
