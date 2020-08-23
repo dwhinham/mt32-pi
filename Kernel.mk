@@ -8,12 +8,14 @@ OBJS		:=	src/main.o \
 				src/kernel.o \
 				src/config.o \
 				src/mt32synth.o \
+				src/control/mcp23017.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
 				src/lcd/hd44780i2c.o \
 				src/lcd/ssd1306.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
+				src/control/*.d src/control/*.o \
 				src/lcd/*.d src/lcd/*.o
 
 #

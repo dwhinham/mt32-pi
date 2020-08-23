@@ -29,6 +29,7 @@
 
 #include <vector>
 
+#include "control/mcp23017.h"
 #include "lcd/clcd.h"
 #include "config.h"
 #include "mt32synth.h"
@@ -57,6 +58,7 @@ protected:
 
 	CI2CMaster mI2CMaster;
 	CCharacterLCD* mLCD;
+	CMCP23017* mControl;
 
 private:
 	bool InitPCM51xx(u8 pAddress);

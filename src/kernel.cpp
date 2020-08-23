@@ -60,6 +60,7 @@ CKernel::CKernel(void)
 
 	  mI2CMaster(1, true),
 	  mLCD(nullptr),
+	  mControl(nullptr),
 
 	  mLCDLogTime(0),
 	  mLCDUpdateTime(0),
@@ -143,6 +144,14 @@ bool CKernel::Initialize(void)
 			delete mLCD;
 			mLCD = nullptr;
 		}
+	}
+
+	mControl = new CMCP23017(&mI2CMaster);
+	if (!mControl->Initialize())
+	{
+		mLogger.Write(GetKernelName(), LogWarning, "Control surface init failed");
+		delete mControl;
+		mControl = nullptr;
 	}
 
 #if !defined(__aarch64__) || !defined(LEAVE_QEMU_ON_HALT)
@@ -262,6 +271,12 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 				mLCD->Update(mSynth);
 				mLCDUpdateTime = ticks;
 			}
+		}
+
+		// Update control surface
+		if (mControl)
+		{
+			mControl->Update();
 		}
 
 		// Check for active sensing timeout (300 milliseconds)
