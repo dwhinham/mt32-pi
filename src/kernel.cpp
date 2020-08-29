@@ -312,7 +312,7 @@ bool CKernel::ParseSysEx()
 void CKernel::UpdateSerialMIDI()
 {
 	// Read serial MIDI data
-	u8 buffer[1024];
+	u8 buffer[SERIAL_BUF_SIZE];
 	int nResult = mSerial.Read(buffer, sizeof(buffer));
 	if (nResult <= 0)
 		return;
