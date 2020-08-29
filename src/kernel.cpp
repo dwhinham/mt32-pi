@@ -384,9 +384,14 @@ void CKernel::UpdateSerialMIDI()
 				mSerialMIDIMessage[mSerialMIDIState++] = data;
 
 				// MIDI message is complete if we receive 3 bytes, or 2 bytes if it was a Control/Program change
-				if (mSerialMIDIState == 3 || ((mSerialMIDIMessage[0] >= 0xC0 && mSerialMIDIMessage[0] <= 0xDF) && mSerialMIDIState == 2))
+				if (mSerialMIDIState == 3)
 				{
-					MIDIPacketHandler(0, mSerialMIDIMessage, sizeof(mSerialMIDIMessage));
+					MIDIPacketHandler(0, mSerialMIDIMessage, 3);
+					mSerialMIDIState = 0;
+				}
+				else if (mSerialMIDIState == 2 && (mSerialMIDIMessage[0] >= 0xC0 && mSerialMIDIMessage[0] <= 0xDF))
+				{
+					MIDIPacketHandler(0, mSerialMIDIMessage, 2);
 					mSerialMIDIState = 0;
 				}
 				break;
