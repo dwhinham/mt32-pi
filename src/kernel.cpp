@@ -314,8 +314,38 @@ void CKernel::UpdateSerialMIDI()
 	// Read serial MIDI data
 	u8 buffer[SERIAL_BUF_SIZE];
 	int nResult = mSerial.Read(buffer, sizeof(buffer));
-	if (nResult <= 0)
+
+	// No data
+	if (nResult == 0)
 		return;
+
+	// Error
+	if (nResult < 0)
+	{
+		const char* errorString;
+		switch (nResult)
+		{
+			case -SERIAL_ERROR_BREAK:
+				errorString = "break error";
+				break;
+
+			case -SERIAL_ERROR_OVERRUN:
+				errorString = "overrun error";
+				break;
+
+			case -SERIAL_ERROR_FRAMING:
+				errorString = "framing error";
+				break;
+
+			default:
+				errorString = "unknown error";
+				break;
+		}
+
+		mLogger.Write("serialmidi", LogWarning, errorString);
+		LCDLog(errorString);
+		return;
+	}
 
 	// Process MIDI messages
 	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
