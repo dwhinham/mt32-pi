@@ -4,6 +4,7 @@
 // CFG_A (auto) means this option needs no special handling, CFG_S (special) needs additional parsing logic.
 
 CFG_A(midi,		usb,					bool,						mMIDIUSB,					true							)
+CFG_A(midi,		gpio_thru,				bool,						mMIDIGPIOThru,				false							)
 CFG_A(audio,	output_device,			AudioOutputDevice,			mAudioOutputDevice,			AudioOutputDevice::PWM			)
 CFG_A(audio,	sample_rate,			int,						mAudioSampleRate,			96000							)
 CFG_A(audio,	chunk_size,				int,						mAudioChunkSize,			512								)

@@ -347,6 +347,17 @@ void CKernel::UpdateSerialMIDI()
 		return;
 	}
 
+	// Replay received MIDI data out via the serial port ('software thru')
+	if (mConfig.mMIDIGPIOThru)
+	{
+		int nSendResult = mSerial.Write(buffer, nResult);
+		if (nSendResult != nResult)
+		{
+			mLogger.Write("serialmidi", LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
+			LCDLog("serial TX error");
+		}
+	}
+
 	// Process MIDI messages
 	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
 	for (int i = 0; i < nResult; i++)

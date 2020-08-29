@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Software "MIDI thru" for GPIO interface (new configuration file option).
+
 ### Changed
 
 - Update to circle-stdlib v15.1/Circle Step 42.1
