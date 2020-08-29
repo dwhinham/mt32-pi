@@ -377,6 +377,8 @@ void CKernel::UpdateSerialMIDI()
 			 	// Expected a parameter, but received a status
 				if (data & 0x80)
 				{
+					mLogger.Write("midi", LogWarning, "Expected parameter, received status");
+					LCDLog("MIDI restart");
 					mSerialMIDIState = 0;
 					goto MIDIRestart;
 				}
