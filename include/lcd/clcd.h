@@ -23,8 +23,6 @@
 
 #include <circle/types.h>
 
-class CMT32SynthBase;
-
 class CCharacterLCD
 {
 public:
@@ -33,9 +31,6 @@ public:
 	virtual bool Initialize() = 0;
 	virtual void Print(const char* pText, u8 pCursorX = 0, u8 pCursorY = 0, bool pClearLine = false, bool pImmediate = true) = 0;
 	virtual void Clear() = 0;
-	virtual void SetMessage(const char* pMessage) {};
-	virtual void ClearMessage() {};
-	virtual void Update(CMT32SynthBase* pSynth = nullptr) = 0;
 };
 
 #endif

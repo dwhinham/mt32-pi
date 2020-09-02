@@ -224,7 +224,9 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		}
 	}
 
-	mSynth->SetLCDMessageHandler(LCDMessageHandler);
+	// Attach LCD to MT32 synth
+	if (mLCD)
+		mSynth->SetLCD(mLCD);
 
 	// Start audio
 	//mSynth->Start();
@@ -266,7 +268,7 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 			}
 			else if ((ticks - mLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
 			{
-				mLCD->Update(mSynth);
+				mLCD->Update(*mSynth);
 				mLCDUpdateTime = ticks;
 			}
 		}
@@ -428,11 +430,4 @@ void CKernel::USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLengt
 
 	// Process MIDI messages
 	pThis->ParseMIDIBytes(pPacket, nLength);
-}
-
-void CKernel::LCDMessageHandler(const char* pMessage)
-{
-	assert(pThis != nullptr);
-	if (pThis->mLCD)
-		pThis->mLCD->SetMessage(pMessage);
 }

@@ -19,7 +19,6 @@
 //
 
 #include <algorithm>
-#include <cmath>
 #include <type_traits>
 
 #include "lcd/font6x8.h"
@@ -132,14 +131,10 @@ const u8 CSSD1306::InitSequence[] =
 };
 
 CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 pAddress, u8 pHeight)
-	: mI2CMaster(pI2CMaster),
+	: CMT32LCD(),
+	  mI2CMaster(pI2CMaster),
 	  mAddress(pAddress),
 	  mHeight(pHeight),
-
-	  mMessageFlag(false),
-	  mPartLevels{0},
-	  mPeakLevels{0},
-	  mPeakTimes{0},
 
 	  mFramebuffer{0x40}
 {
@@ -194,6 +189,10 @@ void CSSD1306::DrawChar(char pChar, u8 pCursorX, u8 pCursorY, bool pInverted, bo
 	size_t rowOffset = pCursorY * 128 * 2;
 	size_t columnOffset = pCursorX * (pDoubleWidth ? 12 : 6) + 4;
 
+	// FIXME: Won't be needed when the full font is implemented in font6x8.h
+	if (pChar == '\xFF')
+		pChar = '\x80';
+
 	for (u8 i = 0; i < 6; ++i)
 	{
 		u16 fontColumn = FontDouble[static_cast<u8>(pChar - ' ')][i];
@@ -215,60 +214,7 @@ void CSSD1306::DrawChar(char pChar, u8 pCursorX, u8 pCursorY, bool pInverted, bo
 	}
 }
 
-void CSSD1306::DrawStatusLine(const CMT32SynthBase* pSynth)
-{
-	// Showing a SysEx message, bail out
-	if (mMessageFlag)
-		return;
-
-	u32 partStates = pSynth->GetPartStates();
-	char buf[9];
-
-	// First 5 parts
-	for (u8 i = 0; i < 5; ++i)
-	{
-		bool state = (partStates >> i) & 1;
-		DrawChar(state ? 0x80 : '1' + i, i * 2, 0);
-	}
-
-	// Rhythm
-	DrawChar((partStates >> 8) ? 0x80 : 'R', 10, 0);
-
-	// Volume
-	sprintf(buf, "|vol:%3d", pSynth->GetMasterVolume());
-	Print(buf, 12, 0);
-}
-
-void CSSD1306::UpdatePartLevels(const CMT32SynthBase* pSynth)
-{
-	u32 partStates = pSynth->GetPartStates();
-	for (u8 i = 0; i < 9; ++i)
-	{
-		if ((partStates >> i) & 1)
-		{
-			mPartLevels[i] = floor(VelocityScale * pSynth->GetVelocityForPart(i)) + 0.5f;
-			if (mPartLevels[i] > mPeakLevels[i])
-			{
-				mPeakLevels[i] = mPartLevels[i];
-				mPeakTimes[i] = 100;
-			}
-		}
-		else
-		{
-			if (mPartLevels[i] > 0)
-				--mPartLevels[i];
-			if (mPeakTimes[i] == 0 && mPeakLevels[i] > 0)
-			{
-				--mPeakLevels[i];
-				mPeakTimes[i] = 3;
-			}
-			else
-				--mPeakTimes[i];
-		}
-	}
-}
-
-void CSSD1306::DrawPartLevels()
+void CSSD1306::DrawPartLevels(bool pDrawPeaks)
 {
 	for (u8 i = 0; i < 9; ++i)
 	{
@@ -286,15 +232,18 @@ void CSSD1306::DrawPartLevels()
 		}
 
 		// Peak meters
-		if (mPeakLevels[i] > 8)
-			topVal |= 1 << (8 - (mPeakLevels[i] - 8));
-		else
-			bottomVal |= 1 << (8 - (mPeakLevels[i]));
-
-		for (u8 j = 0; j < 12; ++j)
+		if (pDrawPeaks)
 		{
-			mFramebuffer[256 + i * 14 + j + 3] = topVal;	
-			mFramebuffer[256 + i * 14 + j + 128 + 3] = bottomVal;
+			if (mPeakLevels[i] > 8)
+				topVal |= 1 << (8 - (mPeakLevels[i] - 8));
+			else
+				bottomVal |= 1 << (8 - (mPeakLevels[i]));
+
+			for (u8 j = 0; j < 12; ++j)
+			{
+				mFramebuffer[256 + i * 14 + j + 3] = topVal;	
+				mFramebuffer[256 + i * 14 + j + 128 + 3] = bottomVal;
+			}
 		}
 	}
 }
@@ -323,29 +272,14 @@ void CSSD1306::Clear()
 	WriteFramebuffer();
 }
 
-void CSSD1306::SetMessage(const char* pMessage)
+void CSSD1306::Update(const CMT32SynthBase& pSynth)
 {
-	strncpy(mMessageText, pMessage, sizeof(mMessageText));
-	mMessageFlag = true;
-}
-
-void CSSD1306::ClearMessage()
-{
-	mMessageFlag = false;
-}
-
-void CSSD1306::Update(CMT32SynthBase* pSynth)
-{
-	if (!pSynth)
-		return;
+	CMT32LCD::Update(pSynth);
 
 	UpdatePartLevels(pSynth);
+	UpdatePeakLevels();
+
+	Print(mTextBuffer, 0, 0, true);
 	DrawPartLevels();
-
-	if (mMessageFlag)
-		Print(mMessageText, 0, 0, true);
-	else
-		DrawStatusLine(pSynth);
-
 	WriteFramebuffer();
 }

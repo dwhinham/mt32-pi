@@ -12,6 +12,7 @@ OBJS		:=	src/main.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
 				src/lcd/hd44780i2c.o \
+				src/lcd/mt32lcd.o \
 				src/lcd/ssd1306.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \

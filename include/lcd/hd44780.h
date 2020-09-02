@@ -26,20 +26,22 @@
 #include <circle/types.h>
 
 #include "lcd/clcd.h"
+#include "lcd/mt32lcd.h"
 #include "mt32synth.h"
 
-class CHD44780Base : public CCharacterLCD
+class CHD44780Base : public CMT32LCD
 {
 public:
 	CHD44780Base(u8 pColumns = 20, u8 pRows = 2);
 	virtual ~CHD44780Base() = default;
 
+	// CCharacterLCD
 	virtual bool Initialize() override;
 	virtual void Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine = false, bool pImmediate = true) override;
 	virtual void Clear() override;
-	virtual void SetMessage(const char* pMessage) override;
-	virtual void ClearMessage() override;
-	virtual void Update(CMT32SynthBase* pSynth = nullptr) override;
+
+	// CMT32LCD
+	virtual void Update(const CMT32SynthBase& pSynth) override;
 
 protected:
 	enum class WriteMode
@@ -57,23 +59,12 @@ protected:
 
 	void SetCustomChar(u8 pIndex, const u8 pCharData[8]);
 
-	void DrawStatusLine(const CMT32SynthBase* pSynth, u8 pRow = 0);
-	void UpdatePartLevels(const CMT32SynthBase* pSynth);
 	void DrawPartLevelsSingle(u8 pRow);
 	void DrawPartLevelsDouble(u8 pFirstRow);
-
-	// MIDI velocity range [1-127] to bar graph height range [0-16] scale factor
-	static constexpr float VelocityScale = 16.f / (127.f - 1.f);
-	static constexpr size_t TextBufferLength = 20;
 
 	CScheduler* mScheduler;
 	u8 mRows;
 	u8 mColumns;
-
-	// MT-32 state
-	bool mMessageFlag;
-	char mMessageText[MT32Emu::SYSEX_BUFFER_SIZE + 1];
-	u8 mPartLevels[9];
 
 	static const u8 CustomCharData[7][8];
 	static const char BarChars[9];

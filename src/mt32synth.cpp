@@ -43,7 +43,7 @@ CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResampler
 	  mResamplerQuality(pResamplerQuality),
 	  mSampleRateConverter(nullptr),
 
-	  mLCDMessageHandler(nullptr),
+	  mLCD(nullptr),
 
 #ifdef BAKE_MT32_ROMS
 	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
@@ -159,22 +159,28 @@ void CMT32SynthBase::AllSoundOff()
 		mSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
 }
 
-void CMT32SynthBase::printDebug(const char *fmt, va_list list)
-{
-	//CLogger::Get()->WriteV("debug", LogNotice, fmt, list);
-}
-
-void CMT32SynthBase::showLCDMessage(const char *message)
-{
-	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", message);
-	if (mLCDMessageHandler)
-		mLCDMessageHandler(message);
-}
-
 bool CMT32SynthBase::onMIDIQueueOverflow()
 {
 	CLogger::Get()->Write(MT32SynthName, LogError, "MIDI queue overflow");
 	return false;
+}
+
+void CMT32SynthBase::onProgramChanged(MT32Emu::Bit8u partNum, const char* soundGroupName, const char* patchName)
+{
+	if (mLCD)
+		mLCD->OnProgramChanged(partNum, soundGroupName, patchName);
+}
+
+void CMT32SynthBase::printDebug(const char* fmt, va_list list)
+{
+	//CLogger::Get()->WriteV("debug", LogNotice, fmt, list);
+}
+
+void CMT32SynthBase::showLCDMessage(const char* message)
+{
+	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", message);
+	if (mLCD)
+		mLCD->OnLCDMessage(message);
 }
 
 //

@@ -29,6 +29,8 @@
 
 #include <mt32emu/mt32emu.h>
 
+#include "lcd/mt32lcd.h"
+
 #ifdef BAKE_MT32_ROMS
 #define MT32_ROM_FILE MT32Emu::ArrayFile
 #else
@@ -48,9 +50,10 @@ public:
 	};
 
 	virtual bool Initialize();
+
 	void HandleMIDIShortMessage(u32 pMessage);
 	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
-	void SetLCDMessageHandler(void(*pHandler)(const char* pMessage)){ mLCDMessageHandler = pHandler; }
+	void SetLCD(CMT32LCD* pLCD) { mLCD = pLCD; }
 
 	u32 GetPartStates() const { return mSynth->getPartStates(); }
 	u8 GetVelocityForPart(u8 pPart) const;
@@ -74,11 +77,12 @@ protected:
 
 private:
 	// ReportHandler
-	virtual void printDebug(const char *fmt, va_list list);
-	virtual void showLCDMessage(const char *message);
-	virtual bool onMIDIQueueOverflow();
+	virtual bool onMIDIQueueOverflow() override;
+	virtual void onProgramChanged(MT32Emu::Bit8u partNum, const char* soundGroupName, const char* patchName) override;
+	virtual void printDebug(const char* fmt, va_list list) override;
+	virtual void showLCDMessage(const char* message) override;
 
-	void(*mLCDMessageHandler)(const char* pMessage);
+	CMT32LCD* mLCD;
 
 	MT32_ROM_FILE mControlFile;
 	MT32_ROM_FILE mPCMFile;

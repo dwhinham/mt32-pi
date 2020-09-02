@@ -27,8 +27,8 @@
 #include <circle/sched/scheduler.h>
 #include <circle_stdlib_app.h>
 
-#include "lcd/clcd.h"
 #include "config.h"
+#include "lcd/mt32lcd.h"
 #include "midiparser.h"
 #include "mt32synth.h"
 
@@ -55,7 +55,7 @@ protected:
 	FATFS mFileSystem;
 
 	CI2CMaster mI2CMaster;
-	CCharacterLCD* mLCD;
+	CMT32LCD* mLCD;
 
 private:
 	bool InitPCM51xx(u8 pAddress);
@@ -92,6 +92,7 @@ private:
 	CMT32SynthBase* mSynth;
 
 	static void USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
+	static void ProgramChangedHander(u8 pPartNum, const char* pSoundGroupName, const char* pPatchName);
 	static void LCDMessageHandler(const char* pMessage);
 	static CKernel *pThis;
 };

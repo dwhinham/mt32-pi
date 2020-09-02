@@ -105,12 +105,10 @@ const u8 CHD44780Base::CustomCharData[7][8] =
 const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7', '\xff' };
 
 CHD44780Base::CHD44780Base(u8 pColumns, u8 pRows)
-	: mScheduler(CScheduler::Get()),
+	: CMT32LCD(),
+	  mScheduler(CScheduler::Get()),
 	  mRows(pRows),
-	  mColumns(pColumns),
-
-	  mMessageFlag(false),
-	  mPartLevels{0}
+	  mColumns(pColumns)
 {
 }
 
@@ -220,51 +218,6 @@ void CHD44780Base::Clear()
 	mScheduler->MsSleep(50);
 }
 
-void CHD44780Base::SetMessage(const char* pMessage)
-{
-	strncpy(mMessageText, pMessage, sizeof(mMessageText));
-	mMessageFlag = true;
-}
-
-void CHD44780Base::ClearMessage()
-{
-	mMessageFlag = false;
-}
-
-void CHD44780Base::DrawStatusLine(const CMT32SynthBase* pSynth, u8 pRow)
-{
-	u32 partStates = pSynth->GetPartStates();
-	char buf[TextBufferLength + 1];
-
-	// First 5 parts
-	for (u8 i = 0; i < 5; ++i)
-	{
-		bool state = (partStates >> i) & 1;
-		buf[i * 2] = state ? '\xff' : ('1' + i);
-		buf[i * 2 + 1] = ' ';
-	}
-
-	// Rhythm
-	buf[10] = (partStates >> 8) ? '\xff' : 'R';
-	buf[11] = ' ';
-
-	// Volume
-	sprintf(buf + 12, "|vol:%3d", pSynth->GetMasterVolume());
-	Print(buf, 0, pRow);
-}
-
-void CHD44780Base::UpdatePartLevels(const CMT32SynthBase* pSynth)
-{
-	u32 partStates = pSynth->GetPartStates();
-	for (u8 i = 0; i < 9; ++i)
-	{
-		if ((partStates >> i) & 1)
-			mPartLevels[i] = floor(VelocityScale * pSynth->GetVelocityForPart(i)) + 0.5f;
-		else if (mPartLevels[i] > 0)
-			--mPartLevels[i];
-	}
-}
-
 void CHD44780Base::DrawPartLevelsSingle(u8 pRow)
 {
 	char lineBuf[18 + 1];
@@ -307,28 +260,15 @@ void CHD44780Base::DrawPartLevelsDouble(u8 pFirstRow)
 	Print(line2Buf, 0, pFirstRow + 1, true);
 }
 
-void CHD44780Base::Update(CMT32SynthBase* pSynth)
+void CHD44780Base::Update(const CMT32SynthBase& pSynth)
 {
-	if (!pSynth)
-		return;
+	CMT32LCD::Update(pSynth);
 
 	UpdatePartLevels(pSynth);
 
+	Print(mTextBuffer, 0, 0, true);
 	if (mRows == 2)
-	{
-		if (mMessageFlag)
-			Print(mMessageText, 0, 0, true);
-		else
-			DrawStatusLine(pSynth, 0);
 		DrawPartLevelsSingle(1);
-	}
 	else if (mRows == 4)
-	{
-		if (mMessageFlag)
-			Print(mMessageText, 0, 0, false);
-		else
-			Print(" ", 0, 0, true);
-		DrawStatusLine(pSynth, 1);
 		DrawPartLevelsDouble(2);
-	}
 }
