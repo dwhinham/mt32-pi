@@ -366,20 +366,38 @@ void CKernel::UpdateSerialMIDI()
 		switch (mSerialMIDIState)
 		{
 			case 0:
-				// Channel voice message
-				MIDIRestart:
-				if (data >= 0x80 && data <= 0xEF)
-					mSerialMIDIMessage[mSerialMIDIState++] = data;
-
-				// System real-time message - single byte, handle immediately
-				else if (data >= 0xF8)
-					MIDIPacketHandler(0, &data, 1);
-
-				// SysEx
-				else if (data == 0xF0)
+				// Is it a status byte?
+				if (data & 0x80)
 				{
-					mSerialMIDIState = 4;
-					mSysExMessage.push_back(data);
+					RestartStatus:
+					// System real-time message - single byte, handle immediately
+					if (data >= 0xF8)
+						MIDIPacketHandler(0, &data, 1);
+
+					// System Common or Exclusive
+					else if (data >= 0xF0 && data <= 0xF7)
+					{
+						// Start of SysEx message
+						if (data == 0xF0)
+						{
+							mSerialMIDIState = 4;
+							mSysExMessage.push_back(data);
+						}
+					
+						// Clear status byte
+						mSerialMIDIMessage[0] = 0;
+					}
+
+					// Channel message
+					else if (data >= 0x80 && data <= 0xEF)
+						mSerialMIDIMessage[mSerialMIDIState++] = data;
+				}
+
+				// Data byte, Running Status
+				else if (mSerialMIDIMessage[0] & 0x80)
+				{
+					mSerialMIDIState = 2;
+					mSerialMIDIMessage[1] = data;
 				}
 				break;
 
@@ -391,17 +409,19 @@ void CKernel::UpdateSerialMIDI()
 					mLogger.Write("midi", LogWarning, "Expected parameter, received status");
 					LCDLog("MIDI restart");
 					mSerialMIDIState = 0;
-					goto MIDIRestart;
+					goto RestartStatus;
 				}
 
 				mSerialMIDIMessage[mSerialMIDIState++] = data;
 
-				// MIDI message is complete if we receive 3 bytes, or 2 bytes if it was a Control/Program change
+				// MIDI message is complete if we receive 3 bytes
 				if (mSerialMIDIState == 3)
 				{
 					MIDIPacketHandler(0, mSerialMIDIMessage, 3);
 					mSerialMIDIState = 0;
 				}
+
+				// Or 2 bytes if it's a program change or channel pressure/aftertouch
 				else if (mSerialMIDIState == 2 && (mSerialMIDIMessage[0] >= 0xC0 && mSerialMIDIMessage[0] <= 0xDF))
 				{
 					MIDIPacketHandler(0, mSerialMIDIMessage, 2);
@@ -409,6 +429,7 @@ void CKernel::UpdateSerialMIDI()
 				}
 				break;
 
+			// SysEx state
 			case 4:
 				mSysExMessage.push_back(data);
 				if (data == 0xF7)
