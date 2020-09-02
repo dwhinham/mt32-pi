@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2020-09-02
+
 ### Added
 
 - Software "MIDI thru" for GPIO interface (new configuration file option).
@@ -14,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update to circle-stdlib v15.1/Circle Step 42.1
+- Enhanced error reporting for GPIO MIDI parser.
+
+### Fixed
+
+- Hanging/missing notes when GPIO MIDI interface used with some modern MIDI sources that transmit using Running Status optimizations.
+  * Many thanks to @thorr2, @nswaldman, @icb-, @glaucon1984, @Braincell1973, @Higgy69, and @olliraa for patiently reporting, testing and brainstorming the cause of this critical issue.
+- MIDI messages could be passed to `mt32emu` with the wrong length.
 
 ## [0.3.1] - 2020-08-08
 
@@ -53,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/dwhinham/mt32-pi/compare/v0.3.1..v0.4.0
 [0.3.1]: https://github.com/dwhinham/mt32-pi/compare/v0.3.0..v0.3.1
 [0.3.0]: https://github.com/dwhinham/mt32-pi/compare/v0.2.1..v0.3.0
 [0.2.1]: https://github.com/dwhinham/mt32-pi/compare/v0.2.0..v0.2.1
