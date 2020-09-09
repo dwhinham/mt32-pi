@@ -47,6 +47,7 @@ CKernel *CKernel::pThis = nullptr;
 
 CKernel::CKernel(void)
 	: CStdlibApp("mt32-pi"),
+	  CMIDIParser(),
 
 	  mSerial(&mInterrupt, true),
 #ifdef HDMI_CONSOLE
@@ -65,8 +66,6 @@ CKernel::CKernel(void)
 	  mLCDUpdateTime(0),
 
 	  mSerialMIDIEnabled(false),
-	  mSerialMIDIState(0),
-	  mSerialMIDIMessage{0},
 
 	  mActiveSenseFlag(false),
 	  mActiveSenseTime(0),
@@ -210,7 +209,7 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	CUSBMIDIDevice *pMIDIDevice = static_cast<CUSBMIDIDevice *>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
 	{
-		pMIDIDevice->RegisterPacketHandler(MIDIPacketHandler);
+		pMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
 		mLogger.Write(GetKernelName(), LogNotice, "Using USB MIDI interface");
 		mSerialMIDIEnabled = false;
 	}
@@ -289,17 +288,53 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	return ShutdownHalt;
 }
 
-bool CKernel::ParseSysEx()
+void CKernel::OnShortMessage(u32 pMessage)
 {
-	if (mSysExMessage.size() < 4)
+	// Active sensing
+	if (pMessage == 0xFE)
+	{
+		mActiveSenseFlag = true;
+		return;
+	}
+
+	// Flash LED on note on or off
+	if ((pMessage & 0x80) == 0x80)
+		LEDOn();
+
+	//mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", pMessage);
+	mSynth->HandleMIDIShortMessage(pMessage);
+}
+
+void CKernel::OnSysExMessage(const u8* pData, size_t pSize)
+{
+	// If we don't consume the SysEx message, forward it to mt32emu
+	if (!ParseCustomSysEx(pData, pSize))
+		mSynth->HandleMIDISysExMessage(pData, pSize);
+}
+
+void CKernel::OnUnexpectedStatus()
+{
+	CMIDIParser::OnUnexpectedStatus();
+	LCDLog("Unexp. MIDI status!");
+}
+
+void CKernel::OnSysExOverflow()
+{
+	CMIDIParser::OnSysExOverflow();
+	LCDLog("SysEx overflow!");
+}
+
+bool CKernel::ParseCustomSysEx(const u8* pData, size_t pSize)
+{
+	if (pSize < 4)
 		return false;
 
 	// 'Educational' manufacturer
-	if (mSysExMessage[1] != 0x7D)
+	if (pData[1] != 0x7D)
 		return false;
 
 	// Reboot (F0 7D 00 F7)
-	if (mSysExMessage[2] == 0x00)
+	if (pData[2] == 0x00)
 	{
 		mLogger.Write(GetKernelName(), LogNotice, "midi: Reboot command received");
 		mShouldReboot = true;
@@ -358,102 +393,11 @@ void CKernel::UpdateSerialMIDI()
 		}
 	}
 
-	// Process MIDI messages
-	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
-	for (int i = 0; i < nResult; i++)
-	{
-		u8 data = buffer[i];
-		switch (mSerialMIDIState)
-		{
-			case 0:
-				// Is it a status byte?
-				if (data & 0x80)
-				{
-					RestartStatus:
-					// System real-time message - single byte, handle immediately
-					if (data >= 0xF8)
-						MIDIPacketHandler(0, &data, 1);
-
-					// System Common or Exclusive
-					else if (data >= 0xF0 && data <= 0xF7)
-					{
-						// Start of SysEx message
-						if (data == 0xF0)
-						{
-							mSerialMIDIState = 4;
-							mSysExMessage.push_back(data);
-						}
-					
-						// Clear status byte
-						mSerialMIDIMessage[0] = 0;
-					}
-
-					// Channel message
-					else if (data >= 0x80 && data <= 0xEF)
-						mSerialMIDIMessage[mSerialMIDIState++] = data;
-				}
-
-				// Data byte, Running Status
-				else if (mSerialMIDIMessage[0] & 0x80)
-				{
-					mSerialMIDIState = 2;
-					mSerialMIDIMessage[1] = data;
-				}
-				break;
-
-			case 1:
-			case 2:
-			 	// Expected a parameter, but received a status
-				if (data & 0x80)
-				{
-					mLogger.Write("midi", LogWarning, "Expected parameter, received status");
-					LCDLog("MIDI restart");
-					mSerialMIDIState = 0;
-					goto RestartStatus;
-				}
-
-				mSerialMIDIMessage[mSerialMIDIState++] = data;
-
-				// MIDI message is complete if we receive 3 bytes
-				if (mSerialMIDIState == 3)
-				{
-					MIDIPacketHandler(0, mSerialMIDIMessage, 3);
-					mSerialMIDIState = 0;
-				}
-
-				// Or 2 bytes if it's a program change or channel pressure/aftertouch
-				else if (mSerialMIDIState == 2 && (mSerialMIDIMessage[0] >= 0xC0 && mSerialMIDIMessage[0] <= 0xDF))
-				{
-					MIDIPacketHandler(0, mSerialMIDIMessage, 2);
-					mSerialMIDIState = 0;
-				}
-				break;
-
-			// SysEx state
-			case 4:
-				mSysExMessage.push_back(data);
-				if (data == 0xF7)
-				{
-					// If we don't consume the SysEx message, forward it to mt32emu
-					if (!ParseSysEx())
-						mSynth->HandleMIDISysExMessage(mSysExMessage.data(), mSysExMessage.size());
-					mSysExMessage.clear();
-					mSerialMIDIState = 0;
-				}
-				break;
-
-			default:
-				assert(0);
-				break;
-		}
-	}
-}
-
-void CKernel::UpdateActiveSense()
-{
-	//mLogger.Write(GetKernelName(), LogNotice, "Active sense");
+	// Reset the Active Sense timer
 	mActiveSenseTime = mTimer.GetTicks();
-	mActiveSenseFlag = true;
+
+	// Process MIDI messages
+	ParseMIDIBytes(buffer, nResult);
 }
 
 void CKernel::LEDOn()
@@ -474,48 +418,15 @@ void CKernel::LCDLog(const char* pMessage)
 	mLCD->Print(pMessage, 2, 1, true, true);
 }
 
-void CKernel::MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
+void CKernel::USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
 {
 	assert(pThis != nullptr);
+
+	// Reset the Active Sense timer
 	pThis->mActiveSenseTime = pThis->mTimer.GetTicks();
 
-	u32 packet = 0;
-	for (size_t i = 0; i < nLength; ++i)
-	{
-		// SysEx message
-		if (pThis->mSysExMessage.size() || pPacket[i] == 0xF0)
-		{
-			pThis->mSysExMessage.push_back(pPacket[i]);
-			if (pPacket[i] == 0xF7)
-			{
-				// If we don't consume the SysEx message, forward it to mt32emu
-				if (!pThis->ParseSysEx())
-					pThis->mSynth->HandleMIDISysExMessage(pThis->mSysExMessage.data(), pThis->mSysExMessage.size());
-				pThis->mSysExMessage.clear();
-				packet = 0;
-			}
-		}
-		// Channel message
-		else
-			packet |= pPacket[i] << 8 * i;
-	}
-
-	if (packet)
-	{
-		// Active sensing
-		if (packet == 0xFE)
-		{
-			pThis->mActiveSenseFlag = true;
-			return;
-		}
-
-		// Flash LED on note on or off
-		if ((packet & 0x80) == 0x80)
-			pThis->LEDOn();
-
-		//pThis->mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", packet);
-		pThis->mSynth->HandleMIDIControlMessage(packet);
-	}
+	// Process MIDI messages
+	pThis->ParseMIDIBytes(pPacket, nLength);
 }
 
 void CKernel::LCDMessageHandler(const char* pMessage)

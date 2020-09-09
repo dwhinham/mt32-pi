@@ -7,6 +7,7 @@ include Config.mk
 OBJS		:=	src/main.o \
 				src/kernel.o \
 				src/config.o \
+				src/midiparser.o \
 				src/mt32synth.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \

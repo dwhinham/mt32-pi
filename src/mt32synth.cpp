@@ -119,13 +119,13 @@ bool CMT32SynthBase::Initialize()
 	return false;
 }
 
-void CMT32SynthBase::HandleMIDIControlMessage(u32 pMessage)
+void CMT32SynthBase::HandleMIDIShortMessage(u32 pMessage)
 {
 	// TODO: timestamping
 	mSynth->playMsg(pMessage);
 }
 
-void CMT32SynthBase::HandleMIDISysExMessage(u8* pData, size_t pSize)
+void CMT32SynthBase::HandleMIDISysExMessage(const u8* pData, size_t pSize)
 {
 	// TODO: timestamping
 	mSynth->playSysex(pData, pSize);

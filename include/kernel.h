@@ -27,13 +27,12 @@
 #include <circle/sched/scheduler.h>
 #include <circle_stdlib_app.h>
 
-#include <vector>
-
 #include "lcd/clcd.h"
 #include "config.h"
+#include "midiparser.h"
 #include "mt32synth.h"
 
-class CKernel : public CStdlibApp
+class CKernel : public CStdlibApp, CMIDIParser
 {
 public:
 	CKernel(void);
@@ -61,10 +60,15 @@ protected:
 private:
 	bool InitPCM51xx(u8 pAddress);
 
-	bool ParseSysEx();
+	// CMIDIParser
+	virtual void OnShortMessage(u32 pMessage) override;
+	virtual void OnSysExMessage(const u8* pData, size_t pSize) override;
+	virtual void OnUnexpectedStatus() override;
+	virtual void OnSysExOverflow() override;
 
+	bool ParseCustomSysEx(const u8* pData, size_t pSize);
 	void UpdateSerialMIDI();
-	void UpdateActiveSense();
+
 	void LEDOn();
 	void LCDLog(const char* pMessage);
 
@@ -76,10 +80,7 @@ private:
 
 	// Serial GPIO MIDI
 	bool mSerialMIDIEnabled;
-	unsigned mSerialMIDIState;
-	u8 mSerialMIDIMessage[3];
 
-	std::vector<u8> mSysExMessage;
 	bool mActiveSenseFlag;
 	unsigned mActiveSenseTime;
 
@@ -90,7 +91,7 @@ private:
 	// Synthesizer
 	CMT32SynthBase* mSynth;
 
-	static void MIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
+	static void USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
 	static void LCDMessageHandler(const char* pMessage);
 	static CKernel *pThis;
 };

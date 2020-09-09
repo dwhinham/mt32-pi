@@ -48,8 +48,8 @@ public:
 	};
 
 	virtual bool Initialize();
-	void HandleMIDIControlMessage(u32 pMessage);
-	void HandleMIDISysExMessage(u8* pData, size_t pSize);
+	void HandleMIDIShortMessage(u32 pMessage);
+	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
 	void SetLCDMessageHandler(void(*pHandler)(const char* pMessage)){ mLCDMessageHandler = pHandler; }
 
 	u32 GetPartStates() const { return mSynth->getPartStates(); }
