@@ -196,7 +196,7 @@ bool CKernel::InitPCM51xx(u8 pAddress)
 	{
 		if (mI2CMaster.Write(pAddress, &command, sizeof(command)) != sizeof(command))
 		{
-			CLogger::Get()->Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
+			mLogger.Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
 			return false;
 		}
 	}

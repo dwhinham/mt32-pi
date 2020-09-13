@@ -166,14 +166,14 @@ void CMT32SynthBase::printDebug(const char *fmt, va_list list)
 
 void CMT32SynthBase::showLCDMessage(const char *message)
 {
-	CLogger::Get()->Write("lcd", LogNotice, message);
+	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", message);
 	if (mLCDMessageHandler)
 		mLCDMessageHandler(message);
 }
 
 bool CMT32SynthBase::onMIDIQueueOverflow()
 {
-	CLogger::Get()->Write("midi", LogError, "MIDI queue overflow");
+	CLogger::Get()->Write(MT32SynthName, LogError, "MIDI queue overflow");
 	return false;
 }
 
