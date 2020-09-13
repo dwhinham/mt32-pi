@@ -37,7 +37,7 @@
 #define LCD_UPDATE_PERIOD_MILLIS 16
 #define LCD_LOG_TIME_MILLIS 2000
 #define LED_TIMEOUT_MILLIS 50
-#define ACTIVE_SENSE_TIMEOUT_MILLIS 300
+#define ACTIVE_SENSE_TIMEOUT_MILLIS 330
 
 #define I2C_MASTER_DEVICE	1		// 0 on Raspberry Pi 1 Rev. 1 boards, 1 otherwise
 #define I2C_MASTER_CONFIG	0		// 0 or 1 on Raspberry Pi 4, 0 otherwise
@@ -263,8 +263,7 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 			}
 		}
 
-		// Check for active sensing timeout (300 milliseconds)
-		// Based on http://midi.teragonaudio.com/tech/midispec/sense.htm
+		// Check for active sensing timeout
 		if (mActiveSenseFlag && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
 		{
 			mSynth->AllSoundOff();
