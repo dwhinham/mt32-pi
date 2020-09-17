@@ -232,11 +232,19 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 
 	while (true)
 	{
-		unsigned ticks = mTimer.GetTicks();
-
 		// Update serial GPIO MIDI
 		if (mSerialMIDIEnabled)
 			UpdateSerialMIDI();
+
+		unsigned ticks = mTimer.GetTicks();
+
+		// Check for active sensing timeout
+		if (mActiveSenseFlag && (ticks > mActiveSenseTime) && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
+		{
+			mSynth->AllSoundOff();
+			mActiveSenseFlag = false;
+			mLogger.Write(GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
+		}
 
 		// Update activity LED
 		if (mLEDOn && (ticks - mLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
@@ -261,14 +269,6 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 				mLCD->Update(mSynth);
 				mLCDUpdateTime = ticks;
 			}
-		}
-
-		// Check for active sensing timeout
-		if (mActiveSenseFlag && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
-		{
-			mSynth->AllSoundOff();
-			mActiveSenseFlag = false;
-			mLogger.Write(GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
 		}
 
 		if (mShouldReboot)
