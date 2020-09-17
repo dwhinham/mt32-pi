@@ -296,9 +296,8 @@ void CKernel::OnShortMessage(u32 pMessage)
 		return;
 	}
 
-	// Flash LED on note on or off
-	if ((pMessage & 0x80) == 0x80)
-		LEDOn();
+	// Flash LED
+	LEDOn();
 
 	//mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", pMessage);
 	mSynth->HandleMIDIShortMessage(pMessage);
@@ -306,6 +305,9 @@ void CKernel::OnShortMessage(u32 pMessage)
 
 void CKernel::OnSysExMessage(const u8* pData, size_t pSize)
 {
+	// Flash LED
+	LEDOn();
+
 	// If we don't consume the SysEx message, forward it to mt32emu
 	if (!ParseCustomSysEx(pData, pSize))
 		mSynth->HandleMIDISysExMessage(pData, pSize);
