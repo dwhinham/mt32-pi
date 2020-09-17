@@ -20,6 +20,7 @@
 // mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "config.h"
 #include "kernel.h"
 
 #ifndef MT32_PI_VERSION

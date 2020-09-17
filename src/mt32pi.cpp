@@ -34,6 +34,9 @@
 
 const char MT32PiName[] = "mt32-pi";
 
+const char WLANFirmwarePath[] = "SD:/firmware/";
+const char WLANConfigFile[]   = "SD:/wpa_supplicant.conf";
+
 constexpr u32 LCDUpdatePeriodMillis                = 16;
 constexpr u32 MisterUpdatePeriodMillis             = 50;
 constexpr u32 LEDTimeoutMillis                     = 50;
@@ -65,6 +68,12 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pSerial(pSerialDevice),
 	  m_pUSBHCI(pUSBHCI),
 	  m_USBFileSystem{},
+
+	  m_pNet(nullptr),
+	  m_WLAN(WLANFirmwarePath),
+	  m_WPASupplicant(WLANConfigFile),
+	  m_bNetworkReady(false),
+	  m_pAppleMIDIParticipant(nullptr),
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
@@ -162,12 +171,15 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	}
 #endif
 
+	LCDLog(TLCDLogType::Startup, "Init Network");
+	InitNetwork();
+
 	// Check for Blokas Pisound
 	m_pPisound = new CPisound(m_pSPIMaster, m_pGPIOManager, pConfig->AudioSampleRate);
 	if (m_pPisound->Initialize())
 	{
 		pLogger->Write(MT32PiName, LogWarning, "Blokas Pisound detected");
-		m_pPisound->RegisterMIDIReceiveHandler(MIDIReceiveHandler);
+		m_pPisound->RegisterMIDIReceiveHandler(IRQMIDIReceiveHandler);
 		m_bSerialMIDIEnabled = false;
 	}
 	else
@@ -281,6 +293,55 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	return true;
 }
 
+bool CMT32Pi::InitNetwork()
+{
+	assert(m_pNet == nullptr);
+
+	CConfig* const pConfig = CConfig::Get();
+	CLogger* const pLogger = CLogger::Get();
+
+	TNetDeviceType NetDeviceType = NetDeviceTypeUnknown;
+
+	if (pConfig->NetworkMode == CConfig::TNetworkMode::WiFi)
+	{
+		pLogger->Write(MT32PiName, LogNotice, "Initializing Wi-Fi");
+
+		if (m_WLAN.Initialize() && m_WPASupplicant.Initialize())
+			NetDeviceType = NetDeviceTypeWLAN;
+		else
+			pLogger->Write(MT32PiName, LogError, "Failed to initialize Wi-Fi");
+	}
+	else if (pConfig->NetworkMode == CConfig::TNetworkMode::Ethernet)
+	{
+		pLogger->Write(MT32PiName, LogNotice, "Initializing Ethernet");
+		NetDeviceType = NetDeviceTypeEthernet;
+	}
+
+	if (NetDeviceType != NetDeviceTypeUnknown)
+	{
+		if (pConfig->NetworkDHCP)
+			m_pNet = new CNetSubSystem(0, 0, 0, 0, pConfig->NetworkHostname, NetDeviceType);
+		else
+			m_pNet = new CNetSubSystem(
+				pConfig->NetworkIPAddress.Get(),
+				pConfig->NetworkSubnetMask.Get(),
+				pConfig->NetworkDefaultGateway.Get(),
+				pConfig->NetworkDNSServer.Get(),
+				pConfig->NetworkHostname,
+				NetDeviceType
+			);
+
+		if (!m_pNet->Initialize(false))
+		{
+			pLogger->Write(MT32PiName, LogError, "Failed to initialize network subsystem");
+			delete m_pNet;
+			m_pNet = nullptr;
+		}
+	}
+
+	return m_pNet != nullptr;
+}
+
 bool CMT32Pi::InitMT32Synth()
 {
 	assert(m_pMT32Synth == nullptr);
@@ -327,6 +388,7 @@ void CMT32Pi::MainTask()
 {
 	CConfig* const pConfig = CConfig::Get();
 	CLogger* const pLogger = CLogger::Get();
+	CScheduler* const pScheduler = CScheduler::Get();
 
 	pLogger->Write(MT32PiName, LogNotice, "Main task on Core 0 starting up");
 
@@ -336,6 +398,9 @@ void CMT32Pi::MainTask()
 	{
 		// Process MIDI data
 		UpdateMIDI();
+
+		// Process network packets
+		UpdateNetwork();
 
 		// Update controls
 		if (m_pControl)
@@ -380,7 +445,11 @@ void CMT32Pi::MainTask()
 		// Check for USB PnP events
 		if (CConfig::Get()->SystemUSB)
 			UpdateUSB();
+
+		// Allow other tasks to run
+		pScheduler->Yield();
 	}
+
 
 	// Stop audio
 	m_pSound->Cancel();
@@ -571,6 +640,28 @@ void CMT32Pi::OnSysExOverflow()
 	LCDLog(TLCDLogType::Error, "SysEx overflow!");
 }
 
+void CMT32Pi::OnAppleMIDIConnect(const CIPAddress* pIPAddress, const char* pName)
+{
+	if (!m_pLCD)
+		return;
+
+	if (strlen(pName) > 9)
+		pName = "RTP";
+
+	LCDLog(TLCDLogType::Notice, "%s connected!", pName);
+}
+
+void CMT32Pi::OnAppleMIDIDisconnect(const CIPAddress* pIPAddress, const char* pName)
+{
+	if (!m_pLCD)
+		return;
+
+	if (strlen(pName) > 6)
+		pName = "RTP";
+
+	LCDLog(TLCDLogType::Notice, "%s disconnected!", pName);
+}
+
 bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 {
 	if (nSize < 4)
@@ -684,6 +775,52 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 		pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
 		m_bSerialMIDIEnabled = false;
 	}
+}
+
+void CMT32Pi::UpdateNetwork()
+{
+	CLogger* const pLogger = CLogger::Get();
+	CConfig* const pConfig = CConfig::Get();
+
+	if (!m_pNet)
+		return;
+
+	const bool bNetIsRunning = m_pNet->IsRunning();
+
+	if (!m_bNetworkReady && bNetIsRunning)
+	{
+		m_bNetworkReady = true;
+
+		const char* pNetDevName = CConfig::Get()->NetworkMode == CConfig::TNetworkMode::Ethernet ? "Ether" : "Wi-Fi";
+		CString IPString;
+		m_pNet->GetConfig()->GetIPAddress ()->Format(&IPString);
+
+		pLogger->Write(MT32PiName, LogNotice, "Network up and running at: %s", static_cast<const char *>(IPString));
+		LCDLog(TLCDLogType::Notice, "%s: %s", pNetDevName, static_cast<const char*>(IPString));
+
+		if (pConfig->NetworkRTPMIDI)
+		{
+			m_pAppleMIDIParticipant = new CAppleMIDIParticipant(&m_Random, this);
+			if (!m_pAppleMIDIParticipant->Initialize())
+			{
+				pLogger->Write(MT32PiName, LogError, "Failed to init AppleMIDI receiver");
+				delete m_pAppleMIDIParticipant;
+				m_pAppleMIDIParticipant = nullptr;
+			}
+			else
+				pLogger->Write(MT32PiName, LogNotice, "AppleMIDI receiver initialized");
+		}
+	}
+	else if (m_bNetworkReady && !bNetIsRunning)
+	{
+		m_bNetworkReady = false;
+		pLogger->Write(MT32PiName, LogNotice, "Network disconnected.");
+		LCDLog(TLCDLogType::Notice, "WiFi disconnected!");
+
+		delete m_pAppleMIDIParticipant;
+	}
+
+	m_pNet->Process();
 }
 
 void CMT32Pi::UpdateMIDI()
@@ -1035,10 +1172,10 @@ void CMT32Pi::USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext)
 // The following handlers are called from interrupt context, enqueue into ring buffer for main thread
 void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength)
 {
-	MIDIReceiveHandler(pPacket, nLength);
+	IRQMIDIReceiveHandler(pPacket, nLength);
 }
 
-void CMT32Pi::MIDIReceiveHandler(const u8* pData, size_t nSize)
+void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
 {
 	assert(s_pThis != nullptr);
 
