@@ -20,6 +20,7 @@ OBJS		:=	src/config.o \
 				src/main.o \
 				src/midiparser.o \
 				src/mt32pi.o \
+				src/net/applemidi.o \
 				src/pisound.o \
 				src/power.o \
 				src/rommanager.o \
@@ -31,7 +32,7 @@ OBJS		:=	src/config.o \
 EXTRACLEAN	+=	src/*.d src/*.o \
 				src/control/*.d src/control/*.o \
 				src/lcd/*.d src/lcd/*.o \
-				src/synth/*.d src/synth/*.o
+				src/net/*.d src/net/*.o
 
 #
 # inih
@@ -52,13 +53,16 @@ CFLAGS		+=	-I "$(NEWLIBDIR)/include" \
 				-I .
 
 LIBS 		:=	$(CIRCLE_STDLIB_LIBS) \
-				$(CIRCLEHOME)/addon/SDCard/libsdcard.a \
-				$(CIRCLEHOME)/lib/usb/libusb.a \
-				$(CIRCLEHOME)/lib/input/libinput.a \
 				$(CIRCLEHOME)/addon/fatfs/libfatfs.a \
+				$(CIRCLEHOME)/addon/SDCard/libsdcard.a \
+				$(CIRCLEHOME)/addon/wlan/hostap/wpa_supplicant/libwpa_supplicant.a \
+				$(CIRCLEHOME)/addon/wlan/libwlan.a \
 				$(CIRCLEHOME)/lib/fs/libfs.a \
+				$(CIRCLEHOME)/lib/input/libinput.a \
+				$(CIRCLEHOME)/lib/libcircle.a \
+				$(CIRCLEHOME)/lib/net/libnet.a \
 				$(CIRCLEHOME)/lib/sched/libsched.a \
-				$(CIRCLEHOME)/lib/libcircle.a
+				$(CIRCLEHOME)/lib/usb/libusb.a
 
 ifeq ($(HDMI_CONSOLE), 1)
 DEFINE		+=	-D HDMI_CONSOLE

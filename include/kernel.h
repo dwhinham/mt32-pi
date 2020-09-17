@@ -24,6 +24,7 @@
 #define _kernel_h
 
 #include <circle_stdlib_app.h>
+#include <circle/bcm54213.h>
 #include <circle/cputhrottle.h>
 #include <circle/gpiomanager.h>
 #include <circle/i2cmaster.h>
@@ -55,6 +56,7 @@ protected:
 	CUSBHCIDevice m_USBHCI;
 	CEMMCDevice m_EMMC;
 	FATFS m_SDFileSystem;
+
 	CI2CMaster m_I2CMaster;
 	CSPIMaster m_SPIMaster;
 	CGPIOManager m_GPIOManager;

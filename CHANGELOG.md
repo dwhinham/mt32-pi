@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Basic networking support (Wi-Fi or Ethernet) - read the new `[network]` section of the configuration file to learn how to enable and set it up.
+  * In order to use Wi-Fi, firmware must be copied to the root of the SD card (new `firmware` directory in release package), and SSID/password must be added to `wpa_supplicant.conf` (example file in release package).
+- Support for receiving MIDI over the network via Wi-Fi or Ethernet using the RTP-MIDI/AppleMIDI protocol.
+  * macOS users can use this feature without any additional software (see [Apple documentation](https://support.apple.com/en-gb/guide/audio-midi-setup/ams1012/mac)).
+  * Windows users can use [rtpMIDI by Tobias Erichsen](https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html).
+  * Linux users can use [rtpmidid by David Moreno](https://github.com/davidmoreno/rtpmidid).
 - The rotary encoder direction can now be reversed (new configuration file option).
 - Ability to use the HDMI port for digital audio (new configuration value for `output_device`). This allows you to use inexpensive HDMI audio extractors or VGA+audio dongles to get better audio quality out of the Raspberry Pi (compared to the headphone jack).
 - Additional boot files for the Compute Module 4 and Raspberry Pi 400 are now included.

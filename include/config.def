@@ -85,6 +85,17 @@ CFG(i2c_lcd_address,		int,						LCDI2CLCDAddress,			0x3c,							true	)
 CFG(rotation,				TLCDRotation,				LCDRotation,				TLCDRotation::Normal					)
 END_SECTION
 
+BEGIN_SECTION(network)
+CFG(mode,					TNetworkMode,				NetworkMode,				TNetworkMode::Off						)
+CFG(dhcp,					bool,						NetworkDHCP,				true									)
+CFG(ip_address,				CIPAddress,					NetworkIPAddress,			0xc0a80164								)
+CFG(subnet_mask,			CIPAddress,					NetworkSubnetMask,			0xffffff00								)
+CFG(default_gateway,		CIPAddress,					NetworkDefaultGateway,		0xc0a80101								)
+CFG(dns_server,				CIPAddress,					NetworkDNSServer,			0xc0a80101								)
+CFG(hostname,				CString,					NetworkHostname,			"mt32-pi"								)
+CFG(rtp_midi,				bool,						NetworkRTPMIDI,				true									)
+END_SECTION
+
 #undef BEGIN_SECTION
 #undef CFG
 #undef END_SECTION
