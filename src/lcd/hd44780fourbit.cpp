@@ -25,8 +25,8 @@
 
 #include "lcd/hd44780.h"
 
-CHD44780FourBit::CHD44780FourBit(u8 pColumns, u8 pRows)
-	: CHD44780Base(pColumns, pRows),
+CHD44780FourBit::CHD44780FourBit(u8 nColumns, u8 nRows)
+	: CHD44780Base(nColumns, nRows),
 
 	  mRS(GPIO_PIN_RS, GPIOModeOutput),
 	  mRW(GPIO_PIN_RW, GPIOModeOutput),
@@ -46,15 +46,15 @@ CHD44780FourBit::CHD44780FourBit(u8 pColumns, u8 pRows)
 	mD7.Write(LOW);
 }
 
-void CHD44780FourBit::WriteNybble(u8 pNybble, WriteMode pMode)
+void CHD44780FourBit::WriteNybble(u8 nNybble, WriteMode Mode)
 {
 	// RS = LOW for command mode, HIGH for data mode
-	mRS.Write(pMode == WriteMode::Command ? LOW : HIGH);
+	mRS.Write(Mode == WriteMode::Command ? LOW : HIGH);
 
-	mD4.Write((pNybble >> 0) & 1);
-	mD5.Write((pNybble >> 1) & 1);
-	mD6.Write((pNybble >> 2) & 1);
-	mD7.Write((pNybble >> 3) & 1);
+	mD4.Write((nNybble >> 0) & 1);
+	mD5.Write((nNybble >> 1) & 1);
+	mD6.Write((nNybble >> 2) & 1);
+	mD7.Write((nNybble >> 3) & 1);
 
 	// Toggle enable
 	mEN.Write(HIGH);

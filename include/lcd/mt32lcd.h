@@ -42,11 +42,11 @@ public:
 	void OnLCDMessage(const char* pMessage);
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);
 
-	virtual void Update(const CMT32SynthBase& pSynth) = 0;
+	virtual void Update(const CMT32SynthBase& Synth) = 0;
 
 protected:
-	void UpdatePartStateText(const CMT32SynthBase& pSynth);
-	void UpdatePartLevels(const CMT32SynthBase& pSynth);
+	void UpdatePartStateText(const CMT32SynthBase& Synth);
+	void UpdatePartLevels(const CMT32SynthBase& Synth);
 	void UpdatePeakLevels();
 
 	// 20 characters plus null terminator

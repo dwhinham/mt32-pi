@@ -32,16 +32,16 @@
 class CHD44780Base : public CMT32LCD
 {
 public:
-	CHD44780Base(u8 pColumns = 20, u8 pRows = 2);
+	CHD44780Base(u8 nColumns = 20, u8 nRows = 2);
 	virtual ~CHD44780Base() = default;
 
 	// CCharacterLCD
 	virtual bool Initialize() override;
-	virtual void Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine = false, bool pImmediate = true) override;
+	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = true) override;
 	virtual void Clear() override;
 
 	// CMT32LCD
-	virtual void Update(const CMT32SynthBase& pSynth) override;
+	virtual void Update(const CMT32SynthBase& Synth) override;
 
 protected:
 	enum class WriteMode
@@ -50,17 +50,17 @@ protected:
 		Command
 	};
 
-	virtual void WriteNybble(u8 pNybble, WriteMode pMode) = 0;
-	void WriteByte(u8 pByte, WriteMode pMode);
+	virtual void WriteNybble(u8 nNybble, WriteMode Mode) = 0;
+	void WriteByte(u8 nByte, WriteMode Mode);
 
-	void WriteCommand(u8 pByte);
-	void WriteData(u8 pByte);
-	void WriteData(const u8* pBytes, size_t pSize);
+	void WriteCommand(u8 nByte);
+	void WriteData(u8 nByte);
+	void WriteData(const u8* pBytes, size_t nSize);
 
-	void SetCustomChar(u8 pIndex, const u8 pCharData[8]);
+	void SetCustomChar(u8 nIndex, const u8 nCharData[8]);
 
-	void DrawPartLevelsSingle(u8 pRow);
-	void DrawPartLevelsDouble(u8 pFirstRow);
+	void DrawPartLevelsSingle(u8 nRow);
+	void DrawPartLevelsDouble(u8 nFirstRow);
 
 	CScheduler* mScheduler;
 	u8 mRows;
@@ -73,10 +73,10 @@ protected:
 class CHD44780FourBit : public CHD44780Base
 {
 public:
-	CHD44780FourBit(u8 pColumns = 20, u8 pRows = 2);
+	CHD44780FourBit(u8 nColumns = 20, u8 nRows = 2);
 
 protected:
-	virtual void WriteNybble(u8 pNybble, WriteMode pMode) override;
+	virtual void WriteNybble(u8 nNybble, WriteMode Mode) override;
 
 	static constexpr u8 GPIO_PIN_RS = 10;
 	static constexpr u8 GPIO_PIN_RW = 9;
@@ -98,10 +98,10 @@ protected:
 class CHD44780I2C : public CHD44780Base
 {
 public:
-	CHD44780I2C(CI2CMaster* pI2CMaster, u8 pAddress = 0x27, u8 pColumns = 20, u8 pRows = 2);
+	CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress = 0x27, u8 nColumns = 20, u8 nRows = 2);
 
 protected:
-	virtual void WriteNybble(u8 pNybble, WriteMode pMode) override;
+	virtual void WriteNybble(u8 nNybble, WriteMode Mode) override;
 
 	CI2CMaster* mI2CMaster;
 	u8 mAddress;

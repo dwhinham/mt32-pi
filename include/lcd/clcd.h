@@ -29,7 +29,7 @@ public:
 	virtual ~CCharacterLCD() = default;
 
 	virtual bool Initialize() = 0;
-	virtual void Print(const char* pText, u8 pCursorX = 0, u8 pCursorY = 0, bool pClearLine = false, bool pImmediate = true) = 0;
+	virtual void Print(const char* pText, u8 nCursorX = 0, u8 nCursorY = 0, bool bClearLine = false, bool bImmediate = true) = 0;
 	virtual void Clear() = 0;
 };
 

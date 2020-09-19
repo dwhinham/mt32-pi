@@ -30,23 +30,23 @@
 class CSSD1306 : public CMT32LCD
 {
 public:
-	CSSD1306(CI2CMaster* pI2CMaster, u8 pAddress = 0x3c, u8 pHeight = 32);
+	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3c, u8 nHeight = 32);
 
 	// CCharacterLCD
 	virtual bool Initialize() override;
-	virtual void Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine = false, bool pImmediate = false) override;
+	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = false) override;
 	virtual void Clear() override;
 
 	// CMT32LCD
-	virtual void Update(const CMT32SynthBase& pSynth) override;
+	virtual void Update(const CMT32SynthBase& Synth) override;
 
 private:
 	void WriteFramebuffer() const;
-	void SetPixel(u8 pX, u8 pY);
-	void ClearPixel(u8 pX, u8 pY);
-	void DrawChar(char pChar, u8 pCursorX, u8 pCursorY, bool pInverted = false, bool pDoubleWidth = false);
+	void SetPixel(u8 nX, u8 nY);
+	void ClearPixel(u8 nX, u8 nY);
+	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
 
-	void DrawPartLevels(bool pDrawPeaks = true);
+	void DrawPartLevels(bool bDrawPeaks = true);
 
 	CI2CMaster* mI2CMaster;
 	u8 mAddress;

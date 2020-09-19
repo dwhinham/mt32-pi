@@ -27,19 +27,19 @@
 #define LCD_ENABLE			(1 << 2)
 #define LCD_BACKLIGHT		(1 << 3)
 
-CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 pAddress, u8 pColumns, u8 pRows)
-	: CHD44780Base(pColumns, pRows),
+CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress, u8 nColumns, u8 nRows)
+	: CHD44780Base(nColumns, nRows),
 	  mI2CMaster(pI2CMaster),
-	  mAddress(pAddress)
+	  mAddress(nAddress)
 {
 }
 
-void CHD44780I2C::WriteNybble(u8 pNybble, WriteMode pMode)
+void CHD44780I2C::WriteNybble(u8 nNybble, WriteMode Mode)
 {
 	// Write bits with ENABLE pulsed high momentarily
-	u8 bits = ((pNybble << 4) & 0xF0) | LCD_BACKLIGHT | LCD_ENABLE;
+	u8 bits = ((nNybble << 4) & 0xF0) | LCD_BACKLIGHT | LCD_ENABLE;
 
-	if (pMode == WriteMode::Data)
+	if (Mode == WriteMode::Data)
 		bits |= 1;
 
 	mI2CMaster->Write(mAddress, &bits, 1);

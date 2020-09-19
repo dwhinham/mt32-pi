@@ -32,21 +32,21 @@ namespace
 	using CharData = u8[8];
 
 	// Iterate through each row of the character data and collect bits for the nth column
-	static constexpr u8 SingleColumn(const CharData& pCharData, u8 pColumn)
+	static constexpr u8 SingleColumn(const CharData& CharData, u8 nColumn)
 	{
-		u8 bit = 5 - pColumn;
+		u8 bit = 5 - nColumn;
 		u8 column = 0;
 
 		for (u8 i = 0; i < 8; ++i)
-			column |= (pCharData[i] >> bit & 1) << i;
+			column |= (CharData[i] >> bit & 1) << i;
 
 		return column;
 	}
 
 	// Double the height of the character by duplicating column bits into a 16-bit value
-	static constexpr u16 DoubleColumn(const CharData& pCharData, u8 pColumn)
+	static constexpr u16 DoubleColumn(const CharData& CharData, u8 nColumn)
 	{
-		u8 singleColumn = SingleColumn(pCharData, pColumn);
+		u8 singleColumn = SingleColumn(CharData, nColumn);
 		u16 column = 0;
 
 		for (u8 i = 0; i < 8; ++i)
@@ -67,14 +67,14 @@ namespace
 		using Column = typename std::result_of<F& (const CharData&, u8)>::type;
 		using ColumnData = Column[6];
 
-		constexpr Font(const CharData(&pCharData)[N], F pFunction) : mCharData{ 0 }
+		constexpr Font(const CharData(&CharData)[N], F Function) : mCharData{ 0 }
 		{
 			for (size_t i = 0; i < N; ++i)
 				for (u8 j = 0; j < 6; ++j)
-					mCharData[i][j] = pFunction(pCharData[i], j);
+					mCharData[i][j] = Function(CharData[i], j);
 		}
 
-		const ColumnData& operator[](size_t i) const { return mCharData[i]; }
+		const ColumnData& operator[](size_t nIndex) const { return mCharData[nIndex]; }
 
 	private:
 		ColumnData mCharData[N];
@@ -130,15 +130,15 @@ const u8 CSSD1306::InitSequence[] =
 	0xAF        /* Set display on */
 };
 
-CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 pAddress, u8 pHeight)
+CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nHeight)
 	: CMT32LCD(),
 	  mI2CMaster(pI2CMaster),
-	  mAddress(pAddress),
-	  mHeight(pHeight),
+	  mAddress(nAddress),
+	  mHeight(nHeight),
 
 	  mFramebuffer{0x40}
 {
-	assert(pHeight == 32 || pHeight == 64);
+	assert(nHeight == 32 || nHeight == 64);
 }
 
 bool CSSD1306::Initialize()
@@ -164,49 +164,49 @@ void CSSD1306::WriteFramebuffer() const
 	mI2CMaster->Write(mAddress, mFramebuffer, mHeight * 16 + 1);
 }
 
-void CSSD1306::SetPixel(u8 pX, u8 pY)
+void CSSD1306::SetPixel(u8 nX, u8 nY)
 {
 	// Ensure range is within 0-127 for x, 0-63 for y
-	pX &= 0x7f;
-	pY &= 0x3f;
+	nX &= 0x7f;
+	nY &= 0x3f;
 
 	// The framebuffer starts with the 0x40 byte so that we can write out the entire
 	// buffer to the I2C device in one shot, so offset by 1
-	mFramebuffer[((pY & 0xf8) << 4) + pX + 1] |= 1 << (pY & 7);
+	mFramebuffer[((nY & 0xf8) << 4) + nX + 1] |= 1 << (nY & 7);
 }
 
-void CSSD1306::ClearPixel(u8 pX, u8 pY)
+void CSSD1306::ClearPixel(u8 nX, u8 nY)
 {
 	// Ensure range is within 0-127 for x, 0-63 for y
-	pX &= 0x7f;
-	pY &= 0x3f;
+	nX &= 0x7f;
+	nY &= 0x3f;
 
-	mFramebuffer[((pY & 0xf8) << 4) + pX + 1] &= ~(1 << (pY & 7));
+	mFramebuffer[((nY & 0xf8) << 4) + nX + 1] &= ~(1 << (nY & 7));
 }
 
-void CSSD1306::DrawChar(char pChar, u8 pCursorX, u8 pCursorY, bool pInverted, bool pDoubleWidth)
+void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
-	size_t rowOffset = pCursorY * 128 * 2;
-	size_t columnOffset = pCursorX * (pDoubleWidth ? 12 : 6) + 4;
+	size_t rowOffset = nCursorY * 128 * 2;
+	size_t columnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 4;
 
 	// FIXME: Won't be needed when the full font is implemented in font6x8.h
-	if (pChar == '\xFF')
-		pChar = '\x80';
+	if (chChar == '\xFF')
+		chChar = '\x80';
 
 	for (u8 i = 0; i < 6; ++i)
 	{
-		u16 fontColumn = FontDouble[static_cast<u8>(pChar - ' ')][i];
+		u16 fontColumn = FontDouble[static_cast<u8>(chChar - ' ')][i];
 
 		// Don't invert the leftmost column or last two rows
-		if (i > 0 && pInverted)
+		if (i > 0 && bInverted)
 			fontColumn ^= 0x3FFF;
 
 		// Upper half of font
-		size_t offset = rowOffset + columnOffset + (pDoubleWidth ? i * 2 : i);
+		size_t offset = rowOffset + columnOffset + (bDoubleWidth ? i * 2 : i);
 
 		mFramebuffer[offset] = fontColumn & 0xFF;
 		mFramebuffer[offset + 128] = (fontColumn >> 8) & 0xFF;
-		if (pDoubleWidth)
+		if (bDoubleWidth)
 		{
 			mFramebuffer[offset + 1] = mFramebuffer[offset];
 			mFramebuffer[offset + 128 + 1] = mFramebuffer[offset + 128];
@@ -214,7 +214,7 @@ void CSSD1306::DrawChar(char pChar, u8 pCursorX, u8 pCursorY, bool pInverted, bo
 	}
 }
 
-void CSSD1306::DrawPartLevels(bool pDrawPeaks)
+void CSSD1306::DrawPartLevels(bool bDrawPeaks)
 {
 	for (u8 i = 0; i < 9; ++i)
 	{
@@ -232,7 +232,7 @@ void CSSD1306::DrawPartLevels(bool pDrawPeaks)
 		}
 
 		// Peak meters
-		if (pDrawPeaks)
+		if (bDrawPeaks)
 		{
 			if (mPeakLevels[i] > 8)
 				topVal |= 1 << (8 - (mPeakLevels[i] - 8));
@@ -248,21 +248,21 @@ void CSSD1306::DrawPartLevels(bool pDrawPeaks)
 	}
 }
 
-void CSSD1306::Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine, bool pImmediate)
+void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
-	while (*pText && pCursorX < 20)
+	while (*pText && nCursorX < 20)
 	{
-		DrawChar(*pText++, pCursorX, pCursorY);
-		++pCursorX;
+		DrawChar(*pText++, nCursorX, nCursorY);
+		++nCursorX;
 	}
 
-	if (pClearLine)
+	if (bClearLine)
 	{
-		while (pCursorX < 20)
-			DrawChar(' ', pCursorX++, pCursorY);
+		while (nCursorX < 20)
+			DrawChar(' ', nCursorX++, nCursorY);
 	}
 
-	if (pImmediate)
+	if (bImmediate)
 		WriteFramebuffer();
 }
 
@@ -272,11 +272,11 @@ void CSSD1306::Clear()
 	WriteFramebuffer();
 }
 
-void CSSD1306::Update(const CMT32SynthBase& pSynth)
+void CSSD1306::Update(const CMT32SynthBase& Synth)
 {
-	CMT32LCD::Update(pSynth);
+	CMT32LCD::Update(Synth);
 
-	UpdatePartLevels(pSynth);
+	UpdatePartLevels(Synth);
 	UpdatePeakLevels();
 
 	Print(mTextBuffer, 0, 0, true);

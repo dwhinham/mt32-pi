@@ -104,45 +104,45 @@ const u8 CHD44780Base::CustomCharData[7][8] =
 // Use ASCII space for empty bar, custom chars for 1-7 rows, 0xFF for full bar
 const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7', '\xff' };
 
-CHD44780Base::CHD44780Base(u8 pColumns, u8 pRows)
+CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
 	: CMT32LCD(),
 	  mScheduler(CScheduler::Get()),
-	  mRows(pRows),
-	  mColumns(pColumns)
+	  mRows(nRows),
+	  mColumns(nColumns)
 {
 }
 
-void CHD44780Base::WriteByte(u8 pByte, WriteMode pMode)
+void CHD44780Base::WriteByte(u8 nByte, WriteMode Mode)
 {
-	WriteNybble(pByte >> 4, pMode);
-	WriteNybble(pByte, pMode);
+	WriteNybble(nByte >> 4, Mode);
+	WriteNybble(nByte, Mode);
 }
 
-void CHD44780Base::WriteCommand(u8 pByte)
+void CHD44780Base::WriteCommand(u8 nByte)
 {
 	// RS = LOW for command mode
-	WriteByte(pByte, WriteMode::Command);
+	WriteByte(nByte, WriteMode::Command);
 }
 
-void CHD44780Base::WriteData(u8 pByte)
+void CHD44780Base::WriteData(u8 nByte)
 {
 	// RS = HIGH for data mode
-	WriteByte(pByte, WriteMode::Data);
+	WriteByte(nByte, WriteMode::Data);
 }
 
-void CHD44780Base::WriteData(const u8* pBytes, size_t pSize)
+void CHD44780Base::WriteData(const u8* pBytes, size_t nSize)
 {
-	for (size_t i = 0; i < pSize; ++i)
+	for (size_t i = 0; i < nSize; ++i)
 		WriteData(pBytes[i]);
 }
 
-void CHD44780Base::SetCustomChar(u8 pIndex, const u8 pCharData[8])
+void CHD44780Base::SetCustomChar(u8 nIndex, const u8 nCharData[8])
 {
-	assert(pIndex < 8);
-	WriteCommand(0x40 | (pIndex << 3));
+	assert(nIndex < 8);
+	WriteCommand(0x40 | (nIndex << 3));
 
 	for (u8 i = 0; i < 8; ++i)
-		WriteData(pCharData[i]);
+		WriteData(nCharData[i]);
 }
 
 bool CHD44780Base::Initialize()
@@ -196,18 +196,18 @@ bool CHD44780Base::Initialize()
 	return true;
 }
 
-void CHD44780Base::Print(const char* pText, u8 pCursorX, u8 pCursorY, bool pClearLine, bool pImmediate)
+void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
 	static u8 rowOffset[] = { 0, u8(0x40), mColumns, u8(0x40 + mColumns) };
-	WriteCommand(0x80 | rowOffset[pCursorY] + pCursorX);
+	WriteCommand(0x80 | rowOffset[nCursorY] + nCursorX);
 
 	const char* p = pText;
 	while (*p)
 		WriteData(*p++);
 
-	if (pClearLine)
+	if (bClearLine)
 	{
-		while ((p++ - pText) < (mColumns - pCursorX))
+		while ((p++ - pText) < (mColumns - nCursorX))
 			WriteData(' ');
 	}
 }
@@ -218,7 +218,7 @@ void CHD44780Base::Clear()
 	mScheduler->MsSleep(50);
 }
 
-void CHD44780Base::DrawPartLevelsSingle(u8 pRow)
+void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
 {
 	char lineBuf[18 + 1];
 
@@ -230,10 +230,10 @@ void CHD44780Base::DrawPartLevelsSingle(u8 pRow)
 
 	lineBuf[18] = '\0';
 
-	Print(lineBuf, 0, pRow, true);
+	Print(lineBuf, 0, nRow, true);
 }
 
-void CHD44780Base::DrawPartLevelsDouble(u8 pFirstRow)
+void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
 {
 	char line1Buf[18 + 1];
 	char line2Buf[18 + 1];
@@ -256,15 +256,15 @@ void CHD44780Base::DrawPartLevelsDouble(u8 pFirstRow)
 
 	line1Buf[18] = line2Buf[18] = '\0';
 
-	Print(line1Buf, 0, pFirstRow, true);
-	Print(line2Buf, 0, pFirstRow + 1, true);
+	Print(line1Buf, 0, nFirstRow, true);
+	Print(line2Buf, 0, nFirstRow + 1, true);
 }
 
-void CHD44780Base::Update(const CMT32SynthBase& pSynth)
+void CHD44780Base::Update(const CMT32SynthBase& Synth)
 {
-	CMT32LCD::Update(pSynth);
+	CMT32LCD::Update(Synth);
 
-	UpdatePartLevels(pSynth);
+	UpdatePartLevels(Synth);
 
 	Print(mTextBuffer, 0, 0, true);
 	if (mRows == 2)

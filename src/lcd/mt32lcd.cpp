@@ -45,7 +45,7 @@ void CMT32LCD::OnLCDMessage(const char* pMessage)
 	mLCDStateTime = ticks;
 }
 
-void CMT32LCD::OnProgramChanged(u8 pPartNum, const char* pSoundGroupName, const char* pPatchName)
+void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
@@ -53,7 +53,7 @@ void CMT32LCD::OnProgramChanged(u8 pPartNum, const char* pSoundGroupName, const 
 	if (mState == State::DisplayingMessage && (ticks - mLCDStateTime) <= MSEC2HZ(MessageDisplayTimeMillis))
 		return;
 
-	snprintf(mTextBuffer, sizeof(mTextBuffer), "%d|%s%s", pPartNum + 1, pSoundGroupName, pPatchName);
+	snprintf(mTextBuffer, sizeof(mTextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
 
 	mState = State::DisplayingTimbreName;
 	mLCDStateTime = ticks;
@@ -83,12 +83,12 @@ void CMT32LCD::Update(const CMT32SynthBase& Synth)
 	}
 	
 	if (mState == State::DisplayingPartStates)
-		UpdatePartStateText(pSynth);
+		UpdatePartStateText(Synth);
 }
 
-void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& pSynth)
+void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& Synth)
 {
-	u32 partStates = pSynth.GetPartStates();
+	u32 partStates = Synth.GetPartStates();
 
 	// First 5 parts
 	for (u8 i = 0; i < 5; ++i)
@@ -103,16 +103,16 @@ void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& pSynth)
 	mTextBuffer[11] = ' ';
 
 	// Volume
-	sprintf(mTextBuffer + 12, "|vol:%3d", pSynth.GetMasterVolume());
+	sprintf(mTextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
 }
 
-void CMT32LCD::UpdatePartLevels(const CMT32SynthBase& pSynth)
+void CMT32LCD::UpdatePartLevels(const CMT32SynthBase& Synth)
 {
-	u32 partStates = pSynth.GetPartStates();
+	u32 partStates = Synth.GetPartStates();
 	for (u8 i = 0; i < 9; ++i)
 	{
 		if ((partStates >> i) & 1)
-			mPartLevels[i] = floor(VelocityScale * pSynth.GetVelocityForPart(i)) + 0.5f;
+			mPartLevels[i] = floor(VelocityScale * Synth.GetVelocityForPart(i)) + 0.5f;
 		else if (mPartLevels[i] > 0)
 			--mPartLevels[i];
 	}
