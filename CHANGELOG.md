@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2020-09-19
+
+### Added
+
+- Program change messages are now shown on the LCD.
+
+### Changed
+
+- Activity LED now flashes when other types of messages are received (e.g. SysEx or control changes).
+
+### Fixed
+
+- Complete rewrite of the MIDI parser code.
+  * USB and GPIO MIDI streams are now handled by a single code path.
+  * Corrupt SysEx messages (e.g. from cheap/no-name MIDI interfaces) will no longer cause `mt32-pi` to hang (issue #25).
+  * 2-byte Running Status messages are now handled correctly (issue #26).
+- Active Sensing race condition fixed and timeout increased to 330ms as recommended by the MIDI 1.0 Specification.
+
 ## [0.4.0] - 2020-09-02
 
 ### Added
@@ -62,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/dwhinham/mt32-pi/compare/v0.4.0..v0.5.0
 [0.4.0]: https://github.com/dwhinham/mt32-pi/compare/v0.3.1..v0.4.0
 [0.3.1]: https://github.com/dwhinham/mt32-pi/compare/v0.3.0..v0.3.1
 [0.3.0]: https://github.com/dwhinham/mt32-pi/compare/v0.2.1..v0.3.0
