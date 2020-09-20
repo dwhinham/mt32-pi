@@ -27,6 +27,7 @@
 
 CMT32LCD::CMT32LCD()
  	: mState(State::DisplayingPartStates),
+	  mStateTime(0),
 	  mTextBuffer{'\0'},
 	  mPreviousMasterVolume(0),
 	  mPartLevels{0},
@@ -42,7 +43,7 @@ void CMT32LCD::OnLCDMessage(const char* pMessage)
 	snprintf(mTextBuffer, sizeof(mTextBuffer), pMessage);
 
 	mState = State::DisplayingMessage;
-	mLCDStateTime = ticks;
+	mStateTime = ticks;
 }
 
 void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
@@ -50,13 +51,13 @@ void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const 
 	unsigned ticks = CTimer::Get()->GetTicks();
 
 	// Bail out if displaying a message and it hasn't been on-screen long enough
-	if (mState == State::DisplayingMessage && (ticks - mLCDStateTime) <= MSEC2HZ(MessageDisplayTimeMillis))
+	if (mState == State::DisplayingMessage && (ticks - mStateTime) <= MSEC2HZ(MessageDisplayTimeMillis))
 		return;
 
 	snprintf(mTextBuffer, sizeof(mTextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
 
 	mState = State::DisplayingTimbreName;
-	mLCDStateTime = ticks;
+	mStateTime = ticks;
 }
 
 void CMT32LCD::Update(const CMT32SynthBase& Synth)
@@ -67,19 +68,19 @@ void CMT32LCD::Update(const CMT32SynthBase& Synth)
 	// Hide message if master volume changed and message has been displayed long enough
 	if (mPreviousMasterVolume != masterVolume)
 	{
-		if (mState != State::DisplayingMessage || (ticks - mLCDStateTime) > MSEC2HZ(MessageDisplayTimeMillis))
+		if (mState != State::DisplayingMessage || (ticks - mStateTime) > MSEC2HZ(MessageDisplayTimeMillis))
 		{
 			mPreviousMasterVolume = masterVolume;
 			mState = State::DisplayingPartStates;
-			mLCDStateTime = ticks;
+			mStateTime = ticks;
 		}
 	}
 
 	// Timbre change timeout
-	if (mState == State::DisplayingTimbreName && (ticks - mLCDStateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
+	if (mState == State::DisplayingTimbreName && (ticks - mStateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
 	{
 		mState = State::DisplayingPartStates;
-		mLCDStateTime = ticks;
+		mStateTime = ticks;
 	}
 	
 	if (mState == State::DisplayingPartStates)

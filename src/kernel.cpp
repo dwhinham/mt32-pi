@@ -58,6 +58,7 @@ CKernel::CKernel(void)
 	  mLogger(mOptions.GetLogLevel(), &mTimer),
 	  mUSBHCI(&mInterrupt, &mTimer),
 	  mEMMC(&mInterrupt, &mTimer, &mActLED),
+	  mFileSystem{},
 
 	  mI2CMaster(1, true),
 	  mLCD(nullptr),

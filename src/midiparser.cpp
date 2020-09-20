@@ -165,7 +165,7 @@ void CMIDIParser::ParseStatusByte(u8 nByte)
 
 bool CMIDIParser::CheckCompleteShortMessage()
 {
-	u8& status = mMessageBuffer[0];
+	u8 status = mMessageBuffer[0];
 
 	// MIDI message is complete if we receive 3 bytes,
 	// or 2 bytes if it's a Program Change, Channel Pressure/Aftertouch, Time Code Quarter Frame, or Song Select

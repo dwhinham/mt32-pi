@@ -58,8 +58,8 @@ protected:
 	static constexpr unsigned MessageDisplayTimeMillis = 200; 
 	static constexpr unsigned TimbreDisplayTimeMillis = 1200; 
 
-	unsigned mLCDStateTime;
 	State mState;
+	unsigned mStateTime;
 
 	// MT-32 state
 	char mTextBuffer[TextBufferLength];
