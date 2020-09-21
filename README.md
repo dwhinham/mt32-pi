@@ -13,7 +13,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 <!-- toc -->
 
-- [✔️ Project status](#-project-status)
+- [✔️ Project status](#%EF%B8%8F-project-status)
 - [✨ Quick-start guide](#-quick-start-guide)
 - [📝 Configuration file](#-configuration-file)
 - [🎹 MIDI connectivity](#-midi-connectivity)
@@ -35,7 +35,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 - [🔩 Custom hardware](#-custom-hardware)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
-- [⚖️ Disclaimer](#-disclaimer)
+- [⚖️ Disclaimer](#%EF%B8%8F-disclaimer)
 - [🙌 Acknowledgments](#-acknowledgments)
 
 <!-- tocstop -->
@@ -70,7 +70,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 `mt32-pi` tries to read a configuration file from the root of the SD card named `mt32-pi.cfg`. Please read the file for a description of all the available options. 
 
-> **Note:** Don't confuse this file with `config.txt` or `cmdline.txt` - they are for configuring the Raspberry Pi itself, and you should not need to alter these when using `mt32-pi`.
+> ⚠️ **Note:** Don't confuse this file with `config.txt` or `cmdline.txt` - they are for configuring the Raspberry Pi itself, and you should not need to alter these when using `mt32-pi`.
 
 ## 🎹 MIDI connectivity
 
@@ -89,7 +89,7 @@ Here are some typical connection examples:
 
 Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
 
-> **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
+> ⚠️ **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
 
 #### Compatibility
 
@@ -105,7 +105,7 @@ If you're shopping for a USB MIDI interface, the following devices have been con
 
 You can build a simple circuit based on an opto-isolator, a diode, and a few resistors. If `mt32-pi` does not detect any USB MIDI devices present on startup, it will expect to receive input on the UART RX pin (pin 10).
 
-> **Tip:** You can disable detection of USB MIDI interfaces by setting `usb = off` in the config file. This can shave off a couple of seconds of boot time as USB initialization is then skipped on startup.
+> 💡 **Tip:** You can disable detection of USB MIDI interfaces by setting `usb = off` in the config file. This can shave off a couple of seconds of boot time as USB initialization is then skipped on startup.
 
 #### Schematic
 ![](docs/gpio_midi_schem.svg)
@@ -119,7 +119,7 @@ The Raspberry Pi's headphone jack is a simple PWM device, and not designed for h
 
 Luckily, a plethora of inexpensive DAC ([digital-to-analog converter]) hardware is available for the Raspberry Pi, giving it true hi-fi quality audio output. These often take the form of an easy-to-install "HAT" board that you place onto the Raspberry Pi's GPIO pins. They make use of the Raspberry Pi's I2S bus for interfacing.
 
-> **Note:** We do not support any kind of USB DAC audio output device, due to the lack of drivers in the [Circle] baremetal framework that we depend on. Adding USB audio support to Circle would be a huge undertaking, although if that changes in the future and Circle gains USB audio support, we could certainly make use of it.
+> ⚠️ **Note:** We do not support any kind of USB DAC audio output device, due to the lack of drivers in the [Circle] baremetal framework that we depend on. Adding USB audio support to Circle would be a huge undertaking, although if that changes in the future and Circle gains USB audio support, we could certainly make use of it.
 
 ### Setup
 
@@ -133,7 +133,7 @@ The NXP UDA1334 is also reportedly working well.
 
 Some more advanced DACs are configured by software (normally a Linux driver), whereas others need no configuration as they are preconfigured in hardware. This will vary between manufacturers, and so some editing of `mt32-pi.cfg` may be required.
 
-> **Note:** If a DAC requires software configuration, they will not produce any sound until they have been properly initialized. This initialization is done by sending it a special sequence of commands over the I2C (not I2S) bus. For the PCM5xxx family, you can set `i2c_dac_init = pcm51xx` to enable this.
+> ⚠️ **Note:** If a DAC requires software configuration, they will not produce any sound until they have been properly initialized. This initialization is done by sending it a special sequence of commands over the I2C (not I2S) bus. For the PCM5xxx family, you can set `i2c_dac_init = pcm51xx` to enable this.
 
 Feel free to open an issue if you'd like to help us support your DAC, or even just to report success or failure so that we can build a list of supported DACs.
 
@@ -205,7 +205,7 @@ Consult your display's datasheet to determine the correct LCD pins to connect to
 
 You will also need to connect a power source and ground to your display. Consult its datasheet to see if it requires 3.3V or 5V. You should be able to use the Pi's 3.3V, 5V, and ground pins as necessary, but **check the datasheet** to ensure the display doesn't draw more current than the Pi can deliver safely.
 
-> **Note:** The GPIO assignment could change in later versions as more functionality is added, so **BE WARNED** if you are thinking about designing hardware.
+> ⚠️ **Note:** The GPIO assignment could change in later versions as more functionality is added, so **BE WARNED** if you are thinking about designing hardware.
 
 #### Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)
 
@@ -245,7 +245,7 @@ The community has been designing some excellent custom hardware for use with `mt
 
 If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
 
-> **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
+> ⚠️ **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
 
 ## 💬 Custom System Exclusive messages
 
@@ -265,7 +265,7 @@ Please note that these commands are subject to change until the project reaches 
 ## ❓ FAQ
 
 - **Q:** I'm trying to play sounds on `mt32-pi` using my MIDI keyboard controller but I'm not hearing anything - what's wrong?  
-  **A:** Your keyboard is probably sending note data on **channel 1**, but by default, on power-up the MT-32 is set to receive on MIDI **channels 2-10**. Check your keyboard's documentation to see if you can change the transmit channel. If this isn't possible, [see this wiki page](dwhinham/mt32-pi/wiki/MIDI-channel-assignment) for more information on how to reassign the emulated MT-32's channels.
+  **A:** Your keyboard is probably sending note data on **channel 1**, but by default, on power-up the MT-32 is set to receive on MIDI **channels 2-10**. Check your keyboard's documentation to see if you can change the transmit channel. If this isn't possible, [see this wiki page](https://github.com/dwhinham/mt32-pi/wiki/MIDI-channel-assignment) for more information on how to reassign the emulated MT-32's channels.
 - **Q:** Why do I only see a rainbow on my HDMI-connected monitor or television? Doesn't this normally mean the Pi has failed to boot?  
   **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
 - **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
