@@ -9,6 +9,7 @@ OBJS		:=	src/main.o \
 				src/config.o \
 				src/midiparser.o \
 				src/mt32synth.o \
+				src/rommanager.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
 				src/lcd/hd44780i2c.o \
@@ -60,19 +61,4 @@ EXTRALIBS	+=	$(MT32EMULIB)
 VERSION=$(shell git describe --tags --dirty --always 2>/dev/null)
 ifneq ($(VERSION),)
 DEFINE		+=	-D MT32_PI_VERSION=\"$(VERSION)\"
-endif
-
-#
-# Convert MT32 ROMs to C headers if baking into kernel
-#
-ifeq ($(BAKE_MT32_ROMS), 1)
-MT32_ROM_HEADERS=mt32_control.h mt32_pcm.h
-mt32_control.h: MT32_CONTROL.ROM
-mt32_pcm.h: MT32_PCM.ROM
-
-$(MT32_ROM_HEADERS):
-	xxd -i $< > $@
-
-DEFINE		+=	-D BAKE_MT32_ROMS
-EXTRACLEAN	+=	$(MT32_ROM_HEADERS)
 endif

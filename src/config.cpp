@@ -170,6 +170,27 @@ bool CConfig::ParseOption(const char* pString, MT32EmuMIDIChannels* pOut)
 	return false;
 }
 
+bool CConfig::ParseOption(const char* pString, MT32EmuROMSet* pOut)
+{
+	if (!strcmp(pString, "old"))
+	{
+		*pOut = MT32EmuROMSet::MT32Old;
+		return true;
+	}
+	else if (!strcmp(pString, "new"))
+	{
+		*pOut = MT32EmuROMSet::MT32New;
+		return true;
+	}
+	else if (!strcmp(pString, "cm32l"))
+	{
+		*pOut = MT32EmuROMSet::CM32L;
+		return true;
+	}
+
+	return false;
+}
+
 bool CConfig::ParseOption(const char* pString, LCDType* pOut)
 {
 	if (!strcmp(pString, "none"))

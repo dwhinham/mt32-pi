@@ -22,24 +22,17 @@
 
 #include <mt32emu/mt32emu.h>
 
+#include "config.h"
 #include "mt32synth.h"
 #include "utility.h"
 
-#ifdef BAKE_MT32_ROMS
-#include "mt32_control.h"
-#include "mt32_pcm.h"
-#else
-static const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
-static const char MT32PCMROMName[] = "MT32_PCM.ROM";
-#endif
-
-static const char MT32SynthName[] = "mt32synth";
+const char MT32SynthName[] = "mt32synth";
 
 // SysEx commands for setting MIDI channel assignment (no SysEx framing, just 3-byte address and 9 channel values)
 const u8 CMT32SynthBase::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 const u8 CMT32SynthBase::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
-CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality)
+CMT32SynthBase::CMT32SynthBase(FATFS& FileSystem, unsigned pSampleRate, ResamplerQuality pResamplerQuality)
 	: mSynth(nullptr),
 
 	  mLowLevel(0),
@@ -50,14 +43,11 @@ CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResampler
 	  mResamplerQuality(pResamplerQuality),
 	  mSampleRateConverter(nullptr),
 
-	  mLCD(nullptr),
-
-#ifdef BAKE_MT32_ROMS
-	  mControlFile(MT32_CONTROL_ROM, MT32_CONTROL_ROM_len),
-	  mPCMFile(MT32_PCM_ROM, MT32_PCM_ROM_len),
-#endif
+	  mROMManager(FileSystem),
 	  mControlROMImage(nullptr),
-	  mPCMROMImage(nullptr)
+	  mPCMROMImage(nullptr),
+
+	  mLCD(nullptr)
 {
 }
 
@@ -72,22 +62,17 @@ CMT32SynthBase::~CMT32SynthBase()
 
 bool CMT32SynthBase::Initialize()
 {
-#ifndef BAKE_MT32_ROMS
-	if (!mControlFile.open(MT32ControlROMName))
-	{
-		CLogger::Get()->Write(MT32SynthName, LogError, "Could not open %s", MT32ControlROMName);
+	if (!mROMManager.ScanROMs())
 		return false;
-	}
 
-	if (!mPCMFile.open(MT32PCMROMName))
-	{
-		CLogger::Get()->Write(MT32SynthName, LogError, "Could not open %s", MT32PCMROMName);
+	// Try to load user's preferred initial ROM set, otherwise fall back on first available
+	CROMManager::TROMSet initialROMSet = CConfig::Get()->mMT32EmuROMSet;
+	if (!mROMManager.HaveROMSet(initialROMSet))
+		initialROMSet = CROMManager::TROMSet::Any;
+
+	if (!mROMManager.GetROMSet(initialROMSet, mControlROMImage, mPCMROMImage))
 		return false;
-	}
-#endif
 
-	mControlROMImage = MT32Emu::ROMImage::makeROMImage(&mControlFile);
-	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
 	mSynth = new MT32Emu::Synth(this);
 
 	if (!mSynth->open(*mControlROMImage, *mPCMROMImage))
@@ -147,6 +132,63 @@ void CMT32SynthBase::SetMIDIChannels(MIDIChannels Channels)
 		mSynth->writeSysex(0x10, StandardMIDIChannelsSysEx, sizeof(StandardMIDIChannelsSysEx));
 	else
 		mSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
+}
+
+bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
+{
+	const MT32Emu::ROMImage* controlROMImage;
+	const MT32Emu::ROMImage* pcmROMImage;
+
+	// Get ROM set if available
+	if (!mROMManager.GetROMSet(ROMSet, controlROMImage, pcmROMImage))
+	{
+		if (mLCD)
+			mLCD->OnLCDMessage("ROM set not avail!");
+		return false;
+	}
+
+	// Is this ROM set already active?
+	if (controlROMImage == mControlROMImage)
+	{
+		if (mLCD)
+			mLCD->OnLCDMessage("Already selected!");
+		return false;
+	}
+
+	// Reopen synth with new ROMs
+	// N.B. it should be safe to do this without stopping the audio device as render()
+	// will just return silence while the synth is closed
+	mSynth->close();
+	if (!mSynth->open(*controlROMImage, *pcmROMImage))
+		return false;
+
+	mControlROMImage = controlROMImage;
+	mPCMROMImage     = pcmROMImage;
+
+	if (mLCD)
+		mLCD->OnLCDMessage(GetControlROMName());
+
+	return true;
+}
+
+const char* CMT32SynthBase::GetControlROMName() const
+{
+	const char* shortName = mControlROMImage->getROMInfo()->shortName;
+	const MT32Emu::Bit8u* romData = mControlROMImage->getFile()->getData();
+	size_t offset;
+
+	// Find version strings from ROMs
+	if (strstr(shortName, "ctrl_cm32l"))
+		offset = 0x2206;
+	else if (strstr(shortName, "1_07") || strstr(shortName, "bluer"))
+		offset = 0x4011;
+	else if (strstr(shortName, "2_04"))
+		// FIXME: Find offset from ROM
+		return "MT-32 Control v2.04";
+	else
+		offset = 0x4015;
+
+	return reinterpret_cast<const char*>(romData + offset);
 }
 
 u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const

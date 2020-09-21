@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ability to configure initial MIDI channel assignment (new configuration file option).
 - Ability to set custom baud rates for GPIO MIDI (new configuration file option).
   * This could be useful for those wanting to use [SoftMPU](http://bjt42.github.io/softmpu/)'s serial MIDI mode.
+- Multiple ROM sets can now be used and switched between using custom SysEx commands. See new `README.md` section and config file for full details.
+  * Please move your `MT32_CONTROL.ROM` and `MT32_PCM.ROM` into a new subdirectory called `roms`.
+  * For now, the old locations are still checked as a fallback, but this may be removed in a later version.
 
 ### Changed
 

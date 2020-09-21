@@ -22,6 +22,7 @@
 #define _config_h
 
 #include "mt32synth.h"
+#include "rommanager.h"
 
 class CConfig
 {
@@ -39,6 +40,7 @@ public:
 
 	using MT32EmuResamplerQuality = CMT32SynthBase::ResamplerQuality;
 	using MT32EmuMIDIChannels = CMT32SynthBase::MIDIChannels;
+	using MT32EmuROMSet = CROMManager::TROMSet;
 
 	enum class LCDType
 	{
@@ -68,6 +70,7 @@ private:
 	static bool ParseOption(const char* pString, AudioI2CDACInit* pOut);
 	static bool ParseOption(const char* pString, MT32EmuResamplerQuality* pOut);
 	static bool ParseOption(const char* pString, MT32EmuMIDIChannels* pOut);
+	static bool ParseOption(const char* pString, MT32EmuROMSet* pOut);
 	static bool ParseOption(const char* pString, LCDType* pOut);
 
 	static CConfig* pThis;

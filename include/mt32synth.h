@@ -25,16 +25,12 @@
 #include <circle/interrupt.h>
 #include <circle/pwmsoundbasedevice.h>
 #include <circle/types.h>
+#include <fatfs/ff.h>
 
 #include <mt32emu/mt32emu.h>
 
 #include "lcd/mt32lcd.h"
-
-#ifdef BAKE_MT32_ROMS
-#define MT32_ROM_FILE MT32Emu::ArrayFile
-#else
-#define MT32_ROM_FILE MT32Emu::FileStream
-#endif
+#include "rommanager.h"
 
 class CMT32SynthBase : public MT32Emu::ReportHandler
 {
@@ -54,7 +50,7 @@ public:
 		Alternate
 	};
 
-	CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality);
+	CMT32SynthBase(FATFS& FileSystem, unsigned pSampleRate, ResamplerQuality pResamplerQuality);
 	virtual ~CMT32SynthBase();
 
 	virtual bool Initialize();
@@ -67,6 +63,8 @@ public:
 	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
 	void SetLCD(CMT32LCD* pLCD) { mLCD = pLCD; }
 	void SetMIDIChannels(MIDIChannels Channels);
+	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
+	const char* GetControlROMName() const;
 
 	u32 GetPartStates() const { return mSynth->getPartStates(); }
 	u8 GetVelocityForPart(u8 pPart) const;
@@ -99,19 +97,18 @@ private:
 	static const u8 StandardMIDIChannelsSysEx[];
 	static const u8 AlternateMIDIChannelsSysEx[];
 
-	CMT32LCD* mLCD;
+	CROMManager mROMManager;
+	const MT32Emu::ROMImage* mControlROMImage;
+	const MT32Emu::ROMImage* mPCMROMImage;
 
-	MT32_ROM_FILE mControlFile;
-	MT32_ROM_FILE mPCMFile;
-	const MT32Emu::ROMImage *mControlROMImage;
-	const MT32Emu::ROMImage *mPCMROMImage;
+	CMT32LCD* mLCD;
 };
 
 class CMT32SynthI2S : public CMT32SynthBase, public CI2SSoundBaseDevice
 {
 public:
-	CMT32SynthI2S(CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
-	: CMT32SynthBase(pSampleRate, pResamplerQuality),
+	CMT32SynthI2S(FATFS& FileSystem, CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
+	: CMT32SynthBase(FileSystem, pSampleRate, pResamplerQuality),
 	  CI2SSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
 	{
 	}
@@ -129,8 +126,8 @@ private:
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
 {
 public:
-	CMT32SynthPWM(CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
-	: CMT32SynthBase(pSampleRate, pResamplerQuality),
+	CMT32SynthPWM(FATFS& FileSystem, CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
+	: CMT32SynthBase(FileSystem, pSampleRate, pResamplerQuality),
 	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize),
 	  mChannelsSwapped(AreChannelsSwapped())
 	{

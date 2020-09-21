@@ -164,12 +164,12 @@ bool CKernel::Initialize(void)
 		if (mConfig.mAudioI2CDACInit == CConfig::AudioI2CDACInit::PCM51xx)
 			InitPCM51xx(mConfig.mAudioI2CDACAddress);
 
-		mSynth = new CMT32SynthI2S(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+		mSynth = new CMT32SynthI2S(mFileSystem, &mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
 	}
 	else
 	{
 		LCDLog("Init mt32emu (PWM)");
-		mSynth = new CMT32SynthPWM(&mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+		mSynth = new CMT32SynthPWM(mFileSystem, &mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
 	}
 
 	if (!mSynth->Initialize())
@@ -348,9 +348,20 @@ bool CKernel::ParseCustomSysEx(const u8* pData, size_t pSize)
 	// Reboot (F0 7D 00 F7)
 	if (pData[2] == 0x00)
 	{
-		mLogger.Write(GetKernelName(), LogNotice, "midi: Reboot command received");
+		mLogger.Write(GetKernelName(), LogNotice, "Reboot command received");
 		mShouldReboot = true;
 		return true;
+	}
+
+	// Switch ROM set (F0 7D 01 xx F7)
+	else if (pData[2] == 0x01 && pSize == 5)
+	{
+		u8 romSet = pData[3];
+		if (romSet > 2)
+			return false;
+
+		mLogger.Write(GetKernelName(), LogNotice, "Switching to ROM set %d", romSet);
+		return mSynth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
 	}
 
 	return false;

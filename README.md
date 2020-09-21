@@ -3,7 +3,7 @@
 
 ## 🎹🎶 mt32-pi
 
-A work-in-progress baremetal Roland MT-32 emulator for the Raspberry Pi 3 or above, based on [Munt] and [Circle].
+A work-in-progress baremetal Roland MT-32 and CM-32L emulator for the Raspberry Pi 3 or above, based on [Munt] and [Circle].
 Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module](https://en.wikipedia.org/wiki/Roland_MT-32) used by countless classic MS-DOS and Sharp X68000 games, that starts up in seconds!
 
 ## 🔖 Table of contents
@@ -33,6 +33,9 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
     + [Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-i2c-driver-hd44780_i2c)
     + [SSD1306 I2C driver (`ssd1306_i2c`)](#ssd1306-i2c-driver-ssd1306_i2c)
   * [Compatibility](#compatibility-2)
+- [🧠 ROM support](#-rom-support)
+  * [ROM scanning](#rom-scanning)
+  * [Switching ROM sets](#switching-rom-sets)
 - [🔩 Custom hardware](#-custom-hardware)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
@@ -63,7 +66,9 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 - Download the latest release from the [Releases] section.
 - Extract contents to a blank FAT32-formatted SD card.
   * If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
-- Add `MT32_CONTROL.ROM` and `MT32_PCM.ROM` to the root of the SD card - you have to provide these for copyright reasons.
+- Add your MT-32 or CM-32L ROM images to the `roms` directory - you have to provide these for copyright reasons.
+  * You will need at least one control ROM and one PCM ROM. For information on using multiple ROM sets and switching between them, see the [ROM support](#-rom-support) section.
+  * The file names or extensions don't matter; `mt32-pi` will scan and detect their types automatically.
 - Connect a [USB MIDI interface](#usb-midi-interfaces) or [GPIO MIDI circuit](#gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
 - Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
 
@@ -244,6 +249,39 @@ The following displays and configurations have been confirmed as working by our 
 | Generic        | [128x32 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 32`, `i2c_lcd_address = 3c` | Extremely cheap yet nice and bright mini OLED. Widely available on AliExpress and eBay. Tested by @dwhinham. |
 | Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                        |
 
+## 🧠 ROM support
+
+`mt32-pi` can make use of all ROMs that [Munt] supports, and allows switching between ROM sets on-the-fly for greater compatibility with various games. For further information about which games work best with each ROM set, consult the [MT-32 game compatibility list].
+
+A ROM set consists of:
+
+- a **control ROM** (contains the code that runs on the MT-32's CPU).
+- a **PCM ROM** (contains the sound samples).
+
+For simplicity, `mt32-pi` categorises the known control ROMs into three types:
+
+1. **MT-32 (old)**: The original version of the MT-32, ROM versions 1.xx.
+2. **MT-32 (new)**: The later version of the MT-32, ROM versions 2.xx.
+3. **CM-32L**: A "computer music" module compatible with the MT-32, but with additional sound effects for games, and the LCD/buttons removed.
+
+As for PCM ROMs, there are only two known versions - the MT-32 version (common to both models of MT-32), and the CM-32L version.
+
+To summarize, to get the most out of `mt32-pi`, you'll need **5 ROM files in total** - old/new/CM-32L control ROMs, and MT-32/CM-32L PCM ROMs.
+
+### ROM scanning
+
+On startup, `mt32-pi` will scan the `roms` directory and load the first ROM it encounters that matches each category. In other words, if you have two "old" control ROMs (e.g. version 1.05 and 1.07), only one of them will be used and assigned to the "old" category slot. Therefore, it's recommended that you only place **one ROM per category** in the `roms` directory.
+
+When multiple ROM sets are available, the default set to load on startup can be set in the [configuration file](#-configuration-file).
+
+### Switching ROM sets
+
+You can use a [custom SysEx message](#-custom-system-exclusive-messages) to make `mt32-pi` quickly swap ROM sets at runtime. If the ROM set is available and loaded, the emulated MT-32 will be restarted with the new ROMs active.
+
+It may be useful to create scripts (e.g. a DOS batch file) that send `mt32-pi` ROM set swap messages before launching a game.
+
+In the future, `mt32-pi` will allow you to switch ROM sets from a menu or button combination.
+
 ## 🔩 Custom hardware
 
 [<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
@@ -259,15 +297,15 @@ If you have created something cool with `mt32-pi`, please get in touch if you'd 
 `mt32-pi` responds to MT-32 SysEx messages as you would expect, but it can also respond to its own commands. `mt32-pi` listens for manufacturer ID `0x7D`, or the "non-commercial/educational use" special ID. Therefore, a complete `mt32-pi` SysEx message looks like:
 
 ```
-F0 7D { command } F7
+F0 7D { command } { parameters } F7
 ```
 
-Currently there is only one implemented command, although more will probably be added in the future.
-Please note that these commands are subject to change until the project reaches a mature state.
+> ⚠️ **Note:** These commands are subject to change until the project reaches a mature state.
 
-| Command | Description              |
-|---------|--------------------------|
-| `00`    | Reboot the Raspberry Pi. |
+| Command   | Description              | Parameters                                                                  |
+|-----------|--------------------------|-----------------------------------------------------------------------------|
+| `00`      | Reboot the Raspberry Pi. | None                                                                        |
+| `01` `xx` | Switch ROM set.          | `xx` = `00`: MT-32 (old)<br>`xx` = `01`: MT-32 (new)<br>`xx` = `02`: CM-32L |
 
 ## ❓ FAQ
 
@@ -301,6 +339,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Hairless MIDI]: https://projectgus.github.io/hairless-midiserial/
 [I2C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
+[MT-32 game compatibility list]: https://en.wikipedia.org/wiki/List_of_MT-32-compatible_computer_games#IBM_PC_compatibles
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
