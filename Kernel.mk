@@ -57,7 +57,7 @@ EXTRALIBS	+=	$(MT32EMULIB)
 #
 # Generate version string from git tag
 #
-VERSION=$(shell git describe --tags --dirty 2>/dev/null)
+VERSION=$(shell git describe --tags --dirty --always 2>/dev/null)
 ifneq ($(VERSION),)
 DEFINE		+=	-D MT32_PI_VERSION=\"$(VERSION)\"
 endif
