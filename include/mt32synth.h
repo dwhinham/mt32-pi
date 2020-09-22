@@ -49,11 +49,18 @@ public:
 		Best
 	};
 
+	enum class MIDIChannels
+	{
+		Standard,
+		Alternate
+	};
+
 	virtual bool Initialize();
 
 	void HandleMIDIShortMessage(u32 pMessage);
 	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
 	void SetLCD(CMT32LCD* pLCD) { mLCD = pLCD; }
+	void SetMIDIChannels(MIDIChannels Channels);
 
 	u32 GetPartStates() const { return mSynth->getPartStates(); }
 	u8 GetVelocityForPart(u8 pPart) const;
@@ -81,6 +88,9 @@ private:
 	virtual void onProgramChanged(MT32Emu::Bit8u partNum, const char* soundGroupName, const char* patchName) override;
 	virtual void printDebug(const char* fmt, va_list list) override;
 	virtual void showLCDMessage(const char* message) override;
+
+	static const u8 StandardMIDIChannelsSysEx[];
+	static const u8 AlternateMIDIChannelsSysEx[];
 
 	CMT32LCD* mLCD;
 

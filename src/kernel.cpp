@@ -171,6 +171,10 @@ bool CKernel::Initialize(void)
 	if (!mSynth->Initialize())
 		return false;
 
+	// Set initial channel assignment from config
+	if (mConfig.mMT32EmuMIDIChannels == CMT32SynthBase::MIDIChannels::Alternate)
+		mSynth->SetMIDIChannels(mConfig.mMT32EmuMIDIChannels);
+
 	mLogger.Write(GetKernelName(), LogNotice, "mt32-pi " MT32_PI_VERSION);
 	mLogger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
 	CCPUThrottle::Get()->DumpStatus();

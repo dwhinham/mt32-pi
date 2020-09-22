@@ -32,6 +32,10 @@ static const char MT32PCMROMName[] = "MT32_PCM.ROM";
 
 static const char MT32SynthName[] = "mt32synth";
 
+// SysEx commands for setting MIDI channel assignment (no SysEx framing, just 3-byte address and 9 channel values)
+const u8 CMT32SynthBase::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
+const u8 CMT32SynthBase::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
+
 CMT32SynthBase::CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality)
 	: mSynth(nullptr),
 
@@ -129,6 +133,14 @@ void CMT32SynthBase::HandleMIDISysExMessage(const u8* pData, size_t pSize)
 {
 	// TODO: timestamping
 	mSynth->playSysex(pData, pSize);
+}
+
+void CMT32SynthBase::SetMIDIChannels(MIDIChannels Channels)
+{
+	if (Channels == MIDIChannels::Standard)
+		mSynth->writeSysex(0x10, StandardMIDIChannelsSysEx, sizeof(StandardMIDIChannelsSysEx));
+	else
+		mSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
 }
 
 u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const

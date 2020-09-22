@@ -154,6 +154,22 @@ bool CConfig::ParseOption(const char* pString, MT32EmuResamplerQuality* pOut)
 	return false;
 }
 
+bool CConfig::ParseOption(const char* pString, MT32EmuMIDIChannels* pOut)
+{
+	if (!strcmp(pString, "standard"))
+	{
+		*pOut = MT32EmuMIDIChannels::Standard;
+		return true;
+	}
+	else if (!strcmp(pString, "alternate"))
+	{
+		*pOut = MT32EmuMIDIChannels::Alternate;
+		return true;
+	}
+
+	return false;
+}
+
 bool CConfig::ParseOption(const char* pString, LCDType* pOut)
 {
 	if (!strcmp(pString, "none"))

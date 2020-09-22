@@ -38,6 +38,7 @@ public:
 	};
 
 	using MT32EmuResamplerQuality = CMT32SynthBase::ResamplerQuality;
+	using MT32EmuMIDIChannels = CMT32SynthBase::MIDIChannels;
 
 	enum class LCDType
 	{
@@ -66,6 +67,7 @@ private:
 	static bool ParseOption(const char* pString, AudioOutputDevice* pOut);
 	static bool ParseOption(const char* pString, AudioI2CDACInit* pOut);
 	static bool ParseOption(const char* pString, MT32EmuResamplerQuality* pOut);
+	static bool ParseOption(const char* pString, MT32EmuMIDIChannels* pOut);
 	static bool ParseOption(const char* pString, LCDType* pOut);
 
 	static CConfig* pThis;

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ability to configure initial MIDI channel assignment (new configuration file option).
+
 ## [0.5.0] - 2020-09-19
 
 ### Added
