@@ -234,7 +234,7 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		mSynth->SetLCD(mLCD);
 
 	// Start audio
-	//mSynth->Start();
+	mSynth->Start();
 	LCDLog("Ready.");
 
 	while (true)
@@ -281,7 +281,7 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 		if (mShouldReboot)
 		{
 			// Stop audio and reboot
-			//mSynth->Cancel();
+			mSynth->Cancel();
 
 			// Clear screen
 			if (mLCD)

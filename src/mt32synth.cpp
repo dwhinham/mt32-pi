@@ -18,9 +18,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <circle/logger.h>
+
 #include <mt32emu/mt32emu.h>
 
 #include "mt32synth.h"
+#include "utility.h"
 
 #ifdef BAKE_MT32_ROMS
 #include "mt32_control.h"
@@ -87,40 +90,43 @@ bool CMT32SynthBase::Initialize()
 	mPCMROMImage = MT32Emu::ROMImage::makeROMImage(&mPCMFile);
 	mSynth = new MT32Emu::Synth(this);
 
-	if (mSynth->open(*mControlROMImage, *mPCMROMImage))
+	if (!mSynth->open(*mControlROMImage, *mPCMROMImage))
+		return false;
+
+	if (mResamplerQuality != ResamplerQuality::None)
 	{
-		if (mResamplerQuality != ResamplerQuality::None)
+		auto quality = MT32Emu::SamplerateConversionQuality_GOOD;
+		switch (mResamplerQuality)
 		{
-			auto quality = MT32Emu::SamplerateConversionQuality_GOOD;
-			switch (mResamplerQuality)
-			{
-				case ResamplerQuality::Fastest:
-					quality = MT32Emu::SamplerateConversionQuality_FASTEST;
-					break;
+			case ResamplerQuality::Fastest:
+				quality = MT32Emu::SamplerateConversionQuality_FASTEST;
+				break;
 
-				case ResamplerQuality::Fast:
-					quality = MT32Emu::SamplerateConversionQuality_FAST;
-					break;
-				
-				case ResamplerQuality::Good:
-					quality = MT32Emu::SamplerateConversionQuality_GOOD;
-					break;
+			case ResamplerQuality::Fast:
+				quality = MT32Emu::SamplerateConversionQuality_FAST;
+				break;
 
-				case ResamplerQuality::Best:
-					quality = MT32Emu::SamplerateConversionQuality_BEST;
-					break;
+			case ResamplerQuality::Good:
+				quality = MT32Emu::SamplerateConversionQuality_GOOD;
+				break;
 
-				default:
-					break;
-			}
-			
-			mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, quality);
+			case ResamplerQuality::Best:
+				quality = MT32Emu::SamplerateConversionQuality_BEST;
+				break;
+
+			default:
+				break;
 		}
 
-		return true;
+		mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, quality);
 	}
 
-	return false;
+	// Audio output device integer range
+	mLowLevel = GetRangeMin();
+	mHighLevel = GetRangeMax();
+	mNullLevel = (mHighLevel + mLowLevel) / 2;
+
+	return true;
 }
 
 void CMT32SynthBase::HandleMIDIShortMessage(u32 pMessage)
@@ -153,7 +159,7 @@ u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const
 	for (u32 i = 1; i < playingNotes; ++i)
 		if (velocities[i] > maxVelocity)
 			maxVelocity = velocities[i];
-	
+
 	return maxVelocity;
 }
 
@@ -196,7 +202,7 @@ void CMT32SynthBase::showLCDMessage(const char* message)
 }
 
 //
-// I2C implementation
+// I2S implementation
 //
 unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
@@ -228,16 +234,22 @@ unsigned int CMT32SynthPWM::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{
-		int level = static_cast<int>(samples[i] * mHighLevel / 2 + mNullLevel);
-		if (level > mHighLevel)
+		int levelLeft = static_cast<int>(samples[i * 2] * mHighLevel / 2 + mNullLevel);
+		int levelRight = static_cast<int>(samples[i * 2 + 1] * mHighLevel / 2 + mNullLevel);
+
+		levelLeft = Utility::Clamp(levelLeft, mLowLevel, mHighLevel);
+		levelRight = Utility::Clamp(levelRight, mLowLevel, mHighLevel);
+
+		if (mChannelsSwapped)
 		{
-			level = mHighLevel;
+			*pBuffer++ = static_cast<u32>(levelRight);
+			*pBuffer++ = static_cast<u32>(levelLeft);
 		}
-		else if (level < 0)
+		else
 		{
-			level = 0;
+			*pBuffer++ = static_cast<u32>(levelLeft);
+			*pBuffer++ = static_cast<u32>(levelRight);
 		}
-		*pBuffer++ = static_cast<u32>(level);
 	}
 
 	return nChunkSize;

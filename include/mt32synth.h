@@ -23,7 +23,6 @@
 
 #include <circle/i2ssoundbasedevice.h>
 #include <circle/interrupt.h>
-#include <circle/logger.h>
 #include <circle/pwmsoundbasedevice.h>
 #include <circle/types.h>
 
@@ -55,7 +54,14 @@ public:
 		Alternate
 	};
 
+	CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality);
+	virtual ~CMT32SynthBase();
+
 	virtual bool Initialize();
+
+	// CSoundBaseDevice
+	virtual bool Start() = 0;
+	virtual void Cancel() = 0;
 
 	void HandleMIDIShortMessage(u32 pMessage);
 	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
@@ -69,8 +75,9 @@ public:
 	void AllSoundOff();
 
 protected:
-	CMT32SynthBase(unsigned pSampleRate, ResamplerQuality pResamplerQuality);
-	virtual ~CMT32SynthBase();
+	// CSoundBaseDevice
+	virtual int GetRangeMin() const = 0;
+	virtual int GetRangeMax() const = 0;
 
 	MT32Emu::Synth *mSynth;
 
@@ -107,52 +114,38 @@ public:
 	: CMT32SynthBase(pSampleRate, pResamplerQuality),
 	  CI2SSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
 	{
-		mLowLevel = GetRangeMin();
-		mHighLevel = GetRangeMax();
-		mNullLevel = (mHighLevel + mLowLevel) / 2;
-		CLogger::Get()->Write("mt32synthi2s", LogNotice, "Audio output range: lo=%d null=%d hi=%d", mLowLevel, mNullLevel, mHighLevel);
 	}
 
-	virtual bool Initialize()
-	{
-		if (!CMT32SynthBase::Initialize())
-			return false;
-
-		Start();
-		return true;
-	}
+	virtual int GetRangeMin() const override { return CI2SSoundBaseDevice::GetRangeMin(); }
+	virtual int GetRangeMax() const override { return CI2SSoundBaseDevice::GetRangeMax(); }
+	virtual bool Start() override { return CI2SSoundBaseDevice::Start(); }
+	virtual void Cancel() override { CI2SSoundBaseDevice::Cancel(); }
 
 private:
 	// CSoundBaseDevice
 	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
 };
 
-// TODO: Remove duplicate code/decide on better inheritance hierarchy
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
 {
 public:
 	CMT32SynthPWM(CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
 	: CMT32SynthBase(pSampleRate, pResamplerQuality),
-	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
+	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize),
+	  mChannelsSwapped(AreChannelsSwapped())
 	{
-		mLowLevel = GetRangeMin();
-		mHighLevel = GetRangeMax();
-		mNullLevel = (mHighLevel + mLowLevel) / 2;
-		CLogger::Get()->Write("mt32synthpwm", LogNotice, "Audio output range: lo=%d null=%d hi=%d", mLowLevel, mNullLevel, mHighLevel);
 	}
 
-	virtual bool Initialize()
-	{
-		if (!CMT32SynthBase::Initialize())
-			return false;
-
-		Start();
-		return true;
-	}
+	virtual int GetRangeMin() const override { return CPWMSoundBaseDevice::GetRangeMin(); }
+	virtual int GetRangeMax() const override { return CPWMSoundBaseDevice::GetRangeMax(); }
+	virtual bool Start() override { return CPWMSoundBaseDevice::Start(); }
+	virtual void Cancel() override { CPWMSoundBaseDevice::Cancel(); }
 
 private:
 	// CSoundBaseDevice
 	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
+
+	bool mChannelsSwapped;
 };
 
 #endif
