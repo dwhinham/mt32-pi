@@ -36,7 +36,7 @@ jobs:
       run: echo "::add-path::$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin"
 
     - name: Build
-      run: make BOARD=${{ matrix.board }}
+      run: make -j BOARD=${{ matrix.board }}
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v2
