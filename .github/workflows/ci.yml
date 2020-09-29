@@ -62,11 +62,11 @@ jobs:
           sdcard/bcm2711-rpi-4-b.dtb
           sdcard/bootcode.bin
           sdcard/COPYING.linux
-          sdcard/fixup.dat
-          sdcard/fixup4.dat
+          sdcard/fixup_cd.dat
+          sdcard/fixup4cd.dat
           sdcard/LICENCE.broadcom
-          sdcard/start.elf
-          sdcard/start4.elf
+          sdcard/start_cd.elf
+          sdcard/start4cd.elf
         key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
 
     - name: Download boot files if not retrieved from cache
@@ -76,11 +76,11 @@ jobs:
           cp  ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
               ${{ env.boot-home }}/bootcode.bin \
               ${{ env.boot-home }}/COPYING.linux \
-              ${{ env.boot-home }}/fixup.dat \
-              ${{ env.boot-home }}/fixup4.dat \
+              ${{ env.boot-home }}/fixup_cd.dat \
+              ${{ env.boot-home }}/fixup4cd.dat \
               ${{ env.boot-home }}/LICENCE.broadcom \
-              ${{ env.boot-home }}/start.elf \
-              ${{ env.boot-home }}/start4.elf \
+              ${{ env.boot-home }}/start_cd.elf \
+              ${{ env.boot-home }}/start4cd.elf \
               sdcard
         fi
 
