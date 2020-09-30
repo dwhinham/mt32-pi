@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Ability to configure initial MIDI channel assignment (new configuration file option).
+- Ability to set custom baud rates for GPIO MIDI (new configuration file option).
+  * This could be useful for those wanting to use [SoftMPU](http://bjt42.github.io/softmpu/)'s serial MIDI mode.
 
 ### Changed
 

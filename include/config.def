@@ -5,6 +5,7 @@
 
 CFG_A(midi,		usb,					bool,						mMIDIUSB,					true							)
 CFG_A(midi,		gpio_thru,				bool,						mMIDIGPIOThru,				false							)
+CFG_A(midi,		gpio_baud_rate,			int,						mMIDIGPIOBaudRate,			31250							)
 CFG_A(audio,	output_device,			AudioOutputDevice,			mAudioOutputDevice,			AudioOutputDevice::PWM			)
 CFG_A(audio,	sample_rate,			int,						mAudioSampleRate,			96000							)
 CFG_A(audio,	chunk_size,				int,						mAudioChunkSize,			512								)

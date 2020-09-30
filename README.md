@@ -22,6 +22,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
   * [GPIO MIDI interface](#gpio-midi-interface)
     + [Schematic](#schematic)
     + [Breadboard example](#breadboard-example)
+    + [Serial ports](#serial-ports)
 - [🔊 I2S DAC support](#-i2s-dac-support)
   * [Setup](#setup)
   * [Compatibility](#compatibility-1)
@@ -112,6 +113,12 @@ You can build a simple circuit based on an opto-isolator, a diode, and a few res
 
 #### Breadboard example
 ![](docs/gpio_midi_bb.svg)
+
+#### Serial ports 
+
+You can also skip the MIDI circuitry and drive `mt32-pi` using a serial port directly using software such as [Hairless MIDI] or [SoftMPU] and suitable cabling. Use the `gpio_baud_rate` option in the configuration file to match up `mt32-pi` with your host's serial port baud rate.
+
+> ⚠️ **Note:** Remember that the Raspberry Pi expects no more than 3.3V on its GPIO pins, so make sure that you use appropriate level shifting when interfacing with other hardware to prevent damage to the Pi.
 
 ## 🔊 I2S DAC support
 
@@ -291,6 +298,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Circle]: https://github.com/rsta2/circle
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
 [GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
+[Hairless MIDI]: https://projectgus.github.io/hairless-midiserial/
 [I2C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
 [Munt]: https://github.com/munt/munt
@@ -299,3 +307,4 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [PI-MIDI]: https://www.arananet.net/pedidos/product/pi-midi-a-baremetal-mt32-emulator-using-raspberry-pi3
 [REC002004B]: https://www.raystar-optronics.com/oled-character-display-module/REC002004B.html
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest
+[SoftMPU]: http://bjt42.github.io/softmpu/

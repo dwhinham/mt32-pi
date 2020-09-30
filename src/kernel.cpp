@@ -95,9 +95,9 @@ bool CKernel::Initialize(void)
 	if (!pLogTarget)
 		pLogTarget = &mNull;
 
-	// Init serial for GPIO MIDI if not being used for logging
+	// Init serial port early if used for logging
 	mSerialMIDIEnabled = pLogTarget != &mSerial;
-	if (!mSerial.Initialize(mSerialMIDIEnabled ? 31250 : 115200))
+	if (!mSerialMIDIEnabled && !mSerial.Initialize(115200))
 		return false;
 
 	if (!mLogger.Initialize(pLogTarget))
@@ -122,6 +122,10 @@ bool CKernel::Initialize(void)
 
 	if (!mConfig.Initialize("mt32-pi.cfg"))
 		mLogger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
+
+	// Init serial port for GPIO MIDI if not being used for logging
+	if (mSerialMIDIEnabled && !mSerial.Initialize(mConfig.mMIDIGPIOBaudRate))
+		return false;
 
 	if (!mI2CMaster.Initialize())
 		return false;
