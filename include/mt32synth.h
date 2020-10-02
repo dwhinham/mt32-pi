@@ -123,7 +123,7 @@ public:
 
 private:
 	// CSoundBaseDevice
-	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
+	virtual unsigned GetChunk(u32* pBuffer, unsigned nChunkSize) override;
 };
 
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
@@ -143,7 +143,7 @@ public:
 
 private:
 	// CSoundBaseDevice
-	virtual unsigned GetChunk(u32 *pBuffer, unsigned nChunkSize);
+	virtual unsigned GetChunk(u32* pBuffer, unsigned nChunkSize) override;
 
 	bool mChannelsSwapped;
 };
