@@ -214,8 +214,10 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 	}
 }
 
-void CSSD1306::DrawPartLevels(bool bDrawPeaks)
+void CSSD1306::DrawPartLevels(u8 nRow, bool bDrawPeaks)
 {
+	size_t rowOffset = nRow * 128;
+
 	for (u8 i = 0; i < 9; ++i)
 	{
 		// Bar graphs
@@ -238,12 +240,12 @@ void CSSD1306::DrawPartLevels(bool bDrawPeaks)
 				topVal |= 1 << (8 - (mPeakLevels[i] - 8));
 			else
 				bottomVal |= 1 << (8 - (mPeakLevels[i]));
-
-			for (u8 j = 0; j < 12; ++j)
-			{
-				mFramebuffer[256 + i * 14 + j + 3] = topVal;	
-				mFramebuffer[256 + i * 14 + j + 128 + 3] = bottomVal;
-			}
+		}
+		
+		for (u8 j = 0; j < 12; ++j)
+		{
+			mFramebuffer[rowOffset + i * 14 + j + 3] = topVal;	
+			mFramebuffer[rowOffset + i * 14 + j + 128 + 3] = bottomVal;
 		}
 	}
 }
@@ -279,7 +281,7 @@ void CSSD1306::Update(const CMT32SynthBase& Synth)
 	UpdatePartLevels(Synth);
 	UpdatePeakLevels();
 
-	Print(mTextBuffer, 0, 0, true);
-	DrawPartLevels();
+	DrawPartLevels(0);
+	Print(mTextBuffer, 0, 1, true);
 	WriteFramebuffer();
 }

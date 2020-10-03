@@ -266,9 +266,14 @@ void CHD44780Base::Update(const CMT32SynthBase& Synth)
 
 	UpdatePartLevels(Synth);
 
-	Print(mTextBuffer, 0, 0, true);
 	if (mRows == 2)
-		DrawPartLevelsSingle(1);
+	{
+		DrawPartLevelsSingle(0);
+		Print(mTextBuffer, 0, 1, true);
+	}
 	else if (mRows == 4)
-		DrawPartLevelsDouble(2);
+	{
+		DrawPartLevelsDouble(0);
+		Print(mTextBuffer, 0, 2, true);
+	}
 }
