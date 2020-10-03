@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ability to configure initial MIDI channel assignment (new configuration file option).
 
+### Changed
+
+- Update to circle-stdlib v15.2/Circle Step 43.
+
 ## [0.5.0] - 2020-09-19
 
 ### Added
