@@ -23,41 +23,38 @@
 
 #include "mt32synth.h"
 #include "rommanager.h"
+#include "utility.h"
 
 class CConfig
 {
 public:
-	enum class AudioOutputDevice
-	{
-		PWM,
-		I2SDAC
-	};
+	#define ENUM_AUDIOOUTPUTDEVICE(ENUM) \
+		ENUM(PWM, pwm)                   \
+		ENUM(I2SDAC, i2s)
 
-	enum class AudioI2CDACInit
-	{
-		PCM51xx
-	};
+	#define ENUM_AUDIOI2CDACINIT(ENUM) ENUM(PCM51xx, pcm51xx)
 
 	using MT32EmuResamplerQuality = CMT32SynthBase::ResamplerQuality;
-	using MT32EmuMIDIChannels = CMT32SynthBase::MIDIChannels;
-	using MT32EmuROMSet = CROMManager::TROMSet;
+	using MT32EmuMIDIChannels     = CMT32SynthBase::MIDIChannels;
+	using MT32EmuROMSet           = CROMManager::TROMSet;
 
-	enum class LCDType
-	{
-		None,
-		HD44780FourBit,
-		HD44780I2C,
-		SSD1306I2C
-	};
+	#define ENUM_LCDTYPE(ENUM)             \
+		ENUM(None, none)                   \
+		ENUM(HD44780FourBit, hd44780_4bit) \
+		ENUM(HD44780I2C, hd44780_i2c)      \
+		ENUM(SSD1306I2C, ssd1306_i2c)
+
+	CONFIG_ENUM(AudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
+	CONFIG_ENUM(AudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
+	CONFIG_ENUM(LCDType, ENUM_LCDTYPE);
 
 	CConfig();
 	bool Initialize(const char* pPath);
 
-	static CConfig* Get();
+	static CConfig* Get() { return pThis; }
 
 	// Expand all config variables from definition file
-	#define CFG_A(_1, _2, TYPE, MEMBER_NAME, _4) TYPE MEMBER_NAME;
-	#define CFG_S CFG_A
+	#define CFG(_1, TYPE, MEMBER_NAME, _2, _3...) TYPE MEMBER_NAME;
 	#include "config.def"
 
 private:

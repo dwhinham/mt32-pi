@@ -31,24 +31,24 @@
 
 #include "lcd/mt32lcd.h"
 #include "rommanager.h"
+#include "utility.h"
 
 class CMT32SynthBase : public MT32Emu::ReportHandler
 {
 public:
-	enum class ResamplerQuality
-	{
-		None,
-		Fastest,
-		Fast,
-		Good,
-		Best
-	};
+	#define ENUM_RESAMPLERQUALITY(ENUM) \
+		ENUM(None, none)                \
+		ENUM(Fastest, fastest)          \
+		ENUM(Fast, fast)                \
+		ENUM(Good, good)                \
+		ENUM(Best, best)
 
-	enum class MIDIChannels
-	{
-		Standard,
-		Alternate
-	};
+	#define ENUM_MIDICHANNELS(ENUM) \
+		ENUM(Standard, standard)    \
+		ENUM(Alternate, alternate)
+
+	CONFIG_ENUM(ResamplerQuality, ENUM_RESAMPLERQUALITY);
+	CONFIG_ENUM(MIDIChannels, ENUM_MIDICHANNELS);
 
 	CMT32SynthBase(FATFS& FileSystem, unsigned pSampleRate, ResamplerQuality pResamplerQuality);
 	virtual ~CMT32SynthBase();

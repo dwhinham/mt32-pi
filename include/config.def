@@ -1,25 +1,45 @@
 // Config option definition file.
-// Format: CFG_{A|S}(<INI section>, <INI name>, <type>, <class member name>, <default>)
-//
-// CFG_A (auto) means this option needs no special handling, CFG_S (special) needs additional parsing logic.
+// Format: CFG(<INI name>, <type>, <class member name>, <default value>, <extra parser function args>...)
 
-CFG_A(midi,		usb,					bool,						mMIDIUSB,					true							)
-CFG_A(midi,		gpio_thru,				bool,						mMIDIGPIOThru,				false							)
-CFG_A(midi,		gpio_baud_rate,			int,						mMIDIGPIOBaudRate,			31250							)
-CFG_A(audio,	output_device,			AudioOutputDevice,			mAudioOutputDevice,			AudioOutputDevice::PWM			)
-CFG_A(audio,	sample_rate,			int,						mAudioSampleRate,			96000							)
-CFG_A(audio,	chunk_size,				int,						mAudioChunkSize,			512								)
-CFG_A(audio,	i2c_dac_init,			AudioI2CDACInit,			mAudioI2CDACInit,			AudioI2CDACInit::PCM51xx		)
-CFG_A(mt32emu,	resampler_quality,		MT32EmuResamplerQuality,	mMT32EmuResamplerQuality,	MT32EmuResamplerQuality::Good	)
-CFG_A(mt32emu,	midi_channels,			MT32EmuMIDIChannels,		mMT32EmuMIDIChannels,		MT32EmuMIDIChannels::Standard	)
-CFG_A(mt32emu,	rom_set,				MT32EmuROMSet,				mMT32EmuROMSet,				CROMManager::TROMSet::MT32Old	)
-CFG_A(lcd,		type,					LCDType,					mLCDType,					LCDType::None					)
-CFG_A(lcd,		width,					int,						mLCDWidth,					20								)
-CFG_A(lcd,		height,					int,						mLCDHeight,					2								)
+#ifndef BEGIN_SECTION
+#define BEGIN_SECTION(SECTION)
+#endif
 
-// Special handling for hex string -> int conversion
-CFG_S(audio,	i2c_dac_address,		int,						mAudioI2CDACAddress,		0x4c							)
-CFG_S(lcd,		i2c_lcd_address,		int,						mLCDI2CLCDAddress,			0x3c							)
+#ifndef CFG
+#define CFG(INI_NAME, TYPE, MEMBER_NAME, DEFAULT, ...)
+#endif
 
-#undef CFG_A
-#undef CFG_S
+#ifndef END_SECTION
+#define END_SECTION
+#endif
+
+BEGIN_SECTION(midi)
+CFG(usb,					bool,						mMIDIUSB,					true									)
+CFG(gpio_baud_rate,			int,						mMIDIGPIOBaudRate,			31250									)
+CFG(gpio_thru,				bool,						mMIDIGPIOThru,				false									)
+END_SECTION
+
+BEGIN_SECTION(audio)
+CFG(output_device,			AudioOutputDevice,			mAudioOutputDevice,			AudioOutputDevice::PWM					)
+CFG(sample_rate,			int,						mAudioSampleRate,			96000									)
+CFG(chunk_size,				int,						mAudioChunkSize,			512										)
+CFG(i2c_dac_address,		int,						mAudioI2CDACAddress,		0x4c,							true	)
+CFG(i2c_dac_init,			AudioI2CDACInit,			mAudioI2CDACInit,			AudioI2CDACInit::PCM51xx				)
+END_SECTION
+
+BEGIN_SECTION(mt32emu)
+CFG(resampler_quality,		MT32EmuResamplerQuality,	mMT32EmuResamplerQuality,	MT32EmuResamplerQuality::Good			)
+CFG(midi_channels,			MT32EmuMIDIChannels,		mMT32EmuMIDIChannels,		MT32EmuMIDIChannels::Standard			)
+CFG(rom_set,				MT32EmuROMSet,				mMT32EmuROMSet,				MT32EmuROMSet::MT32Old					)
+END_SECTION
+
+BEGIN_SECTION(lcd)
+CFG(type,					LCDType,					mLCDType,					LCDType::None							)
+CFG(width,					int,						mLCDWidth,					20										)
+CFG(height,					int,						mLCDHeight,					2										)
+CFG(i2c_lcd_address,		int,						mLCDI2CLCDAddress,			0x3c,							true	)
+END_SECTION
+
+#undef BEGIN_SECTION
+#undef CFG
+#undef END_SECTION

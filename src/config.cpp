@@ -19,22 +19,56 @@
 //
 
 #include <cstdlib>
-#include <cstring>
 
 #include <circle/logger.h>
+#include <circle/util.h>
 #include <ini.h>
 
 #include "config.h"
+#include "utility.h"
+
+// Templated function that converts a string to an enum
+template <class T, const char* pEnumStrings[], size_t N> static bool ParseEnum(const char* pString, T* pOut)
+{
+	for (size_t i = 0; i < N; ++i)
+	{
+		if (!strcmp(pString, pEnumStrings[i]))
+		{
+			*pOut = static_cast<T>(i);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// Macro to expand templated enum parser into an overloaded definition of ParseOption()
+#define CONFIG_ENUM_PARSER(ENUM_NAME)                                                                           \
+	bool CConfig::ParseOption(const char* pString, ENUM_NAME* pOut)                                             \
+	{                                                                                                           \
+		return ParseEnum<ENUM_NAME, ENUM_NAME##Strings, Utility::ArraySize(ENUM_NAME##Strings)>(pString, pOut); \
+	}
+
+const char ConfigName[]    = "config";
+const char* TrueStrings[]  = {"true", "on", "1"};
+const char* FalseStrings[] = {"false", "off", "0"};
+
+// Enum string tables
+CONFIG_ENUM_STRINGS(AudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
+CONFIG_ENUM_STRINGS(AudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
+CONFIG_ENUM_STRINGS(MT32EmuResamplerQuality, ENUM_RESAMPLERQUALITY);
+CONFIG_ENUM_STRINGS(MT32EmuMIDIChannels, ENUM_MIDICHANNELS);
+CONFIG_ENUM_STRINGS(MT32EmuROMSet, ENUM_ROMSET);
+CONFIG_ENUM_STRINGS(LCDType, ENUM_LCDTYPE);
 
 CConfig* CConfig::pThis = nullptr;
 
 CConfig::CConfig()
 {
 	// Expand assignment of all default values from definition file
-	#define CFG_A(_1, _2, _3, MEMBER_NAME, DEFAULT) MEMBER_NAME = DEFAULT;
-	#define CFG_S CFG_A
+	#define CFG(_1, _2, MEMBER_NAME, DEFAULT, _3...) MEMBER_NAME = DEFAULT;
 	#include "config.def"
-	
+
 	pThis = this;
 }
 
@@ -42,49 +76,53 @@ bool CConfig::Initialize(const char* pPath)
 {
 	int result = ini_parse(pPath, INIHandler, this);
 	if (result == -1)
-		CLogger::Get()->Write("config", LogError, "Couldn't open '%s' for reading", pPath);
+		CLogger::Get()->Write(ConfigName, LogError, "Couldn't open '%s' for reading", pPath);
 	else if (result > 0)
-		CLogger::Get()->Write("config", LogWarning, "Parse error on line %d", result);
+		CLogger::Get()->Write(ConfigName, LogWarning, "Parse error on line %d", result);
 
 	return result >= 0;
 }
 
-CConfig* CConfig::Get()
-{
-	return pThis;
-}
-
 int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, const char* pValue)
 {
-	auto config = static_cast<CConfig*>(pUser);
+	CConfig* config = static_cast<CConfig*>(pUser);
 
-	#define MATCH(SECTION, INI_NAME) (!strcmp(SECTION, pSection) && !strcmp(INI_NAME, pName))
-	#define CFG_A(SECTION, INI_NAME, _1, MEMBER_NAME, _2) else if (MATCH(#SECTION, #INI_NAME)) { ParseOption(pValue, &config->MEMBER_NAME); }
-	#define CFG_S(_1, _2, _3, _4, _5)
+	// Automatically generate ParseOption() calls from macro definition file
+	#define BEGIN_SECTION(SECTION)       \
+		if (!strcmp(#SECTION, pSection)) \
+		{
 
-	// Handle special cases
-	if (MATCH("audio", "i2c_dac_address"))
-		ParseOption(pValue, &config->mAudioI2CDACAddress, true);
-	else if (MATCH("lcd", "i2c_lcd_address"))
-		ParseOption(pValue, &config->mLCDI2CLCDAddress, true);
+	#define CFG(INI_NAME, TYPE, MEMBER_NAME, _2, ...) \
+		if (!strcmp(#INI_NAME, pName))                \
+			return ParseOption(pValue, &config->MEMBER_NAME __VA_OPT__(, ) __VA_ARGS__);
 
-	// Handle auto cases
+	#define END_SECTION \
+		return 0;       \
+		}
+
 	#include "config.def"
 
-	return 1;
-} 
+	return 0;
+}
 
 bool CConfig::ParseOption(const char* pString, bool* pOutBool)
 {
-	if (!strcmp(pString, "true") || !strcmp(pString, "on") || !strcmp(pString, "1"))
+	for (auto trueString : TrueStrings)
 	{
-		*pOutBool = true;
-		return true;
+		if (!strcmp(pString, trueString))
+		{
+			*pOutBool = true;
+			return true;
+		}
 	}
-	else if (!strcmp(pString, "false") || !strcmp(pString, "off") || !strcmp(pString, "0"))
+
+	for (auto falseString : FalseStrings)
 	{
-		*pOutBool = false;
-		return true;
+		if (!strcmp(pString, falseString))
+		{
+			*pOutBool = false;
+			return true;
+		}
 	}
 
 	return false;
@@ -96,123 +134,10 @@ bool CConfig::ParseOption(const char* pString, int* pOutInt, bool pHex)
 	return true;
 }
 
-bool CConfig::ParseOption(const char* pString, AudioOutputDevice* pOut)
-{
-	if (!strcmp(pString, "pwm"))
-	{
-		*pOut = AudioOutputDevice::PWM;
-		return true;
-	}
-	else if (!strcmp(pString, "i2s"))
-	{
-		*pOut = AudioOutputDevice::I2SDAC;
-		return true;
-	}
-
-	return false;
-}
-
-bool CConfig::ParseOption(const char* pString, AudioI2CDACInit* pOut)
-{
-	if (!strcmp(pString, "pcm51xx"))
-	{
-		*pOut = AudioI2CDACInit::PCM51xx;
-		return true;
-	}
-
-	return false;
-}
-
-bool CConfig::ParseOption(const char* pString, MT32EmuResamplerQuality* pOut)
-{
-	if (!strcmp(pString, "none"))
-	{
-		*pOut = MT32EmuResamplerQuality::None;
-		return true;
-	}
-	else if (!strcmp(pString, "fastest"))
-	{
-		*pOut = MT32EmuResamplerQuality::Fastest;
-		return true;
-	}
-	else if (!strcmp(pString, "fast"))
-	{
-		*pOut = MT32EmuResamplerQuality::Fast;
-		return true;
-	}
-	else if (!strcmp(pString, "good"))
-	{
-		*pOut = MT32EmuResamplerQuality::Good;
-		return true;
-	}
-	else if (!strcmp(pString, "best"))
-	{
-		*pOut = MT32EmuResamplerQuality::Best;
-		return true;
-	}
-
-	return false;
-}
-
-bool CConfig::ParseOption(const char* pString, MT32EmuMIDIChannels* pOut)
-{
-	if (!strcmp(pString, "standard"))
-	{
-		*pOut = MT32EmuMIDIChannels::Standard;
-		return true;
-	}
-	else if (!strcmp(pString, "alternate"))
-	{
-		*pOut = MT32EmuMIDIChannels::Alternate;
-		return true;
-	}
-
-	return false;
-}
-
-bool CConfig::ParseOption(const char* pString, MT32EmuROMSet* pOut)
-{
-	if (!strcmp(pString, "old"))
-	{
-		*pOut = MT32EmuROMSet::MT32Old;
-		return true;
-	}
-	else if (!strcmp(pString, "new"))
-	{
-		*pOut = MT32EmuROMSet::MT32New;
-		return true;
-	}
-	else if (!strcmp(pString, "cm32l"))
-	{
-		*pOut = MT32EmuROMSet::CM32L;
-		return true;
-	}
-
-	return false;
-}
-
-bool CConfig::ParseOption(const char* pString, LCDType* pOut)
-{
-	if (!strcmp(pString, "none"))
-	{
-		*pOut = LCDType::None;
-		return true;
-	}
-	else if (!strcmp(pString, "hd44780_4bit"))
-	{
-		*pOut = LCDType::HD44780FourBit;
-		return true;
-	}
-	else if (!strcmp(pString, "hd44780_i2c"))
-	{
-		*pOut = LCDType::HD44780I2C;
-		return true;
-	}
-	else if (!strcmp(pString, "ssd1306_i2c"))
-	{
-		*pOut = LCDType::SSD1306I2C;
-		return true;
-	}
-
-	return false;
-}
+// Define template function wrappers for parsing enums
+CONFIG_ENUM_PARSER(AudioOutputDevice);
+CONFIG_ENUM_PARSER(AudioI2CDACInit);
+CONFIG_ENUM_PARSER(MT32EmuResamplerQuality);
+CONFIG_ENUM_PARSER(MT32EmuMIDIChannels);
+CONFIG_ENUM_PARSER(MT32EmuROMSet);
+CONFIG_ENUM_PARSER(LCDType);

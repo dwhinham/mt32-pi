@@ -25,18 +25,18 @@
 
 #include <mt32emu/mt32emu.h>
 
-struct dirent;
+#include "utility.h"
 
 class CROMManager
 {
 public:
-	enum class TROMSet
-	{
-		MT32Old,
-		MT32New,
-		CM32L,
-		Any
-	};
+	#define ENUM_ROMSET(ENUM) \
+		ENUM(MT32Old, old)    \
+		ENUM(MT32New, new)    \
+		ENUM(CM32L, cm32l)    \
+		ENUM(Any, any)
+
+	CONFIG_ENUM(TROMSet, ENUM_ROMSET);
 
 	CROMManager(FATFS& FileSystem);
 	~CROMManager();

@@ -23,6 +23,7 @@
 
 #include "lcd/font6x8.h"
 #include "lcd/ssd1306.h"
+#include "utility.h"
 
 // Compile-time (constexpr) font conversion functions.
 // The SSD1306 stores pixel data in columns, but our source font data is stored as rows.
@@ -79,15 +80,11 @@ namespace
 	private:
 		ColumnData mCharData[N];
 	};
-
-	// Return number of elements in an array
-	template<class T, size_t N>
-	constexpr size_t ArraySize(const T(&)[N]) { return N; }
 }
 
 // Single and double-height versions of the font
-constexpr auto FontSingle = Font<ArraySize(Font6x8), decltype(SingleColumn)>(Font6x8, SingleColumn);
-constexpr auto FontDouble = Font<ArraySize(Font6x8), decltype(DoubleColumn)>(Font6x8, DoubleColumn);
+constexpr auto FontSingle = Font<Utility::ArraySize(Font6x8), decltype(SingleColumn)>(Font6x8, SingleColumn);
+constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleColumn)>(Font6x8, DoubleColumn);
 
 const u8 CSSD1306::InitSequence[] =
 {
