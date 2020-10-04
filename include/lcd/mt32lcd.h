@@ -30,7 +30,7 @@ class CMT32SynthBase;
 class CMT32LCD : public CCharacterLCD
 {
 public:
-	enum class State
+	enum class TState
 	{
 		DisplayingPartStates,
 		DisplayingTimbreName,
@@ -55,18 +55,18 @@ protected:
 	// MIDI velocity range [1-127] to bar graph height range [0-16] scale factor
 	static constexpr float VelocityScale = 16.f / (127.f - 1.f);
 
-	static constexpr unsigned MessageDisplayTimeMillis = 200; 
-	static constexpr unsigned TimbreDisplayTimeMillis = 1200; 
+	static constexpr unsigned MessageDisplayTimeMillis = 200;
+	static constexpr unsigned TimbreDisplayTimeMillis = 1200;
 
-	State mState;
-	unsigned mStateTime;
+	TState m_State;
+	unsigned m_nStateTime;
 
 	// MT-32 state
-	char mTextBuffer[TextBufferLength];
-	u8 mPreviousMasterVolume;
-	u8 mPartLevels[9];
-	u8 mPeakLevels[9];
-	u8 mPeakTimes[9];
+	char m_TextBuffer[TextBufferLength];
+	u8 m_nPreviousMasterVolume;
+	u8 m_PartLevels[9];
+	u8 m_PeakLevels[9];
+	u8 m_PeakTimes[9];
 };
 
 #endif

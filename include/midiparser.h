@@ -39,7 +39,7 @@ protected:
 	virtual void OnSysExOverflow();
 
 private:
-	enum class State
+	enum class TState
 	{
 		StatusByte,
 		DataByte,
@@ -54,9 +54,9 @@ private:
 	u32 PrepareShortMessage() const;
 	void ResetState(bool bClearStatusByte);
 
-	State mState;
-	u8 mMessageBuffer[SysExBufferSize];
-	size_t mMessageLength;
+	TState m_State;
+	u8 m_MessageBuffer[SysExBufferSize];
+	size_t m_nMessageLength;
 };
 
 #endif

@@ -54,14 +54,14 @@ const char* TrueStrings[]  = {"true", "on", "1"};
 const char* FalseStrings[] = {"false", "off", "0"};
 
 // Enum string tables
-CONFIG_ENUM_STRINGS(AudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
-CONFIG_ENUM_STRINGS(AudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
-CONFIG_ENUM_STRINGS(MT32EmuResamplerQuality, ENUM_RESAMPLERQUALITY);
-CONFIG_ENUM_STRINGS(MT32EmuMIDIChannels, ENUM_MIDICHANNELS);
-CONFIG_ENUM_STRINGS(MT32EmuROMSet, ENUM_ROMSET);
-CONFIG_ENUM_STRINGS(LCDType, ENUM_LCDTYPE);
+CONFIG_ENUM_STRINGS(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
+CONFIG_ENUM_STRINGS(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
+CONFIG_ENUM_STRINGS(TMT32EmuResamplerQuality, ENUM_RESAMPLERQUALITY);
+CONFIG_ENUM_STRINGS(TMT32EmuMIDIChannels, ENUM_MIDICHANNELS);
+CONFIG_ENUM_STRINGS(TMT32EmuROMSet, ENUM_ROMSET);
+CONFIG_ENUM_STRINGS(TLCDType, ENUM_LCDTYPE);
 
-CConfig* CConfig::pThis = nullptr;
+CConfig* CConfig::s_pThis = nullptr;
 
 CConfig::CConfig()
 {
@@ -69,7 +69,7 @@ CConfig::CConfig()
 	#define CFG(_1, _2, MEMBER_NAME, DEFAULT, _3...) MEMBER_NAME = DEFAULT;
 	#include "config.def"
 
-	pThis = this;
+	s_pThis = this;
 }
 
 bool CConfig::Initialize(const char* pPath)
@@ -128,16 +128,16 @@ bool CConfig::ParseOption(const char* pString, bool* pOutBool)
 	return false;
 }
 
-bool CConfig::ParseOption(const char* pString, int* pOutInt, bool pHex)
+bool CConfig::ParseOption(const char* pString, int* pOutInt, bool bHex)
 {
-	*pOutInt = strtol(pString, nullptr, pHex ? 16 : 10);
+	*pOutInt = strtol(pString, nullptr, bHex ? 16 : 10);
 	return true;
 }
 
 // Define template function wrappers for parsing enums
-CONFIG_ENUM_PARSER(AudioOutputDevice);
-CONFIG_ENUM_PARSER(AudioI2CDACInit);
-CONFIG_ENUM_PARSER(MT32EmuResamplerQuality);
-CONFIG_ENUM_PARSER(MT32EmuMIDIChannels);
-CONFIG_ENUM_PARSER(MT32EmuROMSet);
-CONFIG_ENUM_PARSER(LCDType);
+CONFIG_ENUM_PARSER(TAudioOutputDevice);
+CONFIG_ENUM_PARSER(TAudioI2CDACInit);
+CONFIG_ENUM_PARSER(TMT32EmuResamplerQuality);
+CONFIG_ENUM_PARSER(TMT32EmuMIDIChannels);
+CONFIG_ENUM_PARSER(TMT32EmuROMSet);
+CONFIG_ENUM_PARSER(TLCDType);

@@ -23,9 +23,9 @@
 #include "midiparser.h"
 
 CMIDIParser::CMIDIParser()
-	: mState(State::StatusByte),
-	  mMessageBuffer{0},
-	  mMessageLength(0)
+	: m_State(TState::StatusByte),
+	  m_MessageBuffer{0},
+	  m_nMessageLength(0)
 {
 }
 
@@ -48,15 +48,15 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 			continue;
 		}
 
-		switch (mState)
+		switch (m_State)
 		{
 			// Expecting a status byte
-			case State::StatusByte:
+			case TState::StatusByte:
 				ParseStatusByte(data);
 				break;
 
 			// Expecting a data byte
-			case State::DataByte:
+			case TState::DataByte:
 				// Expected a data byte, but received a status
 				if (data & 0x80)
 				{
@@ -66,12 +66,12 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 					break;
 				}
 
-				mMessageBuffer[mMessageLength++] = data;
+				m_MessageBuffer[m_nMessageLength++] = data;
 				CheckCompleteShortMessage();
 				break;
 
 			// Expecting a SysEx data byte or EOX
-			case State::SysExByte:
+			case TState::SysExByte:
 				// Received a status that wasn't EOX
 				if (data & 0x80 && data != 0xF7)
 				{
@@ -82,7 +82,7 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 				}
 
 				// Buffer overflow
-				if (mMessageLength == sizeof(mMessageBuffer))
+				if (m_nMessageLength == sizeof(m_MessageBuffer))
 				{
 					OnSysExOverflow();
 					ResetState(true);
@@ -90,12 +90,12 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 					break;
 				}
 
-				mMessageBuffer[mMessageLength++] = data;
+				m_MessageBuffer[m_nMessageLength++] = data;
 
 				// End of SysEx
 				if (data == 0xF7)
 				{
-					OnSysExMessage(mMessageBuffer, mMessageLength);
+					OnSysExMessage(m_MessageBuffer, m_nMessageLength);
 					ResetState(true);
 				}
 
@@ -106,7 +106,7 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 
 void CMIDIParser::OnUnexpectedStatus()
 {
-	if (mState == State::SysExByte)
+	if (m_State == TState::SysExByte)
 		CLogger::Get()->Write("midi", LogWarning, "Received illegal status byte during SysEx message; SysEx ignored");
 	else
 		CLogger::Get()->Write("midi", LogWarning, "Received illegal status byte when data expected");
@@ -128,49 +128,49 @@ void CMIDIParser::ParseStatusByte(u8 nByte)
 			case 0xF4:
 			case 0xF5:
 			case 0xF7:
-				mMessageBuffer[0] = 0;
+				m_MessageBuffer[0] = 0;
 				return;
 
 			// Start of SysEx message
 			case 0xF0:
-				mState = State::SysExByte;
+				m_State = TState::SysExByte;
 				break;
 
 			// Tune Request - single byte, handle immediately and clear running status
 			case 0xF6:
 				OnShortMessage(nByte);
-				mMessageBuffer[0] = 0;
+				m_MessageBuffer[0] = 0;
 				break;
 
 			// Channel or System Common message
 			default:
-				mState = State::DataByte;
+				m_State = TState::DataByte;
 				break;
 		}
 
-		mMessageBuffer[mMessageLength++] = nByte;
+		m_MessageBuffer[m_nMessageLength++] = nByte;
 	}
 
 	// Data byte, use Running Status if we've stored a status byte
-	else if (mMessageBuffer[0])
+	else if (m_MessageBuffer[0])
 	{
-		mMessageBuffer[1] = nByte;
-		mMessageLength = 2;
+		m_MessageBuffer[1] = nByte;
+		m_nMessageLength = 2;
 
 		// We could have a complete 2-byte message, otherwise wait for third byte
 		if (!CheckCompleteShortMessage())
-			mState = State::DataByte;
+			m_State = TState::DataByte;
 	}
 }
 
 bool CMIDIParser::CheckCompleteShortMessage()
 {
-	u8 status = mMessageBuffer[0];
+	u8 status = m_MessageBuffer[0];
 
 	// MIDI message is complete if we receive 3 bytes,
 	// or 2 bytes if it's a Program Change, Channel Pressure/Aftertouch, Time Code Quarter Frame, or Song Select
-	if (mMessageLength == 3 ||
-		(mMessageLength == 2 && ((status >= 0xC0 && status <= 0xDF) || status == 0xF1 || status == 0xF3)))
+	if (m_nMessageLength == 3 ||
+		(m_nMessageLength == 2 && ((status >= 0xC0 && status <= 0xDF) || status == 0xF1 || status == 0xF3)))
 	{
 		OnShortMessage(PrepareShortMessage());
 
@@ -184,11 +184,11 @@ bool CMIDIParser::CheckCompleteShortMessage()
 
 u32 CMIDIParser::PrepareShortMessage() const
 {
-	assert(mMessageLength == 2 || mMessageLength == 3);
+	assert(m_nMessageLength == 2 || m_nMessageLength == 3);
 
 	u32 message = 0;
-	for (size_t i = 0; i < mMessageLength; ++i)
-		message |= mMessageBuffer[i] << 8 * i;
+	for (size_t i = 0; i < m_nMessageLength; ++i)
+		message |= m_MessageBuffer[i] << 8 * i;
 
 	return message;
 }
@@ -196,8 +196,8 @@ u32 CMIDIParser::PrepareShortMessage() const
 void CMIDIParser::ResetState(bool bClearStatusByte)
 {
 	if (bClearStatusByte)
-		mMessageBuffer[0] = 0;
+		m_MessageBuffer[0] = 0;
 
-	mMessageLength = 0;
-	mState = State::StatusByte;
+	m_nMessageLength = 0;
+	m_State = TState::StatusByte;
 }

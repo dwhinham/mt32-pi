@@ -34,9 +34,9 @@ public:
 
 	#define ENUM_AUDIOI2CDACINIT(ENUM) ENUM(PCM51xx, pcm51xx)
 
-	using MT32EmuResamplerQuality = CMT32SynthBase::ResamplerQuality;
-	using MT32EmuMIDIChannels     = CMT32SynthBase::MIDIChannels;
-	using MT32EmuROMSet           = CROMManager::TROMSet;
+	using TMT32EmuResamplerQuality = CMT32SynthBase::TResamplerQuality;
+	using TMT32EmuMIDIChannels     = CMT32SynthBase::TMIDIChannels;
+	using TMT32EmuROMSet           = CROMManager::TROMSet;
 
 	#define ENUM_LCDTYPE(ENUM)             \
 		ENUM(None, none)                   \
@@ -44,14 +44,14 @@ public:
 		ENUM(HD44780I2C, hd44780_i2c)      \
 		ENUM(SSD1306I2C, ssd1306_i2c)
 
-	CONFIG_ENUM(AudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
-	CONFIG_ENUM(AudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
-	CONFIG_ENUM(LCDType, ENUM_LCDTYPE);
+	CONFIG_ENUM(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
+	CONFIG_ENUM(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
+	CONFIG_ENUM(TLCDType, ENUM_LCDTYPE);
 
 	CConfig();
 	bool Initialize(const char* pPath);
 
-	static CConfig* Get() { return pThis; }
+	static CConfig* Get() { return s_pThis; }
 
 	// Expand all config variables from definition file
 	#define CFG(_1, TYPE, MEMBER_NAME, _2, _3...) TYPE MEMBER_NAME;
@@ -62,15 +62,15 @@ private:
 
 	// Overloaded function to parse config options based on their types specified in the definition file
 	static bool ParseOption(const char* pString, bool* pOut);
-	static bool ParseOption(const char* pString, int* pOut, bool pHex = false);
-	static bool ParseOption(const char* pString, AudioOutputDevice* pOut);
-	static bool ParseOption(const char* pString, AudioI2CDACInit* pOut);
-	static bool ParseOption(const char* pString, MT32EmuResamplerQuality* pOut);
-	static bool ParseOption(const char* pString, MT32EmuMIDIChannels* pOut);
-	static bool ParseOption(const char* pString, MT32EmuROMSet* pOut);
-	static bool ParseOption(const char* pString, LCDType* pOut);
+	static bool ParseOption(const char* pString, int* pOut, bool bHex = false);
+	static bool ParseOption(const char* pString, TAudioOutputDevice* pOut);
+	static bool ParseOption(const char* pString, TAudioI2CDACInit* pOut);
+	static bool ParseOption(const char* pString, TMT32EmuResamplerQuality* pOut);
+	static bool ParseOption(const char* pString, TMT32EmuMIDIChannels* pOut);
+	static bool ParseOption(const char* pString, TMT32EmuROMSet* pOut);
+	static bool ParseOption(const char* pString, TLCDType* pOut);
 
-	static CConfig* pThis;
+	static CConfig* s_pThis;
 };
 
 #endif

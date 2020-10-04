@@ -49,16 +49,16 @@ private:
 	bool CheckROM(const char* pPath);
 	bool StoreROM(const MT32Emu::ROMImage& ROMImage);
 
-	FATFS* mFileSystem;
+	FATFS* m_pFileSystem;
 
 	// Control ROMs
-	const MT32Emu::ROMImage* mMT32OldControl;
-	const MT32Emu::ROMImage* mMT32NewControl;
-	const MT32Emu::ROMImage* mCM32LControl;
+	const MT32Emu::ROMImage* m_pMT32OldControl;
+	const MT32Emu::ROMImage* m_pMT32NewControl;
+	const MT32Emu::ROMImage* m_pCM32LControl;
 
 	// PCM ROMs
-	const MT32Emu::ROMImage* mMT32PCM;
-	const MT32Emu::ROMImage* mCM32LPCM;
+	const MT32Emu::ROMImage* m_pMT32PCM;
+	const MT32Emu::ROMImage* m_pCM32LPCM;
 };
 
 #endif

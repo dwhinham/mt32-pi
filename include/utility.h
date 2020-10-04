@@ -33,9 +33,9 @@
 // Macro to declare an array of string representations for an enum
 #define CONFIG_ENUM_STRINGS(NAME, DATA) static const char* NAME##Strings[] = {DATA(CONFIG_ENUM_STRING)}
 
-// Templated function for clamping a value between a minimum and a maximum
 namespace Utility
 {
+	// Templated function for clamping a value between a minimum and a maximum{
 	template <class T>
 	static inline T Clamp(T value, T min, T max)
 	{

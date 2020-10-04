@@ -30,19 +30,19 @@ const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
 const char MT32PCMROMName[] = "MT32_PCM.ROM";
 
 CROMManager::CROMManager(FATFS& FileSystem)
-	: mFileSystem(&FileSystem),
-	  mMT32OldControl(nullptr),
-	  mMT32NewControl(nullptr),
-	  mCM32LControl(nullptr),
+	: m_pFileSystem(&FileSystem),
+	  m_pMT32OldControl(nullptr),
+	  m_pMT32NewControl(nullptr),
+	  m_pCM32LControl(nullptr),
 
-	  mMT32PCM(nullptr),
-	  mCM32LPCM(nullptr)
+	  m_pMT32PCM(nullptr),
+	  m_pCM32LPCM(nullptr)
 {
 }
 
 CROMManager::~CROMManager()
 {
-	const MT32Emu::ROMImage** const roms[] = { &mMT32OldControl, &mMT32NewControl, &mCM32LControl, &mMT32PCM, &mCM32LPCM };
+	const MT32Emu::ROMImage** const roms[] = { &m_pMT32OldControl, &m_pMT32NewControl, &m_pCM32LControl, &m_pMT32PCM, &m_pCM32LPCM };
 	for (const MT32Emu::ROMImage** rom : roms)
 		if (*rom)
 			MT32Emu::ROMImage::freeROMImage(*rom);
@@ -86,16 +86,16 @@ bool CROMManager::HaveROMSet(TROMSet ROMSet) const
 	switch (ROMSet)
 	{
 		case TROMSet::Any:
-			return (mMT32OldControl || mMT32NewControl || mCM32LControl) && (mMT32PCM || mCM32LPCM);
+			return (m_pMT32OldControl || m_pMT32NewControl || m_pCM32LControl) && (m_pMT32PCM || m_pCM32LPCM);
 
 		case TROMSet::MT32Old:
-			return mMT32OldControl && mMT32PCM;
+			return m_pMT32OldControl && m_pMT32PCM;
 
 		case TROMSet::MT32New:
-			return mMT32NewControl && mMT32PCM;
+			return m_pMT32NewControl && m_pMT32PCM;
 
 		case TROMSet::CM32L:
-			return mCM32LControl && mCM32LPCM;
+			return m_pCM32LControl && m_pCM32LPCM;
 	}
 
 	return false;
@@ -109,33 +109,33 @@ bool CROMManager::GetROMSet(TROMSet ROMSet, const MT32Emu::ROMImage*& pOutContro
 	switch (ROMSet)
 	{
 		case TROMSet::Any:
-			if (mMT32OldControl)
-				pOutControl = mMT32OldControl;
-			else if (mMT32NewControl)
-				pOutControl = mMT32NewControl;
+			if (m_pMT32OldControl)
+				pOutControl = m_pMT32OldControl;
+			else if (m_pMT32NewControl)
+				pOutControl = m_pMT32NewControl;
 			else
-				pOutControl = mCM32LControl;
+				pOutControl = m_pCM32LControl;
 
-			if (pOutControl == mCM32LControl && mCM32LPCM)
-				pOutPCM = mCM32LPCM;
+			if (pOutControl == m_pCM32LControl && m_pCM32LPCM)
+				pOutPCM = m_pCM32LPCM;
 			else
-				pOutPCM = mMT32PCM;
+				pOutPCM = m_pMT32PCM;
 
 			break;
 
 		case TROMSet::MT32Old:
-			pOutControl = mMT32OldControl;
-			pOutPCM     = mMT32PCM;
+			pOutControl = m_pMT32OldControl;
+			pOutPCM     = m_pMT32PCM;
 			break;
 
 		case TROMSet::MT32New:
-			pOutControl = mMT32NewControl;
-			pOutPCM     = mMT32PCM;
+			pOutControl = m_pMT32NewControl;
+			pOutPCM     = m_pMT32PCM;
 			break;
 
 		case TROMSet::CM32L:
-			pOutControl = mCM32LControl;
-			pOutPCM     = mCM32LPCM;
+			pOutControl = m_pCM32LControl;
+			pOutPCM     = m_pCM32LPCM;
 			break;
 	}
 
@@ -177,25 +177,25 @@ bool CROMManager::StoreROM(const MT32Emu::ROMImage& ROMImage)
 	{
 		// Is an 'old' MT-32 control ROM
 		if (romInfo->shortName[10] == '1' || romInfo->shortName[10] == 'b')
-			romPtr = &mMT32OldControl;
+			romPtr = &m_pMT32OldControl;
 
 		// Is a 'new' MT-32 control ROM
 		else if (romInfo->shortName[10] == '2')
-			romPtr = &mMT32NewControl;
+			romPtr = &m_pMT32NewControl;
 
 		// Is a CM-32L control ROM
 		else
-			romPtr = &mCM32LControl;
+			romPtr = &m_pCM32LControl;
 	}
 	else if (romInfo->type == MT32Emu::ROMInfo::Type::PCM)
 	{
 		// Is an MT-32 PCM ROM
 		if (romInfo->shortName[4] == 'm')
-			romPtr = &mMT32PCM;
+			romPtr = &m_pMT32PCM;
 
 		// Is a CM-32L PCM ROM
 		else
-			romPtr = &mCM32LPCM;
+			romPtr = &m_pCM32LPCM;
 	}
 
 	// Ensure we don't already have this ROM

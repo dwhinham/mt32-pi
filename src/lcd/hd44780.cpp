@@ -106,13 +106,13 @@ const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', 
 
 CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
 	: CMT32LCD(),
-	  mScheduler(CScheduler::Get()),
-	  mRows(nRows),
-	  mColumns(nColumns)
+	  m_pScheduler(CScheduler::Get()),
+	  m_nRows(nRows),
+	  m_nColumns(nColumns)
 {
 }
 
-void CHD44780Base::WriteByte(u8 nByte, WriteMode Mode)
+void CHD44780Base::WriteByte(u8 nByte, TWriteMode Mode)
 {
 	WriteNybble(nByte >> 4, Mode);
 	WriteNybble(nByte, Mode);
@@ -121,13 +121,13 @@ void CHD44780Base::WriteByte(u8 nByte, WriteMode Mode)
 void CHD44780Base::WriteCommand(u8 nByte)
 {
 	// RS = LOW for command mode
-	WriteByte(nByte, WriteMode::Command);
+	WriteByte(nByte, TWriteMode::Command);
 }
 
 void CHD44780Base::WriteData(u8 nByte)
 {
 	// RS = HIGH for data mode
-	WriteByte(nByte, WriteMode::Data);
+	WriteByte(nByte, TWriteMode::Data);
 }
 
 void CHD44780Base::WriteData(const u8* pBytes, size_t nSize)
@@ -147,38 +147,38 @@ void CHD44780Base::SetCustomChar(u8 nIndex, const u8 nCharData[8])
 
 bool CHD44780Base::Initialize()
 {
-	assert(mScheduler != nullptr);
+	assert(m_pScheduler != nullptr);
 
 	// Validate dimensions - only 20x2 and 20x4 supported for now
-	if (!(mRows == 2 || mRows == 4) || mColumns != 20)
+	if (!(m_nRows == 2 || m_nRows == 4) || m_nColumns != 20)
 		return false;
 
 	// Give the LCD some time to start up
-	mScheduler->MsSleep(50);
+	m_pScheduler->MsSleep(50);
 
 	// The following algorithm ensures the LCD is in the correct mode no matter what state it's currently in:
 	// https://en.wikipedia.org/wiki/Hitachi_HD44780_LCD_controller#Mode_selection
-	WriteNybble(0b0011, WriteMode::Command);
-	mScheduler->MsSleep(50);
-	WriteNybble(0b0011, WriteMode::Command);
-	mScheduler->MsSleep(50);
-	WriteNybble(0b0011, WriteMode::Command);
-	mScheduler->MsSleep(50);
+	WriteNybble(0b0011, TWriteMode::Command);
+	m_pScheduler->MsSleep(50);
+	WriteNybble(0b0011, TWriteMode::Command);
+	m_pScheduler->MsSleep(50);
+	WriteNybble(0b0011, TWriteMode::Command);
+	m_pScheduler->MsSleep(50);
 
 	// Switch to 4-bit mode
-	WriteNybble(0b0010, WriteMode::Command);
-	mScheduler->MsSleep(50);
+	WriteNybble(0b0010, TWriteMode::Command);
+	m_pScheduler->MsSleep(50);
 
 	// Turn off
 	WriteCommand(0b1000);
 
 	// Clear display
 	WriteCommand(0b0001);
-	mScheduler->MsSleep(50);
+	m_pScheduler->MsSleep(50);
 
 	// Home cursor
 	WriteCommand(0b0010);
-	mScheduler->MsSleep(2);
+	m_pScheduler->MsSleep(2);
 
 	// Function set (4-bit, 2-line)
 	WriteCommand(0b101000);
@@ -198,7 +198,7 @@ bool CHD44780Base::Initialize()
 
 void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
-	static u8 rowOffset[] = { 0, u8(0x40), mColumns, u8(0x40 + mColumns) };
+	static u8 rowOffset[] = { 0, u8(0x40), m_nColumns, u8(0x40 + m_nColumns) };
 	WriteCommand(0x80 | rowOffset[nCursorY] + nCursorX);
 
 	const char* p = pText;
@@ -207,7 +207,7 @@ void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClea
 
 	if (bClearLine)
 	{
-		while ((p++ - pText) < (mColumns - nCursorX))
+		while ((p++ - pText) < (m_nColumns - nCursorX))
 			WriteData(' ');
 	}
 }
@@ -215,7 +215,7 @@ void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClea
 void CHD44780Base::Clear()
 {
 	WriteCommand(0b0001);
-	mScheduler->MsSleep(50);
+	m_pScheduler->MsSleep(50);
 }
 
 void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
@@ -224,7 +224,7 @@ void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
 
 	for (u8 i = 0; i < 9; ++i)
 	{
-		lineBuf[i * 2] = BarChars[mPartLevels[i] / 2];
+		lineBuf[i * 2] = BarChars[m_PartLevels[i] / 2];
 		lineBuf[i * 2 + 1] = ' ';
 	}
 
@@ -240,15 +240,15 @@ void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
 
 	for (u8 i = 0; i < 9; ++i)
 	{
-		if (mPartLevels[i] > 8)
+		if (m_PartLevels[i] > 8)
 		{
-			line1Buf[i * 2] = BarChars[mPartLevels[i] - 8];
+			line1Buf[i * 2] = BarChars[m_PartLevels[i] - 8];
 			line2Buf[i * 2] = BarChars[8];
 		}
 		else
 		{
 			line1Buf[i * 2] = BarChars[0];
-			line2Buf[i * 2] = BarChars[mPartLevels[i]];
+			line2Buf[i * 2] = BarChars[m_PartLevels[i]];
 		}
 
 		line1Buf[i * 2 + 1] = line2Buf[i * 2 + 1] = ' ';
@@ -266,14 +266,14 @@ void CHD44780Base::Update(const CMT32SynthBase& Synth)
 
 	UpdatePartLevels(Synth);
 
-	if (mRows == 2)
+	if (m_nRows == 2)
 	{
 		DrawPartLevelsSingle(0);
-		Print(mTextBuffer, 0, 1, true);
+		Print(m_TextBuffer, 0, 1, true);
 	}
-	else if (mRows == 4)
+	else if (m_nRows == 4)
 	{
 		DrawPartLevelsDouble(0);
-		Print(mTextBuffer, 0, 2, true);
+		Print(m_TextBuffer, 0, 2, true);
 	}
 }

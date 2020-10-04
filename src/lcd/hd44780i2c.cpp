@@ -29,24 +29,24 @@
 
 CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress, u8 nColumns, u8 nRows)
 	: CHD44780Base(nColumns, nRows),
-	  mI2CMaster(pI2CMaster),
-	  mAddress(nAddress)
+	  m_pI2CMaster(pI2CMaster),
+	  m_nAddress(nAddress)
 {
 }
 
-void CHD44780I2C::WriteNybble(u8 nNybble, WriteMode Mode)
+void CHD44780I2C::WriteNybble(u8 nNybble, TWriteMode Mode)
 {
 	// Write bits with ENABLE pulsed high momentarily
 	u8 bits = ((nNybble << 4) & 0xF0) | LCD_BACKLIGHT | LCD_ENABLE;
 
-	if (Mode == WriteMode::Data)
+	if (Mode == TWriteMode::Data)
 		bits |= 1;
 
-	mI2CMaster->Write(mAddress, &bits, 1);
-	mScheduler->usSleep(5);
+	m_pI2CMaster->Write(m_nAddress, &bits, 1);
+	m_pScheduler->usSleep(5);
 
 	// Bring ENABLE low again
 	bits &= ~LCD_ENABLE;
-	mI2CMaster->Write(mAddress, &bits, 1);
-	mScheduler->usSleep(100);
+	m_pI2CMaster->Write(m_nAddress, &bits, 1);
+	m_pScheduler->usSleep(100);
 }

@@ -41,60 +41,59 @@ public:
 	TShutdownMode Run(void);
 
 protected:
-	CCPUThrottle mCPUThrottle;
-	CNullDevice mNull;
-	CSerialDevice mSerial;
+	CCPUThrottle m_CPUThrottle;
+	CNullDevice m_Null;
+	CSerialDevice m_Serial;
 #ifdef HDMI_CONSOLE
-	CScreenDevice mScreen;
+	CScreenDevice m_Screen;
 #endif
-	CTimer mTimer;
-	CLogger mLogger;
-	CScheduler mScheduler;
-	CUSBHCIDevice mUSBHCI;
-	CEMMCDevice mEMMC;
-	FATFS mFileSystem;
+	CTimer m_Timer;
+	CLogger m_Logger;
+	CScheduler m_Scheduler;
+	CUSBHCIDevice m_USBHCI;
+	CEMMCDevice m_EMMC;
+	FATFS m_FileSystem;
 
-	CI2CMaster mI2CMaster;
-	CMT32LCD* mLCD;
+	CI2CMaster m_I2CMaster;
+	CMT32LCD* m_pLCD;
 
 private:
-	bool InitPCM51xx(u8 pAddress);
+	bool InitPCM51xx(u8 nAddress);
 
 	// CMIDIParser
-	virtual void OnShortMessage(u32 pMessage) override;
-	virtual void OnSysExMessage(const u8* pData, size_t pSize) override;
+	virtual void OnShortMessage(u32 nMessage) override;
+	virtual void OnSysExMessage(const u8* pData, size_t nSize) override;
 	virtual void OnUnexpectedStatus() override;
 	virtual void OnSysExOverflow() override;
 
-	bool ParseCustomSysEx(const u8* pData, size_t pSize);
+	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 	void UpdateSerialMIDI();
 
 	void LEDOn();
 	void LCDLog(const char* pMessage);
 
 	// Configuration
-	CConfig mConfig;
+	CConfig m_Config;
 
-	unsigned mLCDLogTime;
-	unsigned mLCDUpdateTime;
+	unsigned m_nLCDLogTime;
+	unsigned m_nLCDUpdateTime;
 
 	// Serial GPIO MIDI
-	bool mSerialMIDIEnabled;
+	bool m_bSerialMIDIEnabled;
 
-	bool mActiveSenseFlag;
-	unsigned mActiveSenseTime;
+	bool m_bActiveSenseFlag;
+	unsigned m_nActiveSenseTime;
 
-	bool mShouldReboot;
-	bool mLEDOn;
-	unsigned mLEDOnTime;
+	bool m_bShouldReboot;
+	bool m_bLEDOn;
+	unsigned m_nLEDOnTime;
 
 	// Synthesizer
-	CMT32SynthBase* mSynth;
+	CMT32SynthBase* m_pSynth;
 
-	static void USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength);
-	static void ProgramChangedHander(u8 pPartNum, const char* pSoundGroupName, const char* pPatchName);
-	static void LCDMessageHandler(const char* pMessage);
-	static CKernel *pThis;
+	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
+
+	static CKernel* s_pThis;
 };
 
 #endif

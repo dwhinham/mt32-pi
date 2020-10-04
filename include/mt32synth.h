@@ -47,10 +47,10 @@ public:
 		ENUM(Standard, standard)    \
 		ENUM(Alternate, alternate)
 
-	CONFIG_ENUM(ResamplerQuality, ENUM_RESAMPLERQUALITY);
-	CONFIG_ENUM(MIDIChannels, ENUM_MIDICHANNELS);
+	CONFIG_ENUM(TResamplerQuality, ENUM_RESAMPLERQUALITY);
+	CONFIG_ENUM(TMIDIChannels, ENUM_MIDICHANNELS);
 
-	CMT32SynthBase(FATFS& FileSystem, unsigned pSampleRate, ResamplerQuality pResamplerQuality);
+	CMT32SynthBase(FATFS& FileSystem, unsigned nSampleRate, TResamplerQuality ResamplerQuality);
 	virtual ~CMT32SynthBase();
 
 	virtual bool Initialize();
@@ -59,15 +59,15 @@ public:
 	virtual bool Start() = 0;
 	virtual void Cancel() = 0;
 
-	void HandleMIDIShortMessage(u32 pMessage);
-	void HandleMIDISysExMessage(const u8* pData, size_t pSize);
-	void SetLCD(CMT32LCD* pLCD) { mLCD = pLCD; }
-	void SetMIDIChannels(MIDIChannels Channels);
+	void HandleMIDIShortMessage(u32 nMessage);
+	void HandleMIDISysExMessage(const u8* pData, size_t nSize);
+	void SetLCD(CMT32LCD* pLCD) { m_pLCD = pLCD; }
+	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
 	const char* GetControlROMName() const;
 
-	u32 GetPartStates() const { return mSynth->getPartStates(); }
-	u8 GetVelocityForPart(u8 pPart) const;
+	u32 GetPartStates() const { return m_pSynth->getPartStates(); }
+	u8 GetVelocityForPart(u8 nPart) const;
 	u8 GetMasterVolume() const;
 
 	void AllSoundOff();
@@ -77,39 +77,39 @@ protected:
 	virtual int GetRangeMin() const = 0;
 	virtual int GetRangeMax() const = 0;
 
-	MT32Emu::Synth *mSynth;
+	MT32Emu::Synth* m_pSynth;
 
-	int mLowLevel;
-	int mNullLevel;
-	int mHighLevel;
+	int m_nLowLevel;
+	int m_nNullLevel;
+	int m_HighLevel;
 
-	unsigned int mSampleRate;
-	ResamplerQuality mResamplerQuality;
-	MT32Emu::SampleRateConverter *mSampleRateConverter;
+	unsigned int m_nSampleRate;
+	TResamplerQuality m_ResamplerQuality;
+	MT32Emu::SampleRateConverter* m_pSampleRateConverter;
 
 private:
 	// ReportHandler
 	virtual bool onMIDIQueueOverflow() override;
-	virtual void onProgramChanged(MT32Emu::Bit8u partNum, const char* soundGroupName, const char* patchName) override;
-	virtual void printDebug(const char* fmt, va_list list) override;
-	virtual void showLCDMessage(const char* message) override;
+	virtual void onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName) override;
+	virtual void printDebug(const char* pFmt, va_list pList) override;
+	virtual void showLCDMessage(const char* pMessage) override;
 
 	static const u8 StandardMIDIChannelsSysEx[];
 	static const u8 AlternateMIDIChannelsSysEx[];
 
-	CROMManager mROMManager;
-	const MT32Emu::ROMImage* mControlROMImage;
-	const MT32Emu::ROMImage* mPCMROMImage;
+	CROMManager m_ROMManager;
+	const MT32Emu::ROMImage* m_pControlROMImage;
+	const MT32Emu::ROMImage* m_pPCMROMImage;
 
-	CMT32LCD* mLCD;
+	CMT32LCD* m_pLCD;
 };
 
 class CMT32SynthI2S : public CMT32SynthBase, public CI2SSoundBaseDevice
 {
 public:
-	CMT32SynthI2S(FATFS& FileSystem, CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
-	: CMT32SynthBase(FileSystem, pSampleRate, pResamplerQuality),
-	  CI2SSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize)
+	CMT32SynthI2S(FATFS& FileSystem, CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
+	: CMT32SynthBase(FileSystem, nSampleRate, ResamplerQuality),
+	  CI2SSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize)
 	{
 	}
 
@@ -126,10 +126,10 @@ private:
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
 {
 public:
-	CMT32SynthPWM(FATFS& FileSystem, CInterruptSystem *pInterrupt, unsigned pSampleRate, ResamplerQuality pResamplerQuality, unsigned pChunkSize)
-	: CMT32SynthBase(FileSystem, pSampleRate, pResamplerQuality),
-	  CPWMSoundBaseDevice(pInterrupt, pSampleRate, pChunkSize),
-	  mChannelsSwapped(AreChannelsSwapped())
+	CMT32SynthPWM(FATFS& FileSystem, CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
+	: CMT32SynthBase(FileSystem, nSampleRate, ResamplerQuality),
+	  CPWMSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize),
+	  m_bChannelsSwapped(AreChannelsSwapped())
 	{
 	}
 
@@ -142,7 +142,7 @@ private:
 	// CSoundBaseDevice
 	virtual unsigned GetChunk(u32* pBuffer, unsigned nChunkSize) override;
 
-	bool mChannelsSwapped;
+	bool m_bChannelsSwapped;
 };
 
 #endif

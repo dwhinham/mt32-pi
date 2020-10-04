@@ -44,14 +44,14 @@ public:
 	virtual void Update(const CMT32SynthBase& Synth) override;
 
 protected:
-	enum class WriteMode
+	enum class TWriteMode
 	{
 		Data,
 		Command
 	};
 
-	virtual void WriteNybble(u8 nNybble, WriteMode Mode) = 0;
-	void WriteByte(u8 nByte, WriteMode Mode);
+	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) = 0;
+	void WriteByte(u8 nByte, TWriteMode Mode);
 
 	void WriteCommand(u8 nByte);
 	void WriteData(u8 nByte);
@@ -62,9 +62,9 @@ protected:
 	void DrawPartLevelsSingle(u8 nRow);
 	void DrawPartLevelsDouble(u8 nFirstRow);
 
-	CScheduler* mScheduler;
-	u8 mRows;
-	u8 mColumns;
+	CScheduler* m_pScheduler;
+	u8 m_nRows;
+	u8 m_nColumns;
 
 	static const u8 CustomCharData[7][8];
 	static const char BarChars[9];
@@ -76,7 +76,7 @@ public:
 	CHD44780FourBit(u8 nColumns = 20, u8 nRows = 2);
 
 protected:
-	virtual void WriteNybble(u8 nNybble, WriteMode Mode) override;
+	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) override;
 
 	static constexpr u8 GPIO_PIN_RS = 10;
 	static constexpr u8 GPIO_PIN_RW = 9;
@@ -86,13 +86,13 @@ protected:
 	static constexpr u8 GPIO_PIN_D6 = 6;
 	static constexpr u8 GPIO_PIN_D7 = 13;
 
-	CGPIOPin mRS;
-	CGPIOPin mRW;
-	CGPIOPin mEN;
-	CGPIOPin mD4;
-	CGPIOPin mD5;
-	CGPIOPin mD6;
-	CGPIOPin mD7;
+	CGPIOPin m_RS;
+	CGPIOPin m_RW;
+	CGPIOPin m_EN;
+	CGPIOPin m_D4;
+	CGPIOPin m_D5;
+	CGPIOPin m_D6;
+	CGPIOPin m_D7;
 };
 
 class CHD44780I2C : public CHD44780Base
@@ -101,10 +101,10 @@ public:
 	CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress = 0x27, u8 nColumns = 20, u8 nRows = 2);
 
 protected:
-	virtual void WriteNybble(u8 nNybble, WriteMode Mode) override;
+	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) override;
 
-	CI2CMaster* mI2CMaster;
-	u8 mAddress;
+	CI2CMaster* m_pI2CMaster;
+	u8 m_nAddress;
 };
 
 #endif

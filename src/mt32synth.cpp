@@ -32,70 +32,70 @@ const char MT32SynthName[] = "mt32synth";
 const u8 CMT32SynthBase::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 const u8 CMT32SynthBase::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
-CMT32SynthBase::CMT32SynthBase(FATFS& FileSystem, unsigned pSampleRate, ResamplerQuality pResamplerQuality)
-	: mSynth(nullptr),
+CMT32SynthBase::CMT32SynthBase(FATFS& FileSystem, unsigned nSampleRate, TResamplerQuality ResamplerQuality)
+	: m_pSynth(nullptr),
 
-	  mLowLevel(0),
-	  mNullLevel(0),
-	  mHighLevel(0),
+	  m_nLowLevel(0),
+	  m_nNullLevel(0),
+	  m_HighLevel(0),
 
-	  mSampleRate(pSampleRate),
-	  mResamplerQuality(pResamplerQuality),
-	  mSampleRateConverter(nullptr),
+	  m_nSampleRate(nSampleRate),
+	  m_ResamplerQuality(ResamplerQuality),
+	  m_pSampleRateConverter(nullptr),
 
-	  mROMManager(FileSystem),
-	  mControlROMImage(nullptr),
-	  mPCMROMImage(nullptr),
+	  m_ROMManager(FileSystem),
+	  m_pControlROMImage(nullptr),
+	  m_pPCMROMImage(nullptr),
 
-	  mLCD(nullptr)
+	  m_pLCD(nullptr)
 {
 }
 
 CMT32SynthBase::~CMT32SynthBase()
 {
-	if (mSynth)
-		delete mSynth;
+	if (m_pSynth)
+		delete m_pSynth;
 
-	if (mSampleRateConverter)
-		delete mSampleRateConverter;
+	if (m_pSampleRateConverter)
+		delete m_pSampleRateConverter;
 }
 
 bool CMT32SynthBase::Initialize()
 {
-	if (!mROMManager.ScanROMs())
+	if (!m_ROMManager.ScanROMs())
 		return false;
 
 	// Try to load user's preferred initial ROM set, otherwise fall back on first available
-	CROMManager::TROMSet initialROMSet = CConfig::Get()->mMT32EmuROMSet;
-	if (!mROMManager.HaveROMSet(initialROMSet))
+	CROMManager::TROMSet initialROMSet = CConfig::Get()->m_MT32EmuROMSet;
+	if (!m_ROMManager.HaveROMSet(initialROMSet))
 		initialROMSet = CROMManager::TROMSet::Any;
 
-	if (!mROMManager.GetROMSet(initialROMSet, mControlROMImage, mPCMROMImage))
+	if (!m_ROMManager.GetROMSet(initialROMSet, m_pControlROMImage, m_pPCMROMImage))
 		return false;
 
-	mSynth = new MT32Emu::Synth(this);
+	m_pSynth = new MT32Emu::Synth(this);
 
-	if (!mSynth->open(*mControlROMImage, *mPCMROMImage))
+	if (!m_pSynth->open(*m_pControlROMImage, *m_pPCMROMImage))
 		return false;
 
-	if (mResamplerQuality != ResamplerQuality::None)
+	if (m_ResamplerQuality != TResamplerQuality::None)
 	{
 		auto quality = MT32Emu::SamplerateConversionQuality_GOOD;
-		switch (mResamplerQuality)
+		switch (m_ResamplerQuality)
 		{
-			case ResamplerQuality::Fastest:
+			case TResamplerQuality::Fastest:
 				quality = MT32Emu::SamplerateConversionQuality_FASTEST;
 				break;
 
-			case ResamplerQuality::Fast:
+			case TResamplerQuality::Fast:
 				quality = MT32Emu::SamplerateConversionQuality_FAST;
 				break;
 
-			case ResamplerQuality::Good:
+			case TResamplerQuality::Good:
 				quality = MT32Emu::SamplerateConversionQuality_GOOD;
 				break;
 
-			case ResamplerQuality::Best:
+			case TResamplerQuality::Best:
 				quality = MT32Emu::SamplerateConversionQuality_BEST;
 				break;
 
@@ -103,35 +103,35 @@ bool CMT32SynthBase::Initialize()
 				break;
 		}
 
-		mSampleRateConverter = new MT32Emu::SampleRateConverter(*mSynth, mSampleRate, quality);
+		m_pSampleRateConverter = new MT32Emu::SampleRateConverter(*m_pSynth, m_nSampleRate, quality);
 	}
 
 	// Audio output device integer range
-	mLowLevel = GetRangeMin();
-	mHighLevel = GetRangeMax();
-	mNullLevel = (mHighLevel + mLowLevel) / 2;
+	m_nLowLevel = GetRangeMin();
+	m_HighLevel = GetRangeMax();
+	m_nNullLevel = (m_HighLevel + m_nLowLevel) / 2;
 
 	return true;
 }
 
-void CMT32SynthBase::HandleMIDIShortMessage(u32 pMessage)
+void CMT32SynthBase::HandleMIDIShortMessage(u32 nMessage)
 {
 	// TODO: timestamping
-	mSynth->playMsg(pMessage);
+	m_pSynth->playMsg(nMessage);
 }
 
-void CMT32SynthBase::HandleMIDISysExMessage(const u8* pData, size_t pSize)
+void CMT32SynthBase::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
 	// TODO: timestamping
-	mSynth->playSysex(pData, pSize);
+	m_pSynth->playSysex(pData, nSize);
 }
 
-void CMT32SynthBase::SetMIDIChannels(MIDIChannels Channels)
+void CMT32SynthBase::SetMIDIChannels(TMIDIChannels Channels)
 {
-	if (Channels == MIDIChannels::Standard)
-		mSynth->writeSysex(0x10, StandardMIDIChannelsSysEx, sizeof(StandardMIDIChannelsSysEx));
+	if (Channels == TMIDIChannels::Standard)
+		m_pSynth->writeSysex(0x10, StandardMIDIChannelsSysEx, sizeof(StandardMIDIChannelsSysEx));
 	else
-		mSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
+		m_pSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
 }
 
 bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
@@ -140,41 +140,41 @@ bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	const MT32Emu::ROMImage* pcmROMImage;
 
 	// Get ROM set if available
-	if (!mROMManager.GetROMSet(ROMSet, controlROMImage, pcmROMImage))
+	if (!m_ROMManager.GetROMSet(ROMSet, controlROMImage, pcmROMImage))
 	{
-		if (mLCD)
-			mLCD->OnLCDMessage("ROM set not avail!");
+		if (m_pLCD)
+			m_pLCD->OnLCDMessage("ROM set not avail!");
 		return false;
 	}
 
 	// Is this ROM set already active?
-	if (controlROMImage == mControlROMImage)
+	if (controlROMImage == m_pControlROMImage)
 	{
-		if (mLCD)
-			mLCD->OnLCDMessage("Already selected!");
+		if (m_pLCD)
+			m_pLCD->OnLCDMessage("Already selected!");
 		return false;
 	}
 
 	// Reopen synth with new ROMs
 	// N.B. it should be safe to do this without stopping the audio device as render()
 	// will just return silence while the synth is closed
-	mSynth->close();
-	if (!mSynth->open(*controlROMImage, *pcmROMImage))
+	m_pSynth->close();
+	if (!m_pSynth->open(*controlROMImage, *pcmROMImage))
 		return false;
 
-	mControlROMImage = controlROMImage;
-	mPCMROMImage     = pcmROMImage;
+	m_pControlROMImage = controlROMImage;
+	m_pPCMROMImage     = pcmROMImage;
 
-	if (mLCD)
-		mLCD->OnLCDMessage(GetControlROMName());
+	if (m_pLCD)
+		m_pLCD->OnLCDMessage(GetControlROMName());
 
 	return true;
 }
 
 const char* CMT32SynthBase::GetControlROMName() const
 {
-	const char* shortName = mControlROMImage->getROMInfo()->shortName;
-	const MT32Emu::Bit8u* romData = mControlROMImage->getFile()->getData();
+	const char* shortName = m_pControlROMImage->getROMInfo()->shortName;
+	const MT32Emu::Bit8u* romData = m_pControlROMImage->getFile()->getData();
 	size_t offset;
 
 	// Find version strings from ROMs
@@ -191,11 +191,11 @@ const char* CMT32SynthBase::GetControlROMName() const
 	return reinterpret_cast<const char*>(romData + offset);
 }
 
-u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const
+u8 CMT32SynthBase::GetVelocityForPart(u8 nPart) const
 {
 	u8 keys[MT32Emu::DEFAULT_MAX_PARTIALS];
 	u8 velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
-	u32 playingNotes = mSynth->getPlayingNotes(pPart, keys, velocities);
+	u32 playingNotes = m_pSynth->getPlayingNotes(nPart, keys, velocities);
 
 	u8 maxVelocity = velocities[0];
 	for (u32 i = 1; i < playingNotes; ++i)
@@ -208,7 +208,7 @@ u8 CMT32SynthBase::GetVelocityForPart(u8 pPart) const
 u8 CMT32SynthBase::GetMasterVolume() const
 {
 	u8 volume;
-	mSynth->readMemory(0x40016, 1, &volume);
+	m_pSynth->readMemory(0x40016, 1, &volume);
 	return volume;
 }
 
@@ -216,7 +216,7 @@ void CMT32SynthBase::AllSoundOff()
 {
 	// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
 	for (uint8_t i = 0; i < 8; ++i)
-		mSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
+		m_pSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
 }
 
 bool CMT32SynthBase::onMIDIQueueOverflow()
@@ -225,22 +225,22 @@ bool CMT32SynthBase::onMIDIQueueOverflow()
 	return false;
 }
 
-void CMT32SynthBase::onProgramChanged(MT32Emu::Bit8u partNum, const char* soundGroupName, const char* patchName)
+void CMT32SynthBase::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
-	if (mLCD)
-		mLCD->OnProgramChanged(partNum, soundGroupName, patchName);
+	if (m_pLCD)
+		m_pLCD->OnProgramChanged(nPartNum, pSoundGroupName, pPatchName);
 }
 
-void CMT32SynthBase::printDebug(const char* fmt, va_list list)
+void CMT32SynthBase::printDebug(const char* pFmt, va_list pList)
 {
 	//CLogger::Get()->WriteV("debug", LogNotice, fmt, list);
 }
 
-void CMT32SynthBase::showLCDMessage(const char* message)
+void CMT32SynthBase::showLCDMessage(const char* pMessage)
 {
-	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", message);
-	if (mLCD)
-		mLCD->OnLCDMessage(message);
+	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
+	if (m_pLCD)
+		m_pLCD->OnLCDMessage(pMessage);
 }
 
 //
@@ -249,14 +249,14 @@ void CMT32SynthBase::showLCDMessage(const char* message)
 unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
 	float samples[nChunkSize];
-	if (mSampleRateConverter)
-		mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	if (m_pSampleRateConverter)
+		m_pSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
 	else
-		mSynth->render(samples, nChunkSize / 2);
+		m_pSynth->render(samples, nChunkSize / 2);
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{
-		int level = static_cast<int>(samples[i] * mHighLevel / 2 + mNullLevel);
+		int level = static_cast<int>(samples[i] * m_HighLevel / 2 + m_nNullLevel);
 		*pBuffer++ = static_cast<u32>(level);
 	}
 
@@ -269,20 +269,20 @@ unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 unsigned int CMT32SynthPWM::GetChunk(u32 *pBuffer, unsigned nChunkSize)
 {
 	float samples[nChunkSize];
-	if (mSampleRateConverter)
-		mSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
+	if (m_pSampleRateConverter)
+		m_pSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
 	else
-		mSynth->render(samples, nChunkSize / 2);
+		m_pSynth->render(samples, nChunkSize / 2);
 
 	for (size_t i = 0; i < nChunkSize; ++i)
 	{
-		int levelLeft = static_cast<int>(samples[i * 2] * mHighLevel / 2 + mNullLevel);
-		int levelRight = static_cast<int>(samples[i * 2 + 1] * mHighLevel / 2 + mNullLevel);
+		int levelLeft = static_cast<int>(samples[i * 2] * m_HighLevel / 2 + m_nNullLevel);
+		int levelRight = static_cast<int>(samples[i * 2 + 1] * m_HighLevel / 2 + m_nNullLevel);
 
-		levelLeft = Utility::Clamp(levelLeft, mLowLevel, mHighLevel);
-		levelRight = Utility::Clamp(levelRight, mLowLevel, mHighLevel);
+		levelLeft = Utility::Clamp(levelLeft, m_nLowLevel, m_HighLevel);
+		levelRight = Utility::Clamp(levelRight, m_nLowLevel, m_HighLevel);
 
-		if (mChannelsSwapped)
+		if (m_bChannelsSwapped)
 		{
 			*pBuffer++ = static_cast<u32>(levelRight);
 			*pBuffer++ = static_cast<u32>(levelLeft);

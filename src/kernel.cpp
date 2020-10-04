@@ -39,45 +39,41 @@
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 330
 
-#define I2C_MASTER_DEVICE	1		// 0 on Raspberry Pi 1 Rev. 1 boards, 1 otherwise
-#define I2C_MASTER_CONFIG	0		// 0 or 1 on Raspberry Pi 4, 0 otherwise
-#define I2C_FAST_MODE		TRUE	// standard mode (100 Kbps) or fast mode (400 Kbps)
-
-CKernel *CKernel::pThis = nullptr;
+CKernel* CKernel::s_pThis = nullptr;
 
 CKernel::CKernel(void)
 	: CStdlibApp("mt32-pi"),
 	  CMIDIParser(),
 
-	  mSerial(&mInterrupt, true),
+	  m_Serial(&mInterrupt, true),
 #ifdef HDMI_CONSOLE
-	  mScreen(mOptions.GetWidth(), mOptions.GetHeight()),
+	  m_Screen(mOptions.GetWidth(), mOptions.GetHeight()),
 #endif
 
-	  mTimer(&mInterrupt),
-	  mLogger(mOptions.GetLogLevel(), &mTimer),
-	  mUSBHCI(&mInterrupt, &mTimer),
-	  mEMMC(&mInterrupt, &mTimer, &mActLED),
-	  mFileSystem{},
+	  m_Timer(&mInterrupt),
+	  m_Logger(mOptions.GetLogLevel(), &m_Timer),
+	  m_USBHCI(&mInterrupt, &m_Timer),
+	  m_EMMC(&mInterrupt, &m_Timer, &mActLED),
+	  m_FileSystem{},
 
-	  mI2CMaster(1, true),
-	  mLCD(nullptr),
+	  m_I2CMaster(1, true),
+	  m_pLCD(nullptr),
 
-	  mLCDLogTime(0),
-	  mLCDUpdateTime(0),
+	  m_nLCDLogTime(0),
+	  m_nLCDUpdateTime(0),
 
-	  mSerialMIDIEnabled(false),
+	  m_bSerialMIDIEnabled(false),
 
-	  mActiveSenseFlag(false),
-	  mActiveSenseTime(0),
+	  m_bActiveSenseFlag(false),
+	  m_nActiveSenseTime(0),
 
-	  mShouldReboot(false),
-	  mLEDOn(false),
-	  mLEDOnTime(0),
+	  m_bShouldReboot(false),
+	  m_bLEDOn(false),
+	  m_nLEDOnTime(0),
 
-	  mSynth(nullptr)
+	  m_pSynth(nullptr)
 {
-	pThis = this;
+	s_pThis = this;
 }
 
 bool CKernel::Initialize(void)
@@ -86,66 +82,66 @@ bool CKernel::Initialize(void)
 		return false;
 
 #ifdef HDMI_CONSOLE
-	if (!mScreen.Initialize())
+	if (!m_Screen.Initialize())
 		return false;
 #endif
 
-	CDevice *pLogTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
+	CDevice* pLogTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
 
 	if (!pLogTarget)
-		pLogTarget = &mNull;
+		pLogTarget = &m_Null;
 
 	// Init serial port early if used for logging
-	mSerialMIDIEnabled = pLogTarget != &mSerial;
-	if (!mSerialMIDIEnabled && !mSerial.Initialize(115200))
+	m_bSerialMIDIEnabled = pLogTarget != &m_Serial;
+	if (!m_bSerialMIDIEnabled && !m_Serial.Initialize(115200))
 		return false;
 
-	if (!mLogger.Initialize(pLogTarget))
+	if (!m_Logger.Initialize(pLogTarget))
 		return false;
 
-	if (!mTimer.Initialize())
+	if (!m_Timer.Initialize())
 		return false;
 
-	if (!mEMMC.Initialize())
+	if (!m_EMMC.Initialize())
 		return false;
 
-	char const *partitionName = "SD:";
+	char const* partitionName = "SD:";
 
-	if (f_mount(&mFileSystem, partitionName, 1) != FR_OK)
+	if (f_mount(&m_FileSystem, partitionName, 1) != FR_OK)
 	{
-		mLogger.Write(GetKernelName(), LogError, "Cannot mount partition: %s", partitionName);
+		m_Logger.Write(GetKernelName(), LogError, "Cannot mount partition: %s", partitionName);
 		return false;
 	}
 
 	// Initialize newlib stdio with a reference to Circle's file system
-	CGlueStdioInit(mFileSystem);
+	CGlueStdioInit(m_FileSystem);
 
-	if (!mConfig.Initialize("mt32-pi.cfg"))
-		mLogger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
+	if (!m_Config.Initialize("mt32-pi.cfg"))
+		m_Logger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
 
 	// Init serial port for GPIO MIDI if not being used for logging
-	if (mSerialMIDIEnabled && !mSerial.Initialize(mConfig.mMIDIGPIOBaudRate))
+	if (m_bSerialMIDIEnabled && !m_Serial.Initialize(m_Config.m_nMIDIGPIOBaudRate))
 		return false;
 
-	if (!mI2CMaster.Initialize())
+	if (!m_I2CMaster.Initialize())
 		return false;
 
-	if (mConfig.mLCDType == CConfig::LCDType::HD44780FourBit)
-		mLCD = new CHD44780FourBit(mConfig.mLCDWidth, mConfig.mLCDHeight);
-	else if (mConfig.mLCDType == CConfig::LCDType::HD44780I2C)
-		mLCD = new CHD44780I2C(&mI2CMaster, mConfig.mLCDI2CLCDAddress, mConfig.mLCDWidth, mConfig.mLCDHeight);
-	else if (mConfig.mLCDType == CConfig::LCDType::SSD1306I2C)
-		mLCD = new CSSD1306(&mI2CMaster, mConfig.mLCDI2CLCDAddress, mConfig.mLCDHeight);
-	
-	if (mLCD)
+	if (m_Config.m_LCDType == CConfig::TLCDType::HD44780FourBit)
+		m_pLCD = new CHD44780FourBit(m_Config.m_nLCDWidth, m_Config.m_nLCDHeight);
+	else if (m_Config.m_LCDType == CConfig::TLCDType::HD44780I2C)
+		m_pLCD = new CHD44780I2C(&m_I2CMaster, m_Config.m_nLCDI2CLCDAddress, m_Config.m_nLCDWidth, m_Config.m_nLCDHeight);
+	else if (m_Config.m_LCDType == CConfig::TLCDType::SSD1306I2C)
+		m_pLCD = new CSSD1306(&m_I2CMaster, m_Config.m_nLCDI2CLCDAddress, m_Config.m_nLCDHeight);
+
+	if (m_pLCD)
 	{
-		if (mLCD->Initialize())
-			mLCD->Print("mt32-pi " MT32_PI_VERSION, 0, 0, false, true);
+		if (m_pLCD->Initialize())
+			m_pLCD->Print("mt32-pi " MT32_PI_VERSION, 0, 0, false, true);
 		else
 		{
-			mLogger.Write(GetKernelName(), LogWarning, "LCD init failed; invalid dimensions?");
-			delete mLCD;
-			mLCD = nullptr;
+			m_Logger.Write(GetKernelName(), LogWarning, "LCD init failed; invalid dimensions?");
+			delete m_pLCD;
+			m_pLCD = nullptr;
 		}
 	}
 
@@ -154,40 +150,40 @@ bool CKernel::Initialize(void)
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
 	LCDLog("Init USB");
-	if (mConfig.mMIDIUSB && !mUSBHCI.Initialize())
+	if (m_Config.m_bMIDIUSB && !m_USBHCI.Initialize())
 		return false;
 #endif
 
-	if (mConfig.mAudioOutputDevice == CConfig::AudioOutputDevice::I2SDAC)
+	if (m_Config.m_AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
 	{
 		LCDLog("Init mt32emu (I2S)");
-		if (mConfig.mAudioI2CDACInit == CConfig::AudioI2CDACInit::PCM51xx)
-			InitPCM51xx(mConfig.mAudioI2CDACAddress);
+		if (m_Config.m_AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
+			InitPCM51xx(m_Config.m_nAudioI2CDACAddress);
 
-		mSynth = new CMT32SynthI2S(mFileSystem, &mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+		m_pSynth = new CMT32SynthI2S(m_FileSystem, &mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
 	}
 	else
 	{
 		LCDLog("Init mt32emu (PWM)");
-		mSynth = new CMT32SynthPWM(mFileSystem, &mInterrupt, mConfig.mAudioSampleRate, mConfig.mMT32EmuResamplerQuality, mConfig.mAudioChunkSize);
+		m_pSynth = new CMT32SynthPWM(m_FileSystem, &mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
 	}
 
-	if (!mSynth->Initialize())
+	if (!m_pSynth->Initialize())
 		return false;
 
 	// Set initial channel assignment from config
-	if (mConfig.mMT32EmuMIDIChannels == CMT32SynthBase::MIDIChannels::Alternate)
-		mSynth->SetMIDIChannels(mConfig.mMT32EmuMIDIChannels);
+	if (m_Config.m_MT32EmuMIDIChannels == CMT32SynthBase::TMIDIChannels::Alternate)
+		m_pSynth->SetMIDIChannels(m_Config.m_MT32EmuMIDIChannels);
 
-	mLogger.Write(GetKernelName(), LogNotice, "mt32-pi " MT32_PI_VERSION);
-	mLogger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
+	m_Logger.Write(GetKernelName(), LogNotice, "mt32-pi " MT32_PI_VERSION);
+	m_Logger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
 	CCPUThrottle::Get()->DumpStatus();
 
 	return true;
 }
 
 // TODO: Generic configurable DAC init class
-bool CKernel::InitPCM51xx(u8 pAddress)
+bool CKernel::InitPCM51xx(u8 nAddress)
 {
 	unsigned char initBytes[][2] =
 	{
@@ -203,9 +199,9 @@ bool CKernel::InitPCM51xx(u8 pAddress)
 
 	for (auto& command : initBytes)
 	{
-		if (mI2CMaster.Write(pAddress, &command, sizeof(command)) != sizeof(command))
+		if (m_I2CMaster.Write(nAddress, &command, sizeof(command)) != sizeof(command))
 		{
-			mLogger.Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
+			m_Logger.Write(GetKernelName(), LogWarning, "I2C write error (DAC init sequence)");
 			return false;
 		}
 	}
@@ -215,81 +211,81 @@ bool CKernel::InitPCM51xx(u8 pAddress)
 
 CStdlibApp::TShutdownMode CKernel::Run(void)
 {
-	CUSBMIDIDevice *pMIDIDevice = static_cast<CUSBMIDIDevice *>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
+	CUSBMIDIDevice* pMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
 	{
 		pMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
-		mLogger.Write(GetKernelName(), LogNotice, "Using USB MIDI interface");
-		mSerialMIDIEnabled = false;
+		m_Logger.Write(GetKernelName(), LogNotice, "Using USB MIDI interface");
+		m_bSerialMIDIEnabled = false;
 	}
 	else
 	{
-		if (mSerialMIDIEnabled)
-			mLogger.Write(GetKernelName(), LogNotice, "Using serial MIDI interface");
+		if (m_bSerialMIDIEnabled)
+			m_Logger.Write(GetKernelName(), LogNotice, "Using serial MIDI interface");
 		else
 		{
-			mLogger.Write(GetKernelName(), LogError, "No USB MIDI device detected and serial port in use - please restart.");
+			m_Logger.Write(GetKernelName(), LogError, "No USB MIDI device detected and serial port in use - please restart.");
 			return ShutdownHalt;
 		}
 	}
 
 	// Attach LCD to MT32 synth
-	if (mLCD)
-		mSynth->SetLCD(mLCD);
+	if (m_pLCD)
+		m_pSynth->SetLCD(m_pLCD);
 
 	// Start audio
-	mSynth->Start();
+	m_pSynth->Start();
 	LCDLog("Ready.");
 
 	while (true)
 	{
 		// Update serial GPIO MIDI
-		if (mSerialMIDIEnabled)
+		if (m_bSerialMIDIEnabled)
 			UpdateSerialMIDI();
 
-		unsigned ticks = mTimer.GetTicks();
+		unsigned ticks = m_Timer.GetTicks();
 
 		// Check for active sensing timeout
-		if (mActiveSenseFlag && (ticks > mActiveSenseTime) && (ticks - mActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
+		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
 		{
-			mSynth->AllSoundOff();
-			mActiveSenseFlag = false;
-			mLogger.Write(GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
+			m_pSynth->AllSoundOff();
+			m_bActiveSenseFlag = false;
+			m_Logger.Write(GetKernelName(), LogNotice, "Active sense timeout - turning notes off");
 		}
 
 		// Update activity LED
-		if (mLEDOn && (ticks - mLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
+		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
 		{
 			mActLED.Off();
-			mLEDOn = false;
+			m_bLEDOn = false;
 		}
 
 		// Update LCD
-		if (mLCD)
+		if (m_pLCD)
 		{
-			if (mLCDLogTime)
+			if (m_nLCDLogTime)
 			{
-				if ((ticks - mLCDLogTime) >= MSEC2HZ(LCD_LOG_TIME_MILLIS))
+				if ((ticks - m_nLCDLogTime) >= MSEC2HZ(LCD_LOG_TIME_MILLIS))
 				{
-					mLCDLogTime = 0;
-					mLCD->Clear();
+					m_nLCDLogTime = 0;
+					m_pLCD->Clear();
 				}
 			}
-			else if ((ticks - mLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
+			else if ((ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
 			{
-				mLCD->Update(*mSynth);
-				mLCDUpdateTime = ticks;
+				m_pLCD->Update(*m_pSynth);
+				m_nLCDUpdateTime = ticks;
 			}
 		}
 
-		if (mShouldReboot)
+		if (m_bShouldReboot)
 		{
 			// Stop audio and reboot
-			mSynth->Cancel();
+			m_pSynth->Cancel();
 
 			// Clear screen
-			if (mLCD)
-				mLCD->Clear();
+			if (m_pLCD)
+				m_pLCD->Clear();
 
 			return ShutdownReboot;
 		}
@@ -298,30 +294,29 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 	return ShutdownHalt;
 }
 
-void CKernel::OnShortMessage(u32 pMessage)
+void CKernel::OnShortMessage(u32 nMessage)
 {
 	// Active sensing
-	if (pMessage == 0xFE)
+	if (nMessage == 0xFE)
 	{
-		mActiveSenseFlag = true;
+		m_bActiveSenseFlag = true;
 		return;
 	}
 
 	// Flash LED
 	LEDOn();
 
-	//mLogger.Write(pThis->GetKernelName(), LogNotice, "midi 0x%08x", pMessage);
-	mSynth->HandleMIDIShortMessage(pMessage);
+	m_pSynth->HandleMIDIShortMessage(nMessage);
 }
 
-void CKernel::OnSysExMessage(const u8* pData, size_t pSize)
+void CKernel::OnSysExMessage(const u8* pData, size_t nSize)
 {
 	// Flash LED
 	LEDOn();
 
 	// If we don't consume the SysEx message, forward it to mt32emu
-	if (!ParseCustomSysEx(pData, pSize))
-		mSynth->HandleMIDISysExMessage(pData, pSize);
+	if (!ParseCustomSysEx(pData, nSize))
+		m_pSynth->HandleMIDISysExMessage(pData, nSize);
 }
 
 void CKernel::OnUnexpectedStatus()
@@ -336,9 +331,9 @@ void CKernel::OnSysExOverflow()
 	LCDLog("SysEx overflow!");
 }
 
-bool CKernel::ParseCustomSysEx(const u8* pData, size_t pSize)
+bool CKernel::ParseCustomSysEx(const u8* pData, size_t nSize)
 {
-	if (pSize < 4)
+	if (nSize < 4)
 		return false;
 
 	// 'Educational' manufacturer
@@ -348,20 +343,20 @@ bool CKernel::ParseCustomSysEx(const u8* pData, size_t pSize)
 	// Reboot (F0 7D 00 F7)
 	if (pData[2] == 0x00)
 	{
-		mLogger.Write(GetKernelName(), LogNotice, "Reboot command received");
-		mShouldReboot = true;
+		m_Logger.Write(GetKernelName(), LogNotice, "Reboot command received");
+		m_bShouldReboot = true;
 		return true;
 	}
 
 	// Switch ROM set (F0 7D 01 xx F7)
-	else if (pData[2] == 0x01 && pSize == 5)
+	else if (pData[2] == 0x01 && nSize == 5)
 	{
 		u8 romSet = pData[3];
 		if (romSet > 2)
 			return false;
 
-		mLogger.Write(GetKernelName(), LogNotice, "Switching to ROM set %d", romSet);
-		return mSynth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
+		m_Logger.Write(GetKernelName(), LogNotice, "Switching to ROM set %d", romSet);
+		return m_pSynth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
 	}
 
 	return false;
@@ -371,7 +366,7 @@ void CKernel::UpdateSerialMIDI()
 {
 	// Read serial MIDI data
 	u8 buffer[SERIAL_BUF_SIZE];
-	int nResult = mSerial.Read(buffer, sizeof(buffer));
+	int nResult = m_Serial.Read(buffer, sizeof(buffer));
 
 	// No data
 	if (nResult == 0)
@@ -400,24 +395,24 @@ void CKernel::UpdateSerialMIDI()
 				break;
 		}
 
-		mLogger.Write("serialmidi", LogWarning, errorString);
+		m_Logger.Write("serialmidi", LogWarning, errorString);
 		LCDLog(errorString);
 		return;
 	}
 
 	// Replay received MIDI data out via the serial port ('software thru')
-	if (mConfig.mMIDIGPIOThru)
+	if (m_Config.m_bMIDIGPIOThru)
 	{
-		int nSendResult = mSerial.Write(buffer, nResult);
+		int nSendResult = m_Serial.Write(buffer, nResult);
 		if (nSendResult != nResult)
 		{
-			mLogger.Write("serialmidi", LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
+			m_Logger.Write("serialmidi", LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
 			LCDLog("serial TX error");
 		}
 	}
 
 	// Reset the Active Sense timer
-	mActiveSenseTime = mTimer.GetTicks();
+	m_nActiveSenseTime = m_Timer.GetTicks();
 
 	// Process MIDI messages
 	ParseMIDIBytes(buffer, nResult);
@@ -426,28 +421,28 @@ void CKernel::UpdateSerialMIDI()
 void CKernel::LEDOn()
 {
 	mActLED.On();
-	mLEDOnTime = mTimer.GetTicks();
-	mLEDOn = true;
+	m_nLEDOnTime = m_Timer.GetTicks();
+	m_bLEDOn = true;
 }
 
 void CKernel::LCDLog(const char* pMessage)
 {
-	if (!mLCD)
+	if (!m_pLCD)
 		return;
 
-	mLCDLogTime = mTimer.GetTicks();
+	m_nLCDLogTime = m_Timer.GetTicks();
 
-	mLCD->Print("~", 0, 1);
-	mLCD->Print(pMessage, 2, 1, true, true);
+	m_pLCD->Print("~", 0, 1);
+	m_pLCD->Print(pMessage, 2, 1, true, true);
 }
 
-void CKernel::USBMIDIPacketHandler(unsigned nCable, u8 *pPacket, unsigned nLength)
+void CKernel::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength)
 {
-	assert(pThis != nullptr);
+	assert(s_pThis != nullptr);
 
 	// Reset the Active Sense timer
-	pThis->mActiveSenseTime = pThis->mTimer.GetTicks();
+	s_pThis->m_nActiveSenseTime = s_pThis->m_Timer.GetTicks();
 
 	// Process MIDI messages
-	pThis->ParseMIDIBytes(pPacket, nLength);
+	s_pThis->ParseMIDIBytes(pPacket, nLength);
 }

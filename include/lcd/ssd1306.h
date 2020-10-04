@@ -48,13 +48,13 @@ private:
 
 	void DrawPartLevels(u8 nRow, bool bDrawPeaks = true);
 
-	CI2CMaster* mI2CMaster;
-	u8 mAddress;
-	u8 mHeight;
+	CI2CMaster* m_pI2CMaster;
+	u8 m_nAddress;
+	u8 m_nHeight;
 
 	// +1 to store the 0x40 command at the beginning
-	u8 mFramebuffer[128 * 64 / 8 + 1];
-	
+	u8 m_Framebuffer[128 * 64 / 8 + 1];
+
 	static const u8 InitSequence[];
 };
 
