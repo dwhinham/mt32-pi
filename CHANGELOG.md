@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2020-10-04
+
 ### Added
 
 - Ability to configure initial MIDI channel assignment (new configuration file option).
@@ -22,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Boot speed improved by ~0.5 seconds by using `start_cd.elf`/`start4cd.elf` and `fixup_cd.dat`/`fixup4cd.dat`.
   * If updating from an old version, make sure you replace `config.txt` and add the new `*.elf` and `*.dat` files when updating your SD card to benefit from this. 
 - LCD/OLED part level meters moved to the upper row(s).
+- Config file parsing now more efficient.
+
+### Fixed
+
+- Left/right channels were backwards when using PWM (headphone jack) - thanks @ctrl_alt_rees and YouTube viewers.
 
 ## [0.5.0] - 2020-09-19
 
@@ -49,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update to circle-stdlib v15.1/Circle Step 42.1
+- Update to circle-stdlib v15.1/Circle Step 42.1.
 - Enhanced error reporting for GPIO MIDI parser.
 
 ### Fixed
@@ -96,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/dwhinham/mt32-pi/compare/v0.5.0..v0.6.0
 [0.5.0]: https://github.com/dwhinham/mt32-pi/compare/v0.4.0..v0.5.0
 [0.4.0]: https://github.com/dwhinham/mt32-pi/compare/v0.3.1..v0.4.0
 [0.3.1]: https://github.com/dwhinham/mt32-pi/compare/v0.3.0..v0.3.1
