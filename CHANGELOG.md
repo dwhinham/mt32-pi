@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Correct version string is now extracted from ROM 2.04 when switching to it.
+- The `none` option for `i2c_dac_init` was broken in v0.6.0.
 
 ## [0.6.0] - 2020-10-04
 

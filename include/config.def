@@ -24,7 +24,7 @@ CFG(output_device,			TAudioOutputDevice,			m_AudioOutputDevice,		TAudioOutputDev
 CFG(sample_rate,			int,						m_nAudioSampleRate,			96000									)
 CFG(chunk_size,				int,						m_nAudioChunkSize,			512										)
 CFG(i2c_dac_address,		int,						m_nAudioI2CDACAddress,		0x4c,							true	)
-CFG(i2c_dac_init,			TAudioI2CDACInit,			m_AudioI2CDACInit,			TAudioI2CDACInit::PCM51xx				)
+CFG(i2c_dac_init,			TAudioI2CDACInit,			m_AudioI2CDACInit,			TAudioI2CDACInit::None					)
 END_SECTION
 
 BEGIN_SECTION(mt32emu)

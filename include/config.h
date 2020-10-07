@@ -32,7 +32,9 @@ public:
 		ENUM(PWM, pwm)                   \
 		ENUM(I2SDAC, i2s)
 
-	#define ENUM_AUDIOI2CDACINIT(ENUM) ENUM(PCM51xx, pcm51xx)
+	#define ENUM_AUDIOI2CDACINIT(ENUM) \
+		ENUM(None, none)               \
+		ENUM(PCM51xx, pcm51xx)
 
 	using TMT32EmuResamplerQuality = CMT32SynthBase::TResamplerQuality;
 	using TMT32EmuMIDIChannels     = CMT32SynthBase::TMIDIChannels;
