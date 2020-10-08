@@ -173,18 +173,16 @@ bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
 
 const char* CMT32SynthBase::GetControlROMName() const
 {
-	const char* shortName = m_pControlROMImage->getROMInfo()->shortName;
+	// +5 to skip 'ctrl_'
+	const char* shortName = m_pControlROMImage->getROMInfo()->shortName + 5;
 	const MT32Emu::Bit8u* romData = m_pControlROMImage->getFile()->getData();
 	size_t offset;
 
 	// Find version strings from ROMs
-	if (strstr(shortName, "ctrl_cm32l"))
+	if (strstr(shortName, "cm32l") || strstr(shortName, "2_04"))
 		offset = 0x2206;
 	else if (strstr(shortName, "1_07") || strstr(shortName, "bluer"))
 		offset = 0x4011;
-	else if (strstr(shortName, "2_04"))
-		// FIXME: Find offset from ROM
-		return "MT-32 Control v2.04";
 	else
 		offset = 0x4015;
 
