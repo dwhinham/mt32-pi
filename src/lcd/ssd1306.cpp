@@ -198,6 +198,9 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 		if (i > 0 && bInverted)
 			fontColumn ^= 0x3FFF;
 
+		// Shift down by 2 pixels
+		fontColumn <<= 2;
+
 		// Upper half of font
 		size_t offset = rowOffset + columnOffset + (bDoubleWidth ? i * 2 : i);
 
