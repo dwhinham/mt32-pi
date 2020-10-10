@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to libmt32emu v2.4.1.
+
 ### Fixed
 
 - Correct version string is now extracted from ROM 2.04 when switching to it.
