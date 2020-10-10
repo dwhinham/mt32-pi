@@ -1,5 +1,7 @@
 # Remove delay and use cutdown start_cd.elf/start4cd.elf for slightly quicker boot
 boot_delay=0
+disable_splash=1
+force_eeprom_read=0
 gpu_mem=16
 
 # Ensure that the Pi 4 doesn't try to boot the Pi 3-optimized kernel (kernel8-32.img)

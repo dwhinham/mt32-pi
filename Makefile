@@ -31,6 +31,9 @@ else
 	$(error Invalid board type "$(BOARD)"; please specify one of [ pi0 | pi2 | pi3 | pi4 | pi4-64 ])
 endif
 
+	# Disable delay loop calibration (boot speed improvement)
+	echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
+
 #
 # Build circle-stdlib
 #
