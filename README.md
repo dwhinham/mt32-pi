@@ -80,7 +80,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 ## 🎹 MIDI connectivity
 
-The simplest way to get MIDI data into `mt32-pi` is with a [USB MIDI interface](#usb-midi-interfaces). More advanced users or electronics enthusiasts may wish to build a [GPIO MIDI interface](#gpio-midi-interface).
+For the Raspberry Pi to be able to receive MIDI data, it needs a MIDI interface. The simplest way is to connect an off-the-shelf [USB MIDI interface](#usb-midi-interfaces) to one of its USB ports. More advanced users or electronics enthusiasts may wish to build a [GPIO MIDI interface](#gpio-midi-interface) instead.
 
 Here are some typical connection examples:
 
@@ -93,19 +93,11 @@ Here are some typical connection examples:
 
 ### USB MIDI interfaces
 
-Any class-compliant USB MIDI interface should work fine - if the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
+If you want to receive MIDI on the Pi using a USB MIDI interface, any class-compliant interface should work fine. If the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
 
-> ⚠️ **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2]].
+Please check [our wiki page](https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces) for recommended interfaces and compatibiliy reports. 
 
-#### Compatibility
-
-If you're shopping for a USB MIDI interface, the following devices have been confirmed as working properly by our testers. Feel free to contribute test results with your own MIDI interfaces and we can list known working ones!
- 
-| Manufacturer | Device                                                           | Comments                                               |
-|--------------|------------------------------------------------------------------|--------------------------------------------------------|
-| M-Audio      | [Uno](https://m-audio.com/products/view/uno)                     | 1 in, 1 out; male DIN plugs. Tested by @dwhinham.      |
-| M-Audio      | [MIDISport 1x1](https://m-audio.com/products/view/midisport-1x1) | 1 in, 1 out; female DIN sockets. Tested by @nswaldman. |
-| Roland       | [UM-ONE mk2](https://www.roland.com/global/products/um-one_mk2/) | 1 in, 1 out; male DIN plugs. Tested by @nswaldman.     |
+> ⚠️ **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2], [3]].
 
 ### GPIO MIDI interface
 
@@ -330,6 +322,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
 [128x32 OLED]: https://www.aliexpress.com/item/32661842518.html?spm=a2g0s.9042311.0.0.27424c4dSo7J9L
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
+[3]: http://www.fm-alive.com/Pages/DXMidi.aspx
 [2002-1 Series]: https://www.buydisplay.com/character-lcd-display-module/20x2-character
 [Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
