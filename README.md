@@ -303,7 +303,7 @@ F0 7D { command } { parameters } F7
 
 - **Q:** I'm trying to play sounds on `mt32-pi` using my MIDI keyboard controller but I'm not hearing anything - what's wrong?  
   **A:** Your keyboard is probably sending note data on **channel 1**, but by default, on power-up the MT-32 is set to receive on MIDI **channels 2-10**. Check your keyboard's documentation to see if you can change the transmit channel. If this isn't possible, [see this wiki page](https://github.com/dwhinham/mt32-pi/wiki/MIDI-channel-assignment) for more information on how to reassign the emulated MT-32's channels.
-- **Q:** Why do I only see a rainbow on my HDMI-connected monitor or television? Doesn't this normally mean the Pi has failed to boot?  
+- **Q:** Why don't I see any video output on my HDMI-connected monitor or television? Has the Pi has failed to boot?  
   **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
 - **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
   **A:** That's been archived in the [`old-buildroot`](https://github.com/dwhinham/mt32-pi/tree/old-buildroot) branch.
