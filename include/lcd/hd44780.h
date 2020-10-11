@@ -23,6 +23,7 @@
 
 #include <circle/gpiopin.h>
 #include <circle/i2cmaster.h>
+#include <circle/sched/scheduler.h>
 #include <circle/types.h>
 
 #include "lcd/clcd.h"

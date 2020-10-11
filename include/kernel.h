@@ -21,24 +21,22 @@
 #ifndef _kernel_h
 #define _kernel_h
 
+#include <circle_stdlib_app.h>
 #include <circle/cputhrottle.h>
 #include <circle/i2cmaster.h>
-#include <circle/i2ssoundbasedevice.h>
 #include <circle/sched/scheduler.h>
-#include <circle_stdlib_app.h>
+#include <circle/timer.h>
 
 #include "config.h"
-#include "lcd/mt32lcd.h"
-#include "midiparser.h"
-#include "mt32synth.h"
+#include "mt32pi.h"
 
-class CKernel : public CStdlibApp, CMIDIParser
+class CKernel : public CStdlibApp
 {
 public:
 	CKernel(void);
 
 	virtual bool Initialize(void) override;
-	TShutdownMode Run(void);
+	TShutdownMode Run(void) override;
 
 protected:
 	CCPUThrottle m_CPUThrottle;
@@ -53,47 +51,11 @@ protected:
 	CUSBHCIDevice m_USBHCI;
 	CEMMCDevice m_EMMC;
 	FATFS m_FileSystem;
-
 	CI2CMaster m_I2CMaster;
-	CMT32LCD* m_pLCD;
 
 private:
-	bool InitPCM51xx(u8 nAddress);
-
-	// CMIDIParser
-	virtual void OnShortMessage(u32 nMessage) override;
-	virtual void OnSysExMessage(const u8* pData, size_t nSize) override;
-	virtual void OnUnexpectedStatus() override;
-	virtual void OnSysExOverflow() override;
-
-	bool ParseCustomSysEx(const u8* pData, size_t nSize);
-	void UpdateSerialMIDI();
-
-	void LEDOn();
-	void LCDLog(const char* pMessage);
-
-	// Configuration
 	CConfig m_Config;
-
-	unsigned m_nLCDLogTime;
-	unsigned m_nLCDUpdateTime;
-
-	// Serial GPIO MIDI
-	bool m_bSerialMIDIEnabled;
-
-	bool m_bActiveSenseFlag;
-	unsigned m_nActiveSenseTime;
-
-	bool m_bShouldReboot;
-	bool m_bLEDOn;
-	unsigned m_nLEDOnTime;
-
-	// Synthesizer
-	CMT32SynthBase* m_pSynth;
-
-	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
-
-	static CKernel* s_pThis;
+	CMT32Pi m_MT32Pi;
 };
 
 #endif
