@@ -10,3 +10,6 @@
 	path = external/inih
 	url = https://github.com/benhoyt/inih.git
 	ignore = dirty
+[submodule "external/fluidsynth"]
+	path = external/fluidsynth
+	url = git@github.com:FluidSynth/fluidsynth.git
