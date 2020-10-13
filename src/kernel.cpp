@@ -235,6 +235,13 @@ CStdlibApp::TShutdownMode CKernel::Run(void)
 
 	// Start audio
 	m_pSynth->Start();
+
+	// Hack to change to Slap Bass 1 on first part and trigger an LCD update
+	if (m_Config.m_MT32EmuMIDIChannels == CConfig::TMT32EmuMIDIChannels::Standard)
+		m_pSynth->HandleMIDIShortMessage(0x44C1);
+	else
+		m_pSynth->HandleMIDIShortMessage(0x44C0);
+
 	LCDLog("Ready.");
 
 	while (true)

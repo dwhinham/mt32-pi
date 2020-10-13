@@ -62,6 +62,7 @@ void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const 
 
 void CMT32LCD::Update(const CMT32SynthBase& Synth)
 {
+#if 0
 	unsigned ticks = CTimer::Get()->GetTicks();
 	u8 masterVolume = Synth.GetMasterVolume();
 
@@ -85,6 +86,7 @@ void CMT32LCD::Update(const CMT32SynthBase& Synth)
 
 	if (m_State == TState::DisplayingPartStates)
 		UpdatePartStateText(Synth);
+#endif
 }
 
 void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& Synth)
