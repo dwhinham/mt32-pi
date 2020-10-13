@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to libmt32emu v2.4.1.
 - Update to circle-stdlib v15.3/Circle Step 43.1.
+- Update to inih r52.
 
 ### Fixed
 
