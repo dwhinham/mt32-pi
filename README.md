@@ -95,7 +95,7 @@ Here are some typical connection examples:
 
 If you want to receive MIDI on the Pi using a USB MIDI interface, any class-compliant interface should work fine. If the interface works on Windows or Linux PCs without requiring any drivers, there's a high chance it will work with `mt32-pi`.
 
-Please check [our wiki page](https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces) for recommended interfaces and compatibiliy reports. 
+Please check [our wiki page](https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces) for recommended interfaces and compatibility reports. 
 
 > ⚠️ **Beware:** cheap no-name interfaces are not recommended; they have reliability issues not unique to this project [[1], [2], [3]].
 
