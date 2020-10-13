@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2020-10-13
+
 ### Changed
 
 - Update to libmt32emu v2.4.1.
 - Update to circle-stdlib v15.3/Circle Step 43.1.
 - Update to inih r52.
+- Boot speed improved by another ~0.3 seconds when `usb = on` thanks to improvements in Circle Step 43.1.
+  * If updating from an old version, make sure you replace `config.txt` to benefit from a couple of other boot optimizations.
 
 ### Fixed
 
@@ -115,7 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/dwhinham/mt32-pi/compare/v0.6.0..v0.6.1
 [0.6.0]: https://github.com/dwhinham/mt32-pi/compare/v0.5.0..v0.6.0
 [0.5.0]: https://github.com/dwhinham/mt32-pi/compare/v0.4.0..v0.5.0
 [0.4.0]: https://github.com/dwhinham/mt32-pi/compare/v0.3.1..v0.4.0
