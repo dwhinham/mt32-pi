@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- SSD1306 font updated to perfectly match the original MT-32's Sanyo DM2011 font.
+
 ## [0.6.1] - 2020-10-13
 
 ### Changed
