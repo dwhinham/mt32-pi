@@ -148,6 +148,7 @@ The following models of DAC have been confirmed as working by our testers. Pleas
 | Arananet     | [PI-MIDI]         | UDA1334  | None required                                    | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.  |
 | Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham. |
 | Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                               |
+| innomaker    | [HiFi DAC HAT]    | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                       |
 | IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                           |
 
 ### Finding the I2C address of your DAC
@@ -330,6 +331,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
 [GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
 [Hairless MIDI]: https://projectgus.github.io/hairless-midiserial/
+[HiFi DAC HAT]: https://www.amazon.com/gp/product/B07D13QWV9/
 [I2C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
 [MT-32 game compatibility list]: https://en.wikipedia.org/wiki/List_of_MT-32-compatible_computer_games#IBM_PC_compatibles
