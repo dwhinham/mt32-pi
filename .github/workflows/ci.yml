@@ -33,7 +33,7 @@ jobs:
         fi
 
     - name: Update PATH
-      run: echo "::add-path::$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin"
+      run: echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
 
     - name: Build
       run: make -j BOARD=${{ matrix.board }}
@@ -54,7 +54,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    
+
     - name: Cache boot files
       uses: actions/cache@v2
       with:
