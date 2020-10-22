@@ -38,6 +38,7 @@ CFG(type,					TLCDType,					m_LCDType,					TLCDType::None							)
 CFG(width,					int,						m_nLCDWidth,				20										)
 CFG(height,					int,						m_nLCDHeight,				2										)
 CFG(i2c_lcd_address,		int,						m_nLCDI2CLCDAddress,		0x3c,							true	)
+CFG(rotation,				TLCDRotation,				m_nLCDRotation,				TLCDRotation::Normal					)
 END_SECTION
 
 #undef BEGIN_SECTION

@@ -131,7 +131,7 @@ bool CKernel::Initialize(void)
 	else if (m_Config.m_LCDType == CConfig::TLCDType::HD44780I2C)
 		m_pLCD = new CHD44780I2C(&m_I2CMaster, m_Config.m_nLCDI2CLCDAddress, m_Config.m_nLCDWidth, m_Config.m_nLCDHeight);
 	else if (m_Config.m_LCDType == CConfig::TLCDType::SSD1306I2C)
-		m_pLCD = new CSSD1306(&m_I2CMaster, m_Config.m_nLCDI2CLCDAddress, m_Config.m_nLCDHeight);
+		m_pLCD = new CSSD1306(&m_I2CMaster, m_Config.m_nLCDI2CLCDAddress, m_Config.m_nLCDHeight, m_Config.m_nLCDRotation);
 
 	if (m_pLCD)
 	{

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ability to invert the display orientation for SSD1306 (new configuration file option).
+
 ## [0.6.2] - 2020-10-18
 
 ### Fixed

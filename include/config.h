@@ -21,6 +21,7 @@
 #ifndef _config_h
 #define _config_h
 
+#include "lcd/ssd1306.h"
 #include "mt32synth.h"
 #include "rommanager.h"
 #include "utility.h"
@@ -39,6 +40,8 @@ public:
 	using TMT32EmuResamplerQuality = CMT32SynthBase::TResamplerQuality;
 	using TMT32EmuMIDIChannels     = CMT32SynthBase::TMIDIChannels;
 	using TMT32EmuROMSet           = CROMManager::TROMSet;
+
+	using TLCDRotation             = CSSD1306::TLCDRotation;
 
 	#define ENUM_LCDTYPE(ENUM)             \
 		ENUM(None, none)                   \
@@ -71,6 +74,7 @@ private:
 	static bool ParseOption(const char* pString, TMT32EmuMIDIChannels* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuROMSet* pOut);
 	static bool ParseOption(const char* pString, TLCDType* pOut);
+	static bool ParseOption(const char* pString, TLCDRotation* pOut);
 
 	static CConfig* s_pThis;
 };

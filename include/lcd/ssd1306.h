@@ -26,11 +26,18 @@
 
 #include "lcd/mt32lcd.h"
 #include "mt32synth.h"
+#include "utility.h"
 
 class CSSD1306 : public CMT32LCD
 {
 public:
-	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3c, u8 nHeight = 32);
+	#define ENUM_LCDROTATION(ENUM) \
+		ENUM(Normal, normal)       \
+		ENUM(Inverted, inverted)
+
+	CONFIG_ENUM(TLCDRotation, ENUM_LCDROTATION);
+
+	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3c, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
 
 	// CCharacterLCD
 	virtual bool Initialize() override;
@@ -51,11 +58,10 @@ private:
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;
 	u8 m_nHeight;
+	TLCDRotation m_Rotation;
 
 	// +1 to store the 0x40 command at the beginning
 	u8 m_Framebuffer[128 * 64 / 8 + 1];
-
-	static const u8 InitSequence[];
 };
 
 #endif
