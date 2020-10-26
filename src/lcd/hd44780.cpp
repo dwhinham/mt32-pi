@@ -224,7 +224,8 @@ void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
 
 	for (u8 i = 0; i < 9; ++i)
 	{
-		lineBuf[i * 2] = BarChars[m_PartLevels[i] / 2];
+		const u8 charIndex = static_cast<u8>(m_PartLevels[i] * 8);
+		lineBuf[i * 2] = BarChars[charIndex];
 		lineBuf[i * 2 + 1] = ' ';
 	}
 
@@ -240,15 +241,16 @@ void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
 
 	for (u8 i = 0; i < 9; ++i)
 	{
-		if (m_PartLevels[i] > 8)
+		const u8 partLevel = static_cast<u8>(m_PartLevels[i] * 16);
+		if (partLevel > 8)
 		{
-			line1Buf[i * 2] = BarChars[m_PartLevels[i] - 8];
+			line1Buf[i * 2] = BarChars[partLevel - 8];
 			line2Buf[i * 2] = BarChars[8];
 		}
 		else
 		{
 			line1Buf[i * 2] = BarChars[0];
-			line2Buf[i * 2] = BarChars[m_PartLevels[i]];
+			line2Buf[i * 2] = BarChars[partLevel];
 		}
 
 		line1Buf[i * 2 + 1] = line2Buf[i * 2 + 1] = ' ';

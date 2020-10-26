@@ -195,8 +195,8 @@ u8 CMT32SynthBase::GetVelocityForPart(u8 nPart) const
 	u8 velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
 	u32 playingNotes = m_pSynth->getPlayingNotes(nPart, keys, velocities);
 
-	u8 maxVelocity = velocities[0];
-	for (u32 i = 1; i < playingNotes; ++i)
+	u8 maxVelocity = 0;
+	for (u32 i = 0; i < playingNotes; ++i)
 		if (velocities[i] > maxVelocity)
 			maxVelocity = velocities[i];
 

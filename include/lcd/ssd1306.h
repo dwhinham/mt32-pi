@@ -53,7 +53,7 @@ private:
 	void ClearPixel(u8 nX, u8 nY);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
 
-	void DrawPartLevels(u8 nRow, bool bDrawPeaks = true);
+	void DrawPartLevels(u8 nFirstRow, bool bDrawPeaks = true);
 
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;

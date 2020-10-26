@@ -228,9 +228,7 @@ As with all I2C devices, you must know the LCD's I2C address in order for it to 
 
 The SSD1306 controller is found in mini 128x32 and 128x64 OLED displays, which are well-known for their use in FlashFloppy/Gotek devices. They can be found for very little money on eBay and AliExpress.
 
-Currently, only the 32-pixel high version is supported, although if someone were to send me a 64-pixel high model, I'd be glad to test it and add support!
-
-These displays usually have an I2C address of `0x3c`. 
+Both 32 and 64 pixel high variants are supported. These displays usually have an I2C address of `0x3c`. 
 
 ### Compatibility
 
@@ -240,6 +238,7 @@ The following displays and configurations have been confirmed as working by our 
 |----------------|-----------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
 | BuyDisplay.com | [2002-1 Series] | `type = hd44780_i2c`, `width = 20`, `height = 2`, `i2c_lcd_address = 27`   | Very bright and inexpensive 20x2 LCD. Tested by @dwhinham.                                                   |
 | Generic        | [128x32 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 32`, `i2c_lcd_address = 3c` | Extremely cheap yet nice and bright mini OLED. Widely available on AliExpress and eBay. Tested by @dwhinham. |
+| Generic        | [128x64 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Similar to the 32 pixel high OLED, just with more rows. Tested by @dwhinham.                                 |
 | Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                        |
 
 ## 🧠 ROM support
@@ -323,7 +322,8 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 - The [inih] project for a nice, lightweight config file parser.
 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
-[128x32 OLED]: https://www.aliexpress.com/item/32661842518.html?spm=a2g0s.9042311.0.0.27424c4dSo7J9L
+[128x32 OLED]: https://www.aliexpress.com/item/32661842518.html
+[128x64 OLED]: https://www.aliexpress.com/item/32233334632.html
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
 [3]: http://www.fm-alive.com/Pages/DXMidi.aspx
 [2002-1 Series]: https://www.buydisplay.com/character-lcd-display-module/20x2-character

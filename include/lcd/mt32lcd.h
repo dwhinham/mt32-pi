@@ -52,11 +52,11 @@ protected:
 	// 20 characters plus null terminator
 	static constexpr size_t TextBufferLength = 20 + 1;
 
-	// MIDI velocity range [1-127] to bar graph height range [0-16] scale factor
-	static constexpr float VelocityScale = 16.f / (127.f - 1.f);
-
 	static constexpr unsigned MessageDisplayTimeMillis = 200;
 	static constexpr unsigned TimbreDisplayTimeMillis = 1200;
+
+	static constexpr float BarFalloff  = 1.0f / 16.0f;
+	static constexpr float PeakFalloff = 1.0f / 64.0f;
 
 	TState m_State;
 	unsigned m_nStateTime;
@@ -64,8 +64,8 @@ protected:
 	// MT-32 state
 	char m_TextBuffer[TextBufferLength];
 	u8 m_nPreviousMasterVolume;
-	u8 m_PartLevels[9];
-	u8 m_PeakLevels[9];
+	float m_PartLevels[9];
+	float m_PeakLevels[9];
 	u8 m_PeakTimes[9];
 };
 

@@ -35,11 +35,25 @@
 
 namespace Utility
 {
-	// Templated function for clamping a value between a minimum and a maximum{
+	// Templated function for clamping a value between a minimum and a maximum
 	template <class T>
 	static inline T Clamp(T value, T min, T max)
 	{
 		return (value < min) ? min : (value > max) ? max : value;
+	}
+
+	// Templated function for taking the minimum of two values
+	template <class T>
+	static inline T Min(T lhs, T rhs)
+	{
+		return lhs < rhs ? lhs : rhs;
+	}
+
+	// Templated function for taking the maximum of two values
+	template <class T>
+	static inline T Max(T lhs, T rhs)
+	{
+		return lhs > rhs ? lhs : rhs;
 	}
 
 	// Return number of elements in an array

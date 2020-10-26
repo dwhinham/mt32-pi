@@ -10,10 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Ability to invert the display orientation for SSD1306 (new configuration file option).
+- Support for 64 pixel high SSD1306 OLED displays - many thanks to @ctrl_alt_rees for donating a screen!
 
 ### Fixed
 
 - SSD1306 text alignment was off by one pixel.
+- SSD1306 part level meters' top pixels would flicker with long sustained notes.
+- Part level meters would suddenly snap to a lower level if a quiet note followed a loud note instead of falling off.
 - Possibility of overflowing text in HD44780 Print() function.
 
 ## [0.6.2] - 2020-10-18

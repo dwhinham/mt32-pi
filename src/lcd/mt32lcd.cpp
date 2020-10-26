@@ -24,6 +24,7 @@
 
 #include "lcd/mt32lcd.h"
 #include "mt32synth.h"
+#include "utility.h"
 
 CMT32LCD::CMT32LCD()
  	: m_State(TState::DisplayingPartStates),
@@ -112,10 +113,17 @@ void CMT32LCD::UpdatePartLevels(const CMT32SynthBase& Synth)
 	u32 partStates = Synth.GetPartStates();
 	for (u8 i = 0; i < 9; ++i)
 	{
+		// If part active
 		if ((partStates >> i) & 1)
-			m_PartLevels[i] = floor(VelocityScale * Synth.GetVelocityForPart(i)) + 0.5f;
-		else if (m_PartLevels[i] > 0)
-			--m_PartLevels[i];
+		{
+			// MIDI velocity range [0-127] to normalized range [0-1]
+			float partLevel = Synth.GetVelocityForPart(i) / 127.0f;
+
+			if (partLevel >= m_PartLevels[i])
+				m_PartLevels[i] = partLevel;
+		}
+		else
+			m_PartLevels[i] = Utility::Max(m_PartLevels[i] - BarFalloff, 0.0f);
 	}
 }
 
@@ -123,19 +131,14 @@ void CMT32LCD::UpdatePeakLevels()
 {
 	for (u8 i = 0; i < 9; ++i)
 	{
-		if (m_PartLevels[i] > m_PeakLevels[i])
+		if (m_PartLevels[i] >= m_PeakLevels[i])
 		{
 			m_PeakLevels[i] = m_PartLevels[i];
 			m_PeakTimes[i] = 100;
 		}
-		else if (m_PartLevels[i] > 0)
-			--m_PartLevels[i];
 
-		if (m_PeakTimes[i] == 0 && m_PeakLevels[i] > 0)
-		{
-			--m_PeakLevels[i];
-			m_PeakTimes[i] = 3;
-		}
+		if (m_PeakTimes[i] == 0 && m_PeakLevels[i] > 0.0f)
+			m_PeakLevels[i] = Utility::Max(m_PeakLevels[i] - PeakFalloff, 0.0f);
 		else
 			--m_PeakTimes[i];
 	}
