@@ -187,8 +187,7 @@ void CSSD1306::ClearPixel(u8 nX, u8 nY)
 
 void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
-	size_t rowOffset = nCursorY * 128 * 2;
-	size_t columnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 4;
+	size_t columnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 5;
 
 	// FIXME: Won't be needed when the full font is implemented in font6x8.h
 	if (chChar == '\xFF')
