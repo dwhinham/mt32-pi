@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - SSD1306 text alignment was off by one pixel.
+- Possibility of overflowing text in HD44780 Print() function.
 
 ## [0.6.2] - 2020-10-18
 

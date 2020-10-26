@@ -202,7 +202,7 @@ void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClea
 	WriteCommand(0x80 | rowOffset[nCursorY] + nCursorX);
 
 	const char* p = pText;
-	while (*p)
+	while (*p && (p - pText) < m_nColumns)
 		WriteData(*p++);
 
 	if (bClearLine)
