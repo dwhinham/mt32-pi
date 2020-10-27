@@ -34,6 +34,9 @@ endif
 	# Disable delay loop calibration (boot speed improvement)
 	echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
 
+	# Enable save/restore floating point registers on interrupt
+	echo "DEFINE += -DSAVE_VFP_REGS_ON_IRQ" >> $(CIRCLE_CONFIG)
+
 #
 # Build circle-stdlib
 #
