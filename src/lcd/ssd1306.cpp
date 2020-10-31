@@ -18,7 +18,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <algorithm>
 #include <type_traits>
 
 #include "lcd/font6x8.h"
@@ -307,7 +306,7 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 
 void CSSD1306::Clear()
 {
-	std::fill(m_Framebuffer + 1, m_Framebuffer + m_nHeight * 16 + 1, 0);
+	memset(m_Framebuffer + 1, 0, Width * m_nHeight / 8);
 	WriteFramebuffer();
 }
 
