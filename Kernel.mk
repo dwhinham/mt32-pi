@@ -16,7 +16,8 @@ OBJS		:=	src/config.o \
 				src/mt32pi.o \
 				src/power.o \
 				src/rommanager.o \
-				src/synth/mt32synth.o
+				src/synth/mt32synth.o \
+				src/synth/soundfontsynth.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
 				src/lcd/*.d src/lcd/*.o \

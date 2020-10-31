@@ -39,6 +39,7 @@
 #include "midiparser.h"
 #include "power.h"
 #include "synth/mt32synth.h"
+#include "synth/soundfontsynth.h"
 
 class CMT32Pi : public CMultiCoreSupport, CPower, CMIDIParser
 {
@@ -110,7 +111,9 @@ private:
 	CSoundBaseDevice* m_pSound;
 
 	// Synthesizers
+	CSynthBase* m_pCurrentSynth;
 	CMT32Synth* m_pMT32Synth;
+	CSoundFontSynth* m_pSoundFontSynth;
 
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 

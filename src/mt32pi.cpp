@@ -64,7 +64,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_nLEDOnTime(0),
 
 	  m_pSound(nullptr),
-	  m_pMT32Synth(nullptr)
+	  m_pCurrentSynth(nullptr),
+	  m_pMT32Synth(nullptr),
+	  m_pSoundFontSynth(nullptr)
 {
 	s_pThis = this;
 }
@@ -140,6 +142,26 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	if (config.MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
 		m_pMT32Synth->SetMIDIChannels(config.MT32EmuMIDIChannels);
 
+	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
+	m_pSoundFontSynth = new CSoundFontSynth(config.AudioSampleRate);
+	if (!m_pSoundFontSynth->Initialize())
+	{
+		logger.Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");
+		delete m_pSoundFontSynth;
+		m_pSoundFontSynth = nullptr;
+	}
+
+	// TODO: Config option
+	// Set initial synthesizer
+	m_pCurrentSynth = m_pMT32Synth;
+
+	if (!m_pCurrentSynth)
+	{
+		logger.Write(MT32PiName, LogError, "No synthesizers initialized successfully");
+		LCDLog(TLCDLogType::Startup, "Synth init failed!");
+		return false;
+	}
+
 	CUSBMIDIDevice* pMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
 	{
@@ -190,13 +212,13 @@ void CMT32Pi::MainTask()
 		// Check for active sensing timeout
 		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
 		{
-			m_pMT32Synth->AllSoundOff();
+			m_pCurrentSynth->AllSoundOff();
 			m_bActiveSenseFlag = false;
 			logger.Write(MT32PiName, LogNotice, "Active sense timeout - turning notes off");
 		}
 
 		// Update power management
-		if (m_pMT32Synth->IsActive())
+		if (m_pCurrentSynth->IsActive())
 			Awaken();
 
 		CPower::Update();
@@ -258,7 +280,7 @@ void CMT32Pi::AudioTask()
 		const size_t nFrames = nQueueSize - m_pSound->GetQueueFramesAvail();
 		const size_t nWriteBytes = nFrames * 2 * sizeof(s16);
 
-		m_pMT32Synth->Render(Buffer, nFrames);
+		m_pCurrentSynth->Render(Buffer, nFrames);
 		int nResult = m_pSound->Write(Buffer, nWriteBytes);
 
 		if (nResult != static_cast<int>(nWriteBytes))
@@ -330,7 +352,7 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 	// Wake from power saving mode if necessary
 	Awaken();
 
-	m_pMT32Synth->HandleMIDIShortMessage(nMessage);
+	m_pCurrentSynth->HandleMIDIShortMessage(nMessage);
 }
 
 void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
@@ -343,7 +365,7 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 
 	// If we don't consume the SysEx message, forward it to mt32emu
 	if (!ParseCustomSysEx(pData, nSize))
-		m_pMT32Synth->HandleMIDISysExMessage(pData, nSize);
+		m_pCurrentSynth->HandleMIDISysExMessage(pData, nSize);
 }
 
 void CMT32Pi::OnUnexpectedStatus()
