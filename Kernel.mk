@@ -58,6 +58,10 @@ endif
 INCLUDE		+=	-I $(MT32EMUBUILDDIR)/include
 EXTRALIBS	+=	$(MT32EMULIB)
 
+INCLUDE		+=	-I $(FLUIDSYNTHBUILDDIR)/include \
+				-I $(FLUIDSYNTHHOME)/include
+EXTRALIBS	+=	$(FLUIDSYNTHLIB)
+
 #
 # Generate version string from git tag
 #

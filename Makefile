@@ -5,7 +5,7 @@
 include Config.mk
 
 .DEFAULT_GOAL=all
-.PHONY: circle-stdlib mt32emu all clean veryclean
+.PHONY: circle-stdlib mt32emu fluidsynth all clean veryclean
 
 #
 # Configure circle-stdlib
@@ -53,9 +53,49 @@ $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@touch $@
 
 #
+# Build FluidSynth
+#
+fluidsynth: $(FLUIDSYNTHBUILDDIR)/.done
+
+$(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
+	@patch -N -p1 -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.1.5-circle.patch
+
+	@export CFLAGS="$(CFLAGS_FOR_TARGET)"
+	@cmake  -B $(FLUIDSYNTHBUILDDIR) \
+			$(CMAKE_TOOLCHAIN_FLAGS) \
+			-DCMAKE_C_FLAGS_RELEASE="-Ofast -fopenmp-simd" \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DBUILD_SHARED_LIBS=OFF \
+			-Denable-aufile=OFF \
+			-Denable-dbus=OFF \
+			-Denable-dsound=OFF \
+			-Denable-floats=ON \
+			-Denable-ipv6=OFF \
+			-Denable-jack=OFF \
+			-Denable-ladspa=OFF \
+			-Denable-libinstpatch=OFF \
+			-Denable-libsndfile=OFF \
+			-Denable-midishare=OFF \
+			-Denable-network=OFF \
+			-Denable-oboe=OFF \
+			-Denable-opensles=OFF \
+			-Denable-oss=OFF \
+			-Denable-pkgconfig=OFF \
+			-Denable-pulseaudio=OFF \
+			-Denable-readline=OFF \
+			-Denable-sdl2=OFF \
+			-Denable-threads=OFF \
+			-Denable-waveout=OFF \
+			-Denable-winmidi=OFF \
+			$(FLUIDSYNTHHOME) \
+			>/dev/null
+	@cmake --build $(FLUIDSYNTHBUILDDIR) --target libfluidsynth
+	@touch $@
+
+#
 # Build kernel itself
 #
-all: circle-stdlib mt32emu
+all: circle-stdlib mt32emu fluidsynth
 	@$(MAKE) -f Kernel.mk
 
 #
@@ -68,10 +108,15 @@ clean:
 # Clean kernel and all dependencies
 #
 veryclean: clean
+	# Reverse patches
+	@patch -R -N -p1 -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.1.5-circle.patch
+
 	# Clean circle-stdlib
 	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
 	@$(RM) $(CIRCLESTDLIBHOME)/.done
 
 	# Clean mt32emu
 	@$(RM) -r $(MT32EMUBUILDDIR)
-	@$(RM) $(MT32EMUBUILDDIR)/.done
+
+	# Clean FluidSynth
+	@$(RM) -r $(FLUIDSYNTHBUILDDIR)

@@ -1,0 +1,397 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index cc45bd9e..f382adfc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -442,6 +442,7 @@ if ( ASTYLE )
+     )
+ endif(ASTYLE)
+ 
++if(FALSE)
+ if(NOT enable-pkgconfig)
+ 
+     FIND_LIBRARY( GLIB_LIB NAMES glib glib-2.0 PATH GLIB_LIBRARY_DIR )
+@@ -600,6 +601,7 @@ else(NOT enable-pkgconfig)
+     endif ( enable-readline )
+ 
+ endif(NOT enable-pkgconfig)
++endif()
+ 
+ unset ( AUFILE_SUPPORT CACHE )
+ if ( enable-aufile )
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 356bb734..f44fc7f0 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -199,21 +199,21 @@ set ( libfluidsynth_SOURCES
+     synth/fluid_tuning.h
+     synth/fluid_voice.c
+     synth/fluid_voice.h
+-    midi/fluid_midi.c
+-    midi/fluid_midi.h
+-    midi/fluid_midi_router.c
+-    midi/fluid_midi_router.h
+-    midi/fluid_seqbind.c
+-    midi/fluid_seq.c
+-    drivers/fluid_adriver.c
+-    drivers/fluid_adriver.h
+-    drivers/fluid_mdriver.c
+-    drivers/fluid_mdriver.h
+-    bindings/fluid_cmd.c
+-    bindings/fluid_cmd.h
+-    bindings/fluid_filerenderer.c
+-    bindings/fluid_ladspa.c
+-    bindings/fluid_ladspa.h
++    #midi/fluid_midi.c
++    #midi/fluid_midi.h
++    #midi/fluid_midi_router.c
++    #midi/fluid_midi_router.h
++    #midi/fluid_seqbind.c
++    #midi/fluid_seq.c
++    #drivers/fluid_adriver.c
++    #drivers/fluid_adriver.h
++    #drivers/fluid_mdriver.c
++    #drivers/fluid_mdriver.h
++    #bindings/fluid_cmd.c
++    #bindings/fluid_cmd.h
++    #bindings/fluid_filerenderer.c
++    #bindings/fluid_ladspa.c
++    #bindings/fluid_ladspa.h
+ )
+ 
+ set ( public_HEADERS
+diff --git a/src/sfloader/fluid_sfont.c b/src/sfloader/fluid_sfont.c
+index 140fc3c5..9c0e5de3 100644
+--- a/src/sfloader/fluid_sfont.c
++++ b/src/sfloader/fluid_sfont.c
+@@ -21,7 +21,7 @@
+ #include "fluid_sfont.h"
+ #include "fluid_sys.h"
+ 
+-
++#if 0
+ void *default_fopen(const char *path)
+ {
+     const char* msg;
+@@ -74,6 +74,13 @@ int safe_fseek(void *fd, long ofs, int whence)
+ 
+     return FLUID_OK;
+ }
++#endif
++
++void *default_fopen(const char *path);
++int default_fclose(void *handle);
++long default_ftell(void *handle);
++int safe_fread(void *buf, int count, void *fd);
++int safe_fseek(void *fd, long ofs, int whence);
+ 
+ /**
+  * Creates a new SoundFont loader.
+diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
+index 6c10094c..9cfa971c 100644
+--- a/src/synth/fluid_synth.c
++++ b/src/synth/fluid_synth.c
+@@ -95,7 +95,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
+ static fluid_voice_t *fluid_synth_free_voice_by_kill_LOCAL(fluid_synth_t *synth);
+ static void fluid_synth_kill_by_exclusive_class_LOCAL(fluid_synth_t *synth,
+         fluid_voice_t *new_voice);
++#if 0
+ static int fluid_synth_sfunload_callback(void *data, unsigned int msec);
++#endif
+ static fluid_tuning_t *fluid_synth_get_tuning(fluid_synth_t *synth,
+         int bank, int prog);
+ static int fluid_synth_replace_tuning_LOCK(fluid_synth_t *synth,
+@@ -4795,13 +4797,16 @@ fluid_synth_sfont_unref(fluid_synth_t *synth, fluid_sfont_t *sfont)
+         {
+             FLUID_LOG(FLUID_DBG, "Unloaded SoundFont");
+         } /* spin off a timer thread to unload the sfont later (SoundFont loader blocked unload) */
++#if 0
+         else
+         {
+             new_fluid_timer(100, fluid_synth_sfunload_callback, sfont, TRUE, TRUE, FALSE);
+         }
++#endif
+     }
+ }
+ 
++#if 0
+ /* Callback to continually attempt to unload a SoundFont,
+  * only if a SoundFont loader blocked the unload operation */
+ static int
+@@ -4819,6 +4824,7 @@ fluid_synth_sfunload_callback(void *data, unsigned int msec)
+         return TRUE;
+     }
+ }
++#endif
+ 
+ /**
+  * Reload a SoundFont.  The SoundFont retains its ID and index on the SoundFont stack.
+@@ -6339,6 +6345,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
+     FLUID_API_RETURN(result);
+ }
+ 
++#if 0
+ /**
+  * Handle MIDI event from MIDI router, used as a callback function.
+  * @param data FluidSynth instance
+@@ -6395,6 +6402,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
+ 
+     return FLUID_FAILED;
+ }
++#endif
+ 
+ /**
+  * Create and start voices using an arbitrary preset and a MIDI note on event.
+diff --git a/src/utils/fluid_settings.c b/src/utils/fluid_settings.c
+index 75248f42..9cd8390f 100644
+--- a/src/utils/fluid_settings.c
++++ b/src/utils/fluid_settings.c
+@@ -328,11 +328,13 @@ fluid_settings_init(fluid_settings_t *settings)
+     fluid_return_if_fail(settings != NULL);
+ 
+     fluid_synth_settings(settings);
++#if 0
+     fluid_shell_settings(settings);
+     fluid_player_settings(settings);
+     fluid_file_renderer_settings(settings);
+     fluid_audio_driver_settings(settings);
+     fluid_midi_driver_settings(settings);
++#endif
+ }
+ 
+ static int
+diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
+index 3f2687a9..e6886dcb 100644
+--- a/src/utils/fluid_sys.c
++++ b/src/utils/fluid_sys.c
+@@ -50,6 +50,7 @@
+ #define FLUID_SYS_TIMER_HIGH_PRIO_LEVEL         10
+ 
+ 
++#if 0
+ typedef struct
+ {
+     fluid_thread_func_t func;
+@@ -78,6 +79,7 @@ struct _fluid_server_socket_t
+ 
+ 
+ static int fluid_istream_gets(fluid_istream_t in, char *buf, int len);
++#endif
+ 
+ static fluid_log_function_t fluid_log_function[LAST_LOG_LEVEL] =
+ {
+@@ -304,6 +306,7 @@ char *fluid_strtok(char **str, char *delim)
+     return token;
+ }
+ 
++#if 0
+ /**
+  * Suspend the execution of the current thread for the specified amount of time.
+  * @param milliseconds to wait.
+@@ -312,6 +315,7 @@ void fluid_msleep(unsigned int msecs)
+ {
+     g_usleep(msecs * 1000);
+ }
++#endif
+ 
+ /**
+  * Get time in milliseconds to be used in relative timing operations.
+@@ -332,6 +336,7 @@ unsigned int fluid_curtime(void)
+     return (unsigned int)((now - initial_time) / 1000.0f);
+ }
+ 
++#if 0
+ /**
+  * Get time in microseconds to be used in relative timing operations.
+  * @return time in microseconds.
+@@ -1670,3 +1675,4 @@ FILE* fluid_file_open(const char* path, const char** errMsg)
+     
+     return handle;
+ }
++#endif
+diff --git a/src/utils/fluid_sys.h b/src/utils/fluid_sys.h
+index c1644035..925fa176 100644
+--- a/src/utils/fluid_sys.h
++++ b/src/utils/fluid_sys.h
+@@ -157,7 +157,12 @@ typedef gintptr  intptr_t;
+ #include <gmodule.h>
+ #endif
+ 
++#if 0
+ #include <glib/gstdio.h>
++#endif
++
++#define TRUE 1
++#define FALSE 0
+ 
+ /**
+  * Macro used for safely accessing a message from a GError and using a default
+@@ -179,10 +184,17 @@ typedef gintptr  intptr_t;
+ #define FLUID_INT_TO_POINTER(x)   ((void *)(intptr_t)(x))
+ 
+ /* Endian detection */
++#if 0
+ #define FLUID_IS_BIG_ENDIAN       (G_BYTE_ORDER == G_BIG_ENDIAN)
+ 
+ #define FLUID_LE32TOH(x)          GINT32_FROM_LE(x)
+ #define FLUID_LE16TOH(x)          GINT16_FROM_LE(x)
++#endif
++
++#define FLUID_IS_BIG_ENDIAN       FALSE
++
++#define FLUID_LE32TOH(x)          x
++#define FLUID_LE16TOH(x)          x
+ 
+ #if FLUID_IS_BIG_ENDIAN
+ #define FLUID_FOURCC(_a, _b, _c, _d) \
+@@ -225,6 +237,7 @@ typedef int (*fluid_timer_callback_t)(void *data, unsigned int msec);
+ 
+ typedef struct _fluid_timer_t fluid_timer_t;
+ 
++#if 0
+ fluid_timer_t *new_fluid_timer(int msec, fluid_timer_callback_t callback,
+                                void *data, int new_thread, int auto_destroy,
+                                int high_priority);
+@@ -236,9 +249,11 @@ int fluid_timer_stop(fluid_timer_t *timer);
+ // Macros to use for pre-processor if statements to test which Glib thread API we have (pre or post 2.32)
+ #define NEW_GLIB_THREAD_API   GLIB_CHECK_VERSION(2,32,0)
+ #define OLD_GLIB_THREAD_API  !GLIB_CHECK_VERSION(2,32,0)
++#endif
+ 
+ /* Muteces */
+ 
++#if 0
+ #if NEW_GLIB_THREAD_API
+ 
+ /* glib 2.32 and newer */
+@@ -375,10 +390,12 @@ typedef GStaticPrivate fluid_private_t;
+ } while(0)
+ 
+ #endif
++#endif
+ 
+ 
+ /* Atomic operations */
+ 
++#if 0
+ #define fluid_atomic_int_inc(_pi) g_atomic_int_inc(_pi)
+ #define fluid_atomic_int_get(_pi) g_atomic_int_get(_pi)
+ #define fluid_atomic_int_set(_pi, _val) g_atomic_int_set(_pi, _val)
+@@ -420,10 +437,62 @@ fluid_atomic_float_get(volatile float *fptr)
+     memcpy(&fval, &ival, 4);
+     return fval;
+ }
++#endif
+ 
++#define fluid_atomic_int_inc(atomic) \
++    (__extension__({ __atomic_fetch_add((atomic), 1, __ATOMIC_SEQ_CST); }))
++
++#define fluid_atomic_int_get(atomic)                                  \
++    (__extension__({                                                  \
++        int gaig_temp;                                                \
++        __atomic_load((int *)(atomic), &gaig_temp, __ATOMIC_SEQ_CST); \
++        gaig_temp;                                                    \
++    }))
++
++#define fluid_atomic_int_set(atomic, newval)                           \
++    (__extension__({                                                   \
++        int gais_temp = (int)(newval);                                 \
++        __atomic_store((int *)(atomic), &gais_temp, __ATOMIC_SEQ_CST); \
++    }))
++
++#define fluid_atomic_int_compare_and_exchange(atomic, oldval, newval)                                                \
++    (__extension__({                                                                                                 \
++        int gaicae_oldval = (oldval);                                                                                \
++        __atomic_compare_exchange_n((atomic), &gaicae_oldval, (newval), FALSE, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? \
++        TRUE :                                                                                                       \
++        FALSE;                                                                                                       \
++    }))
++
++#define fluid_atomic_int_exchange_and_add(atomic, val) fluid_atomic_int_add(atomic, val)
++
++#define fluid_atomic_int_add(atomic, val) \
++    (__extension__({ (int)__atomic_fetch_add((atomic), (val), __ATOMIC_SEQ_CST); }))
++
++#define fluid_atomic_float_get(atomic) (*atomic)
++#define fluid_atomic_float_set(atomic, newval) (*atomic = newval)
++
++typedef char fluid_mutex_t;
++#define FLUID_MUTEX_INIT { 0 }
++#define fluid_mutex_init(mutex) (void)mutex
++#define fluid_mutex_destroy(mutex) (void)mutex
++#define fluid_mutex_lock(mutex) (void)mutex
++#define fluid_mutex_unlock(mutex) (void)mutex
++
++typedef char fluid_rec_mutex_t;
++#define fluid_rec_mutex_init(mutex) (void)mutex
++#define fluid_rec_mutex_destroy(mutex) (void)mutex
++#define fluid_rec_mutex_lock(mutex) (void)mutex
++#define fluid_rec_mutex_unlock(mutex) (void)mutex
++
++typedef void* fluid_private_t;
++#define fluid_private_init(priv) memset(&priv, 0, sizeof (priv))
++#define fluid_private_get(priv) ((void*)priv)
++#define fluid_private_set(priv, data) (priv = (void*)data)
++#define fluid_private_free(priv)
+ 
+ /* Threads */
+ 
++#if 0
+ /* other thread implementations might change this for their needs */
+ typedef void *fluid_thread_return_t;
+ /* static return value for thread functions which requires a return value */
+@@ -441,6 +510,9 @@ fluid_thread_t *new_fluid_thread(const char *name, fluid_thread_func_t func, voi
+ void delete_fluid_thread(fluid_thread_t *thread);
+ void fluid_thread_self_set_prio(int prio_level);
+ int fluid_thread_join(fluid_thread_t *thread);
++#endif
++
++typedef char fluid_thread_t;
+ 
+ /* Dynamic Module Loading, currently only used by LADSPA subsystem */
+ #ifdef LADSPA
+@@ -479,6 +551,7 @@ fluid_istream_t fluid_socket_get_istream(fluid_socket_t sock);
+ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
+ 
+ /* File access */
++#if 0
+ #define fluid_stat(_filename, _statbuf)   g_stat((_filename), (_statbuf))
+ #if !GLIB_CHECK_VERSION(2, 26, 0)
+     /* GStatBuf has not been introduced yet, manually typedef to what they had at that time:
+@@ -497,6 +570,10 @@ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
+ #else
+ typedef GStatBuf fluid_stat_buf_t;
+ #endif
++#endif
++
++#define fluid_stat(filename, buf) stat(filename, buf)
++typedef struct stat fluid_stat_buf_t;
+ 
+ FILE* fluid_file_open(const char* filename, const char** errMsg);
+ 
+diff --git a/src/utils/fluidsynth_priv.h b/src/utils/fluidsynth_priv.h
+index 0626bace..0398ed77 100644
+--- a/src/utils/fluidsynth_priv.h
++++ b/src/utils/fluidsynth_priv.h
+@@ -29,7 +29,9 @@
+ #ifndef _FLUIDSYNTH_PRIV_H
+ #define _FLUIDSYNTH_PRIV_H
+ 
++#if 0
+ #include <glib.h>
++#endif
+ 
+ #include "config.h"
+ 
+@@ -281,8 +283,12 @@ do { strncpy(_dst,_src,_n); \
+ #define FLUID_ASSERT(a)
+ #endif
+ 
++#if 0
+ #define FLUID_LIKELY G_LIKELY
+ #define FLUID_UNLIKELY G_UNLIKELY
++#endif
++#define FLUID_LIKELY(cond) __builtin_expect((cond), 1)
++#define FLUID_UNLIKELY(cond) __builtin_expect((cond), 0)
+ 
+ /* Misc */
+ #if defined(__INTEL_COMPILER)
