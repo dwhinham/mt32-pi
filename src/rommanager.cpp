@@ -19,6 +19,7 @@
 //
 
 #include <circle/logger.h>
+#include <fatfs/ff.h>
 
 #include "rommanager.h"
 
@@ -28,6 +29,48 @@ const char ROMPath[] = "roms";
 // Filenames for original ROM loading behaviour
 const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
 const char MT32PCMROMName[] = "MT32_PCM.ROM";
+
+// Custom File class for mt32emu
+class CROMFile : public MT32Emu::AbstractFile
+{
+public:
+	CROMFile() : m_File{}, m_pData(nullptr) {}
+
+	virtual ~CROMFile() override { close(); }
+
+	virtual size_t getSize() override { return f_size(&m_File); }
+
+	virtual const MT32Emu::Bit8u* getData() override { return m_pData; }
+
+	virtual bool open(const char* pFileName)
+	{
+		FRESULT Result = f_open(&m_File, pFileName, FA_READ);
+		if (Result != FR_OK)
+			return false;
+
+		size_t nSize = f_size(&m_File);
+		m_pData      = new MT32Emu::Bit8u[nSize];
+
+		size_t nRead;
+		Result = f_read(&m_File, m_pData, nSize, &nRead);
+
+		return Result == FR_OK;
+	}
+
+	virtual void close() override
+	{
+		f_close(&m_File);
+		if (m_pData)
+		{
+			delete[] m_pData;
+			m_pData = nullptr;
+		}
+	}
+
+private:
+	FIL m_File;
+	MT32Emu::Bit8u* m_pData;
+};
 
 CROMManager::CROMManager()
 	: m_pMT32OldControl(nullptr),
@@ -143,7 +186,7 @@ bool CROMManager::GetROMSet(TROMSet ROMSet, const MT32Emu::ROMImage*& pOutContro
 
 bool CROMManager::CheckROM(const char* pPath)
 {
-	MT32Emu::FileStream* file = new MT32Emu::FileStream();
+	CROMFile* file = new CROMFile();
 	if (!file->open(pPath))
 	{
 		CLogger::Get()->Write(ROMManagerName, LogError, "Couldn't open '%s' for reading", pPath);

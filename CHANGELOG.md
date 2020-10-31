@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ability to invert the display orientation for SSD1306 (new configuration file option).
 - Support for 64 pixel high SSD1306 OLED displays - many thanks to @ctrl_alt_rees for donating a screen!
 
+### Changed
+
+- Kernel size significantly reduced by removing mt32emu ROM loader dependency on C++ iostreams.
+
 ### Fixed
 
 - SSD1306 text alignment was off by one pixel.
