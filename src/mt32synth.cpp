@@ -32,7 +32,7 @@ const char MT32SynthName[] = "mt32synth";
 const u8 CMT32SynthBase::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 const u8 CMT32SynthBase::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
-CMT32SynthBase::CMT32SynthBase(FATFS& FileSystem, unsigned nSampleRate, TResamplerQuality ResamplerQuality)
+CMT32SynthBase::CMT32SynthBase(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
 	: m_pSynth(nullptr),
 
 	  m_nLowLevel(0),
@@ -43,7 +43,6 @@ CMT32SynthBase::CMT32SynthBase(FATFS& FileSystem, unsigned nSampleRate, TResampl
 	  m_ResamplerQuality(ResamplerQuality),
 	  m_pSampleRateConverter(nullptr),
 
-	  m_ROMManager(FileSystem),
 	  m_pControlROMImage(nullptr),
 	  m_pPCMROMImage(nullptr),
 

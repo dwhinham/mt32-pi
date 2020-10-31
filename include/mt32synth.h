@@ -25,7 +25,6 @@
 #include <circle/interrupt.h>
 #include <circle/pwmsoundbasedevice.h>
 #include <circle/types.h>
-#include <fatfs/ff.h>
 
 #include <mt32emu/mt32emu.h>
 
@@ -50,7 +49,7 @@ public:
 	CONFIG_ENUM(TResamplerQuality, ENUM_RESAMPLERQUALITY);
 	CONFIG_ENUM(TMIDIChannels, ENUM_MIDICHANNELS);
 
-	CMT32SynthBase(FATFS& FileSystem, unsigned nSampleRate, TResamplerQuality ResamplerQuality);
+	CMT32SynthBase(unsigned nSampleRate, TResamplerQuality ResamplerQuality);
 	virtual ~CMT32SynthBase();
 
 	virtual bool Initialize();
@@ -107,8 +106,8 @@ private:
 class CMT32SynthI2S : public CMT32SynthBase, public CI2SSoundBaseDevice
 {
 public:
-	CMT32SynthI2S(FATFS& FileSystem, CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
-	: CMT32SynthBase(FileSystem, nSampleRate, ResamplerQuality),
+	CMT32SynthI2S(CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
+	: CMT32SynthBase(nSampleRate, ResamplerQuality),
 	  CI2SSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize)
 	{
 	}
@@ -126,8 +125,8 @@ private:
 class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
 {
 public:
-	CMT32SynthPWM(FATFS& FileSystem, CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
-	: CMT32SynthBase(FileSystem, nSampleRate, ResamplerQuality),
+	CMT32SynthPWM(CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
+	: CMT32SynthBase(nSampleRate, ResamplerQuality),
 	  CPWMSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize),
 	  m_bChannelsSwapped(AreChannelsSwapped())
 	{

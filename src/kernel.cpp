@@ -160,12 +160,12 @@ bool CKernel::Initialize(void)
 		if (m_Config.m_AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
 			InitPCM51xx(m_Config.m_nAudioI2CDACAddress);
 
-		m_pSynth = new CMT32SynthI2S(m_FileSystem, &mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
+		m_pSynth = new CMT32SynthI2S(&mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
 	}
 	else
 	{
 		LCDLog("Init mt32emu (PWM)");
-		m_pSynth = new CMT32SynthPWM(m_FileSystem, &mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
+		m_pSynth = new CMT32SynthPWM(&mInterrupt, m_Config.m_nAudioSampleRate, m_Config.m_MT32EmuResamplerQuality, m_Config.m_nAudioChunkSize);
 	}
 
 	if (!m_pSynth->Initialize())

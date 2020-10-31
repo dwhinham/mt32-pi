@@ -38,7 +38,7 @@ public:
 
 	CONFIG_ENUM(TROMSet, ENUM_ROMSET);
 
-	CROMManager(FATFS& FileSystem);
+	CROMManager();
 	~CROMManager();
 
 	bool ScanROMs();
@@ -48,8 +48,6 @@ public:
 private:
 	bool CheckROM(const char* pPath);
 	bool StoreROM(const MT32Emu::ROMImage& ROMImage);
-
-	FATFS* m_pFileSystem;
 
 	// Control ROMs
 	const MT32Emu::ROMImage* m_pMT32OldControl;

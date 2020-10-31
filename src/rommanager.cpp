@@ -29,9 +29,8 @@ const char ROMPath[] = "roms";
 const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
 const char MT32PCMROMName[] = "MT32_PCM.ROM";
 
-CROMManager::CROMManager(FATFS& FileSystem)
-	: m_pFileSystem(&FileSystem),
-	  m_pMT32OldControl(nullptr),
+CROMManager::CROMManager()
+	: m_pMT32OldControl(nullptr),
 	  m_pMT32NewControl(nullptr),
 	  m_pCM32LControl(nullptr),
 
