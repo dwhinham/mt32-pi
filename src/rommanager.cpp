@@ -86,8 +86,14 @@ CROMManager::~CROMManager()
 {
 	const MT32Emu::ROMImage** const roms[] = { &m_pMT32OldControl, &m_pMT32NewControl, &m_pCM32LControl, &m_pMT32PCM, &m_pCM32LPCM };
 	for (const MT32Emu::ROMImage** rom : roms)
+	{
 		if (*rom)
+		{
+			if (MT32Emu::File* File = (*rom)->getFile())
+				delete File;
 			MT32Emu::ROMImage::freeROMImage(*rom);
+		}
+	}
 }
 
 bool CROMManager::ScanROMs()
@@ -98,6 +104,7 @@ bool CROMManager::ScanROMs()
 
 	char path[sizeof(ROMPath) + FF_LFN_BUF];
 	strcpy(path, ROMPath);
+	path[sizeof(ROMPath) - 1] = '/';
 
 	// Loop over each file in the directory
 	while (result == FR_OK && *fileInfo.fname)
@@ -106,7 +113,6 @@ bool CROMManager::ScanROMs()
 		if (!(fileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
 		{
 			// Assemble path
-			path[sizeof(ROMPath) - 1] = '/';
 			strcpy(path + sizeof(ROMPath), fileInfo.fname);
 
 			// Try to open file
