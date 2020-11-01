@@ -408,6 +408,32 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		return m_pMT32Synth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
 	}
 
+	// Switch synthesizer (F0 7D 02 xx F7)
+	else if (pData[2] == 0x02 && nSize == 5)
+	{
+		u8 synth = pData[3];
+		if (synth > 1)
+			return false;
+
+		CSynthBase* newSynth = synth == 0 ? static_cast<CSynthBase*>(m_pMT32Synth) : static_cast<CSynthBase*>(m_pSoundFontSynth);
+		if (!newSynth)
+		{
+			LCDLog(TLCDLogType::Warning, "Synth unavailable!");
+			return false;
+		}
+
+		if (newSynth == m_pCurrentSynth)
+		{
+			LCDLog(TLCDLogType::Warning, "Already active!");
+			return false;
+		}
+
+		m_pCurrentSynth->AllSoundOff();
+		m_pCurrentSynth = newSynth;
+		LCDLog(TLCDLogType::Notice, newSynth == m_pMT32Synth ? "MT-32 mode" : "SoundFont mode");
+		return true;
+	}
+
 	return false;
 }
 
