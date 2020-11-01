@@ -31,7 +31,8 @@ const u8 CMT32Synth::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x0
 const u8 CMT32Synth::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
 CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
-	: m_pSynth(nullptr),
+	: m_Lock(TASK_LEVEL),
+	  m_pSynth(nullptr),
 
 	  m_nSampleRate(nSampleRate),
 	  m_ResamplerQuality(ResamplerQuality),
@@ -123,10 +124,12 @@ void CMT32Synth::AllSoundOff()
 
 size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
 {
+	m_Lock.Acquire();
 	if (m_pSampleRateConverter)
 		m_pSampleRateConverter->getOutputSamples(pOutBuffer, nFrames);
 	else
 		m_pSynth->render(pOutBuffer, nFrames);
+	m_Lock.Release();
 
 	return nFrames;
 }
@@ -171,11 +174,10 @@ bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	}
 
 	// Reopen synth with new ROMs
-	// N.B. it should be safe to do this without stopping the audio device as render()
-	// will just return silence while the synth is closed
+	m_Lock.Acquire();
 	m_pSynth->close();
-	if (!m_pSynth->open(*controlROMImage, *pcmROMImage))
-		return false;
+	assert(m_pSynth->open(*controlROMImage, *pcmROMImage));
+	m_Lock.Release();
 
 	m_pControlROMImage = controlROMImage;
 	m_pPCMROMImage     = pcmROMImage;
