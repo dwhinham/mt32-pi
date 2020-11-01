@@ -25,6 +25,7 @@
 #include <circle/cputhrottle.h>
 #include <circle/devicenameservice.h>
 #include <circle/i2cmaster.h>
+#include <circle/soundbasedevice.h>
 #include <circle/interrupt.h>
 #include <circle/logger.h>
 #include <circle/multicore.h>

@@ -18,7 +18,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <circle/i2ssoundbasedevice.h>
 #include <circle/memory.h>
+#include <circle/pwmsoundbasedevice.h>
 #include <circle/serial.h>
 #include <circle/usb/usbmidi.h>
 

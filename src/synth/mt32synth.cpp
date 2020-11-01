@@ -20,8 +20,6 @@
 
 #include <circle/logger.h>
 
-#include <mt32emu/mt32emu.h>
-
 #include "config.h"
 #include "synth/mt32synth.h"
 #include "utility.h"

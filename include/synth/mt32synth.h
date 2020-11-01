@@ -21,9 +21,6 @@
 #ifndef _mt32synth_h
 #define _mt32synth_h
 
-#include <circle/i2ssoundbasedevice.h>
-#include <circle/interrupt.h>
-#include <circle/pwmsoundbasedevice.h>
 #include <circle/types.h>
 
 #include <mt32emu/mt32emu.h>
