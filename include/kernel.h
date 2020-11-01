@@ -40,7 +40,6 @@ public:
 
 protected:
 	CCPUThrottle m_CPUThrottle;
-	CNullDevice m_Null;
 	CSerialDevice m_Serial;
 #ifdef HDMI_CONSOLE
 	CScreenDevice m_Screen;

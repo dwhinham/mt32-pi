@@ -57,7 +57,7 @@ bool CKernel::Initialize(void)
 	CDevice* pLogTarget = mDeviceNameService.GetDevice(mOptions.GetLogDevice(), false);
 
 	if (!pLogTarget)
-		pLogTarget = &m_Null;
+		pLogTarget = &mNullDevice;
 
 	// Init serial port early if used for logging
 	bool bSerialMIDIEnabled = pLogTarget != &m_Serial;
