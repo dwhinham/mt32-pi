@@ -59,13 +59,15 @@ $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@cmake   -B $(MT32EMUBUILDDIR) \
 			-DARM_HOME=$(ARM_HOME) \
 			-DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi.cmake \
+			-DCMAKE_CXX_FLAGS_RELEASE="-Ofast" \
 			-DCMAKE_BUILD_TYPE=Release \
 			-Dlibmt32emu_C_INTERFACE=FALSE \
 			-Dlibmt32emu_SHARED=FALSE \
 			$(MT32EMUHOME) \
 			>/dev/null
-	@cmake --build $(MT32EMUBUILDDIR) >/dev/null
+	@cmake --build $(MT32EMUBUILDDIR)
 	@touch $@
+
 #
 # Build kernel itself
 #
