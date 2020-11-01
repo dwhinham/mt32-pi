@@ -41,7 +41,7 @@
 class CMT32Pi : public CMultiCoreSupport, CMIDIParser
 {
 public:
-	CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI, FATFS* pFilesystem);
+	CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
 	virtual ~CMT32Pi() override;
 
 	bool Initialize(bool bSerialMIDIEnabled = true);
@@ -71,7 +71,6 @@ private:
 	CTimer* m_pTimer;
 	CActLED* m_pActLED;
 
-	FATFS* m_pFileSystem;
 	CI2CMaster* m_pI2CMaster;
 	CInterruptSystem* m_pInterrupt;
 	CSerialDevice* m_pSerial;

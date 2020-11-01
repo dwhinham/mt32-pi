@@ -36,14 +36,13 @@ const char MT32PiName[] = "mt32-pi";
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
-CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI, FATFS* pFilesystem)
+CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
 	: CMultiCoreSupport(CMemorySystem::Get()),
 	  CMIDIParser(),
 
 	  m_pTimer(CTimer::Get()),
 	  m_pActLED(CActLED::Get()),
 
-	  m_pFileSystem(pFilesystem),
 	  m_pI2CMaster(pI2CMaster),
 	  m_pInterrupt(pInterrupt),
 	  m_pSerial(pSerialDevice),

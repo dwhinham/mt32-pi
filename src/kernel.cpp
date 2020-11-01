@@ -40,7 +40,7 @@ CKernel::CKernel(void)
 
 	  m_I2CMaster(1, true),
 
-	  m_MT32Pi(&m_I2CMaster, &mInterrupt, &m_Serial, &m_USBHCI, &m_FileSystem)
+	  m_MT32Pi(&m_I2CMaster, &mInterrupt, &m_Serial, &m_USBHCI)
 {
 }
 
