@@ -310,7 +310,7 @@ void CSSD1306::Clear()
 	WriteFramebuffer();
 }
 
-void CSSD1306::Update(const CMT32SynthBase& Synth)
+void CSSD1306::Update(const CMT32Synth& Synth)
 {
 	CMT32LCD::Update(Synth);
 

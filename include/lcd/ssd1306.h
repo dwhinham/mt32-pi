@@ -25,7 +25,7 @@
 #include <circle/types.h>
 
 #include "lcd/mt32lcd.h"
-#include "mt32synth.h"
+#include "synth/mt32synth.h"
 #include "utility.h"
 
 class CSSD1306 : public CMT32LCD
@@ -45,7 +45,7 @@ public:
 	virtual void Clear() override;
 
 	// CMT32LCD
-	virtual void Update(const CMT32SynthBase& Synth) override;
+	virtual void Update(const CMT32Synth& Synth) override;
 
 private:
 	void WriteFramebuffer() const;

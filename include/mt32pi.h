@@ -36,7 +36,7 @@
 #include "config.h"
 #include "lcd/mt32lcd.h"
 #include "midiparser.h"
-#include "mt32synth.h"
+#include "synth/mt32synth.h"
 
 class CMT32Pi : public CMultiCoreSupport, CMIDIParser
 {
@@ -45,6 +45,7 @@ public:
 	virtual ~CMT32Pi() override;
 
 	bool Initialize(bool bSerialMIDIEnabled = true);
+
 	virtual void Run(unsigned nCore) override;
 
 private:
@@ -54,6 +55,11 @@ private:
 	virtual void OnUnexpectedStatus() override;
 	virtual void OnSysExOverflow() override;
 
+	// Tasks for specific CPU cores
+	void MainTask();
+	void UITask();
+	void AudioTask();
+
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 	void UpdateSerialMIDI();
 
@@ -62,8 +68,6 @@ private:
 
 	bool InitPCM51xx(u8 nAddress);
 
-	CConfig* m_pConfig;
-	CLogger* m_pLogger;
 	CTimer* m_pTimer;
 	CActLED* m_pActLED;
 
@@ -83,12 +87,15 @@ private:
 	bool m_bActiveSenseFlag;
 	unsigned m_nActiveSenseTime;
 
-	bool m_bShouldReboot;
+	volatile bool m_bRunning;
 	bool m_bLEDOn;
 	unsigned m_nLEDOnTime;
 
-	// Synthesizer
-	CMT32SynthBase* m_pSynth;
+	// Audio output
+	CSoundBaseDevice* m_pSound;
+
+	// Synthesizers
+	CMT32Synth* m_pMT32Synth;
 
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 

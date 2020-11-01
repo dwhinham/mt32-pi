@@ -23,21 +23,17 @@
 #include <mt32emu/mt32emu.h>
 
 #include "config.h"
-#include "mt32synth.h"
+#include "synth/mt32synth.h"
 #include "utility.h"
 
 const char MT32SynthName[] = "mt32synth";
 
 // SysEx commands for setting MIDI channel assignment (no SysEx framing, just 3-byte address and 9 channel values)
-const u8 CMT32SynthBase::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
-const u8 CMT32SynthBase::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
+const u8 CMT32Synth::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
+const u8 CMT32Synth::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
-CMT32SynthBase::CMT32SynthBase(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
+CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
 	: m_pSynth(nullptr),
-
-	  m_nLowLevel(0),
-	  m_nNullLevel(0),
-	  m_HighLevel(0),
 
 	  m_nSampleRate(nSampleRate),
 	  m_ResamplerQuality(ResamplerQuality),
@@ -50,7 +46,7 @@ CMT32SynthBase::CMT32SynthBase(unsigned nSampleRate, TResamplerQuality Resampler
 {
 }
 
-CMT32SynthBase::~CMT32SynthBase()
+CMT32Synth::~CMT32Synth()
 {
 	if (m_pSynth)
 		delete m_pSynth;
@@ -59,7 +55,7 @@ CMT32SynthBase::~CMT32SynthBase()
 		delete m_pSampleRateConverter;
 }
 
-bool CMT32SynthBase::Initialize()
+bool CMT32Synth::Initialize()
 {
 	if (!m_ROMManager.ScanROMs())
 		return false;
@@ -105,27 +101,49 @@ bool CMT32SynthBase::Initialize()
 		m_pSampleRateConverter = new MT32Emu::SampleRateConverter(*m_pSynth, m_nSampleRate, quality);
 	}
 
-	// Audio output device integer range
-	m_nLowLevel = GetRangeMin();
-	m_HighLevel = GetRangeMax();
-	m_nNullLevel = (m_HighLevel + m_nLowLevel) / 2;
-
 	return true;
 }
 
-void CMT32SynthBase::HandleMIDIShortMessage(u32 nMessage)
+void CMT32Synth::HandleMIDIShortMessage(u32 nMessage)
 {
 	// TODO: timestamping
 	m_pSynth->playMsg(nMessage);
 }
 
-void CMT32SynthBase::HandleMIDISysExMessage(const u8* pData, size_t nSize)
+void CMT32Synth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
 	// TODO: timestamping
 	m_pSynth->playSysex(pData, nSize);
 }
 
-void CMT32SynthBase::SetMIDIChannels(TMIDIChannels Channels)
+void CMT32Synth::AllSoundOff()
+{
+	// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
+	for (uint8_t i = 0; i < 8; ++i)
+		m_pSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
+}
+
+size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
+{
+	if (m_pSampleRateConverter)
+		m_pSampleRateConverter->getOutputSamples(pOutBuffer, nFrames);
+	else
+		m_pSynth->render(pOutBuffer, nFrames);
+
+	return nFrames;
+}
+
+size_t CMT32Synth::Render(float* pOutBuffer, size_t nFrames)
+{
+	if (m_pSampleRateConverter)
+		m_pSampleRateConverter->getOutputSamples(pOutBuffer, nFrames);
+	else
+		m_pSynth->render(pOutBuffer, nFrames);
+
+	return nFrames;
+}
+
+void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
 {
 	if (Channels == TMIDIChannels::Standard)
 		m_pSynth->writeSysex(0x10, StandardMIDIChannelsSysEx, sizeof(StandardMIDIChannelsSysEx));
@@ -133,7 +151,7 @@ void CMT32SynthBase::SetMIDIChannels(TMIDIChannels Channels)
 		m_pSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
 }
 
-bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
+bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
 {
 	const MT32Emu::ROMImage* controlROMImage;
 	const MT32Emu::ROMImage* pcmROMImage;
@@ -170,7 +188,7 @@ bool CMT32SynthBase::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	return true;
 }
 
-const char* CMT32SynthBase::GetControlROMName() const
+const char* CMT32Synth::GetControlROMName() const
 {
 	// +5 to skip 'ctrl_'
 	const char* shortName = m_pControlROMImage->getROMInfo()->shortName + 5;
@@ -188,7 +206,7 @@ const char* CMT32SynthBase::GetControlROMName() const
 	return reinterpret_cast<const char*>(romData + offset);
 }
 
-u8 CMT32SynthBase::GetVelocityForPart(u8 nPart) const
+u8 CMT32Synth::GetVelocityForPart(u8 nPart) const
 {
 	u8 keys[MT32Emu::DEFAULT_MAX_PARTIALS];
 	u8 velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
@@ -202,94 +220,33 @@ u8 CMT32SynthBase::GetVelocityForPart(u8 nPart) const
 	return maxVelocity;
 }
 
-u8 CMT32SynthBase::GetMasterVolume() const
+u8 CMT32Synth::GetMasterVolume() const
 {
 	u8 volume;
 	m_pSynth->readMemory(0x40016, 1, &volume);
 	return volume;
 }
 
-void CMT32SynthBase::AllSoundOff()
-{
-	// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
-	for (uint8_t i = 0; i < 8; ++i)
-		m_pSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
-}
-
-bool CMT32SynthBase::onMIDIQueueOverflow()
+bool CMT32Synth::onMIDIQueueOverflow()
 {
 	CLogger::Get()->Write(MT32SynthName, LogError, "MIDI queue overflow");
 	return false;
 }
 
-void CMT32SynthBase::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
+void CMT32Synth::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
 	if (m_pLCD)
 		m_pLCD->OnProgramChanged(nPartNum, pSoundGroupName, pPatchName);
 }
 
-void CMT32SynthBase::printDebug(const char* pFmt, va_list pList)
+void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 {
 	//CLogger::Get()->WriteV("debug", LogNotice, fmt, list);
 }
 
-void CMT32SynthBase::showLCDMessage(const char* pMessage)
+void CMT32Synth::showLCDMessage(const char* pMessage)
 {
 	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
 	if (m_pLCD)
 		m_pLCD->OnLCDMessage(pMessage);
-}
-
-//
-// I2S implementation
-//
-unsigned int CMT32SynthI2S::GetChunk(u32 *pBuffer, unsigned nChunkSize)
-{
-	float samples[nChunkSize];
-	if (m_pSampleRateConverter)
-		m_pSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
-	else
-		m_pSynth->render(samples, nChunkSize / 2);
-
-	for (size_t i = 0; i < nChunkSize; ++i)
-	{
-		int level = static_cast<int>(samples[i] * m_HighLevel / 2 + m_nNullLevel);
-		*pBuffer++ = static_cast<u32>(level);
-	}
-
-	return nChunkSize;
-}
-
-//
-// PWM implementation
-//
-unsigned int CMT32SynthPWM::GetChunk(u32 *pBuffer, unsigned nChunkSize)
-{
-	float samples[nChunkSize];
-	if (m_pSampleRateConverter)
-		m_pSampleRateConverter->getOutputSamples(samples, nChunkSize / 2);
-	else
-		m_pSynth->render(samples, nChunkSize / 2);
-
-	for (size_t i = 0; i < nChunkSize; ++i)
-	{
-		int levelLeft = static_cast<int>(samples[i * 2] * m_HighLevel / 2 + m_nNullLevel);
-		int levelRight = static_cast<int>(samples[i * 2 + 1] * m_HighLevel / 2 + m_nNullLevel);
-
-		levelLeft = Utility::Clamp(levelLeft, m_nLowLevel, m_HighLevel);
-		levelRight = Utility::Clamp(levelRight, m_nLowLevel, m_HighLevel);
-
-		if (m_bChannelsSwapped)
-		{
-			*pBuffer++ = static_cast<u32>(levelRight);
-			*pBuffer++ = static_cast<u32>(levelLeft);
-		}
-		else
-		{
-			*pBuffer++ = static_cast<u32>(levelLeft);
-			*pBuffer++ = static_cast<u32>(levelRight);
-		}
-	}
-
-	return nChunkSize;
 }

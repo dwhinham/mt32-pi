@@ -30,9 +30,10 @@
 
 #include "lcd/mt32lcd.h"
 #include "rommanager.h"
+#include "synth/synthbase.h"
 #include "utility.h"
 
-class CMT32SynthBase : public MT32Emu::ReportHandler
+class CMT32Synth : public CSynthBase, public MT32Emu::ReportHandler
 {
 public:
 	#define ENUM_RESAMPLERQUALITY(ENUM) \
@@ -49,17 +50,17 @@ public:
 	CONFIG_ENUM(TResamplerQuality, ENUM_RESAMPLERQUALITY);
 	CONFIG_ENUM(TMIDIChannels, ENUM_MIDICHANNELS);
 
-	CMT32SynthBase(unsigned nSampleRate, TResamplerQuality ResamplerQuality);
-	virtual ~CMT32SynthBase();
+	CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality);
+	virtual ~CMT32Synth();
 
-	virtual bool Initialize();
+	// CSynthBase
+	virtual bool Initialize() override;
+	void HandleMIDIShortMessage(u32 nMessage) override;
+	void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
+	void AllSoundOff() override;
+	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
+	virtual size_t Render(float* pBuffer, size_t nFrames) override;
 
-	// CSoundBaseDevice
-	virtual bool Start() = 0;
-	virtual void Cancel() = 0;
-
-	void HandleMIDIShortMessage(u32 nMessage);
-	void HandleMIDISysExMessage(const u8* pData, size_t nSize);
 	void SetLCD(CMT32LCD* pLCD) { m_pLCD = pLCD; }
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
@@ -69,18 +70,8 @@ public:
 	u8 GetVelocityForPart(u8 nPart) const;
 	u8 GetMasterVolume() const;
 
-	void AllSoundOff();
-
 protected:
-	// CSoundBaseDevice
-	virtual int GetRangeMin() const = 0;
-	virtual int GetRangeMax() const = 0;
-
 	MT32Emu::Synth* m_pSynth;
-
-	int m_nLowLevel;
-	int m_nNullLevel;
-	int m_HighLevel;
 
 	unsigned int m_nSampleRate;
 	TResamplerQuality m_ResamplerQuality;
@@ -101,47 +92,6 @@ private:
 	const MT32Emu::ROMImage* m_pPCMROMImage;
 
 	CMT32LCD* m_pLCD;
-};
-
-class CMT32SynthI2S : public CMT32SynthBase, public CI2SSoundBaseDevice
-{
-public:
-	CMT32SynthI2S(CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
-	: CMT32SynthBase(nSampleRate, ResamplerQuality),
-	  CI2SSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize)
-	{
-	}
-
-	virtual int GetRangeMin() const override { return CI2SSoundBaseDevice::GetRangeMin(); }
-	virtual int GetRangeMax() const override { return CI2SSoundBaseDevice::GetRangeMax(); }
-	virtual bool Start() override { return CI2SSoundBaseDevice::Start(); }
-	virtual void Cancel() override { CI2SSoundBaseDevice::Cancel(); }
-
-private:
-	// CSoundBaseDevice
-	virtual unsigned GetChunk(u32* pBuffer, unsigned nChunkSize) override;
-};
-
-class CMT32SynthPWM : public CMT32SynthBase, public CPWMSoundBaseDevice
-{
-public:
-	CMT32SynthPWM(CInterruptSystem* pInterrupt, unsigned nSampleRate, TResamplerQuality ResamplerQuality, unsigned nChunkSize)
-	: CMT32SynthBase(nSampleRate, ResamplerQuality),
-	  CPWMSoundBaseDevice(pInterrupt, nSampleRate, nChunkSize),
-	  m_bChannelsSwapped(AreChannelsSwapped())
-	{
-	}
-
-	virtual int GetRangeMin() const override { return CPWMSoundBaseDevice::GetRangeMin(); }
-	virtual int GetRangeMax() const override { return CPWMSoundBaseDevice::GetRangeMax(); }
-	virtual bool Start() override { return CPWMSoundBaseDevice::Start(); }
-	virtual void Cancel() override { CPWMSoundBaseDevice::Cancel(); }
-
-private:
-	// CSoundBaseDevice
-	virtual unsigned GetChunk(u32* pBuffer, unsigned nChunkSize) override;
-
-	bool m_bChannelsSwapped;
 };
 
 #endif

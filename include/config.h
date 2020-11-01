@@ -22,8 +22,8 @@
 #define _config_h
 
 #include "lcd/ssd1306.h"
-#include "mt32synth.h"
 #include "rommanager.h"
+#include "synth/mt32synth.h"
 #include "utility.h"
 
 class CConfig
@@ -37,8 +37,8 @@ public:
 		ENUM(None, none)               \
 		ENUM(PCM51xx, pcm51xx)
 
-	using TMT32EmuResamplerQuality = CMT32SynthBase::TResamplerQuality;
-	using TMT32EmuMIDIChannels     = CMT32SynthBase::TMIDIChannels;
+	using TMT32EmuResamplerQuality = CMT32Synth::TResamplerQuality;
+	using TMT32EmuMIDIChannels     = CMT32Synth::TMIDIChannels;
 	using TMT32EmuROMSet           = CROMManager::TROMSet;
 
 	using TLCDRotation             = CSSD1306::TLCDRotation;

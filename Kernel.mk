@@ -4,21 +4,22 @@
 
 include Config.mk
 
-OBJS		:=	src/main.o \
+OBJS		:=	src/config.o \
 				src/kernel.o \
-				src/config.o \
-				src/midiparser.o \
-				src/mt32pi.o \
-				src/mt32synth.o \
-				src/rommanager.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
 				src/lcd/hd44780i2c.o \
 				src/lcd/mt32lcd.o \
-				src/lcd/ssd1306.o
+				src/lcd/ssd1306.o \
+				src/main.o \
+				src/midiparser.o \
+				src/mt32pi.o \
+				src/rommanager.o \
+				src/synth/mt32synth.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
-				src/lcd/*.d src/lcd/*.o
+				src/lcd/*.d src/lcd/*.o \
+				src/synth/*.d src/synth/*.o
 
 #
 # inih

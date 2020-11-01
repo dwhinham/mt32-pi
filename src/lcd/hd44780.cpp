@@ -262,7 +262,7 @@ void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
 	Print(line2Buf, 0, nFirstRow + 1, true);
 }
 
-void CHD44780Base::Update(const CMT32SynthBase& Synth)
+void CHD44780Base::Update(const CMT32Synth& Synth)
 {
 	CMT32LCD::Update(Synth);
 

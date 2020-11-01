@@ -23,7 +23,7 @@
 #include <cmath>
 
 #include "lcd/mt32lcd.h"
-#include "mt32synth.h"
+#include "synth/mt32synth.h"
 #include "utility.h"
 
 CMT32LCD::CMT32LCD()
@@ -61,7 +61,7 @@ void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const 
 	m_nStateTime = ticks;
 }
 
-void CMT32LCD::Update(const CMT32SynthBase& Synth)
+void CMT32LCD::Update(const CMT32Synth& Synth)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 	u8 masterVolume = Synth.GetMasterVolume();
@@ -88,7 +88,7 @@ void CMT32LCD::Update(const CMT32SynthBase& Synth)
 		UpdatePartStateText(Synth);
 }
 
-void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& Synth)
+void CMT32LCD::UpdatePartStateText(const CMT32Synth& Synth)
 {
 	u32 partStates = Synth.GetPartStates();
 
@@ -108,7 +108,7 @@ void CMT32LCD::UpdatePartStateText(const CMT32SynthBase& Synth)
 	sprintf(m_TextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
 }
 
-void CMT32LCD::UpdatePartLevels(const CMT32SynthBase& Synth)
+void CMT32LCD::UpdatePartLevels(const CMT32Synth& Synth)
 {
 	u32 partStates = Synth.GetPartStates();
 	for (u8 i = 0; i < 9; ++i)

@@ -103,7 +103,10 @@ bool CKernel::Initialize(void)
 
 CStdlibApp::TShutdownMode CKernel::Run(void)
 {
+	m_Logger.Write(GetKernelName(), LogNotice, "mt32-pi " MT32_PI_VERSION);
+	m_Logger.Write(GetKernelName(), LogNotice, "Compile time: " __DATE__ " " __TIME__);
+
 	m_MT32Pi.Run(0);
 
-	return ShutdownHalt;
+	return ShutdownReboot;
 }
