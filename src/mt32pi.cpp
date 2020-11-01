@@ -191,6 +191,24 @@ void CMT32Pi::MainTask()
 			m_bActiveSenseFlag = false;
 			logger.Write(MT32PiName, LogNotice, "Active sense timeout - turning notes off");
 		}
+	}
+
+	// Stop audio
+	m_pSound->Cancel();
+
+	// Clear screen
+	if (m_pLCD)
+		m_pLCD->Clear();
+}
+
+void CMT32Pi::UITask()
+{
+	CLogger& logger = *CLogger::Get();
+	logger.Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
+
+	while (m_bRunning)
+	{
+		unsigned ticks = m_pTimer->GetTicks();
 
 		// Update activity LED
 		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
@@ -217,19 +235,6 @@ void CMT32Pi::MainTask()
 			}
 		}
 	}
-
-	// Stop audio
-	m_pSound->Cancel();
-
-	// Clear screen
-	if (m_pLCD)
-		m_pLCD->Clear();
-}
-
-void CMT32Pi::UITask()
-{
-	CLogger& logger = *CLogger::Get();
-	logger.Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
 }
 
 void CMT32Pi::AudioTask()
