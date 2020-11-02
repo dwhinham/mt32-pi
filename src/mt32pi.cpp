@@ -51,7 +51,6 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_pUSBHCI(pUSBHCI),
 
 	  m_pLCD(nullptr),
-	  m_nLCDLogTime(0),
 	  m_nLCDUpdateTime(0),
 
 	  m_bSerialMIDIEnabled(false),
@@ -60,6 +59,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_nActiveSenseTime(0),
 
 	  m_bRunning(true),
+	  m_bUITaskDone(false),
 	  m_bLEDOn(false),
 	  m_nLEDOnTime(0),
 
@@ -103,12 +103,14 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	// The USB driver is not supported under 64-bit QEMU, so
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
+	LCDLog(TLCDLogType::Startup, "Init USB");
 	if (config.MIDIUSB && !m_pUSBHCI->Initialize())
 		return false;
 #endif
 
 	if (config.AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
 	{
+		LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
 		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
 
 		if (config.AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
@@ -116,6 +118,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	}
 	else
 	{
+		LCDLog(TLCDLogType::Startup, "Init audio (PWM)");
 		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
 	}
 
@@ -124,6 +127,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 
 	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned16);
 
+	LCDLog(TLCDLogType::Startup, "Init mt32emu");
 	m_pMT32Synth = new CMT32Synth(config.AudioSampleRate, config.MT32EmuResamplerQuality);
 	if (!m_pMT32Synth->Initialize())
 	{
@@ -159,7 +163,6 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 
 	// Start audio
 	m_pSound->Start();
-	LCDLog("Ready.");
 
 	// Start other cores
 	if (!CMultiCoreSupport::Initialize())
@@ -193,9 +196,9 @@ void CMT32Pi::MainTask()
 	// Stop audio
 	m_pSound->Cancel();
 
-	// Clear screen
-	if (m_pLCD)
-		m_pLCD->Clear();
+	// Wait for UI task to finish
+	while (!m_bUITaskDone)
+		;
 }
 
 void CMT32Pi::UITask()
@@ -215,23 +218,18 @@ void CMT32Pi::UITask()
 		}
 
 		// Update LCD
-		if (m_pLCD)
+		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
 		{
-			if (m_nLCDLogTime)
-			{
-				if ((ticks - m_nLCDLogTime) >= MSEC2HZ(LCD_LOG_TIME_MILLIS))
-				{
-					m_nLCDLogTime = 0;
-					m_pLCD->Clear();
-				}
-			}
-			else if ((ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
-			{
-				m_pLCD->Update(*m_pMT32Synth);
-				m_nLCDUpdateTime = ticks;
-			}
+			m_pLCD->Update(*m_pMT32Synth);
+			m_nLCDUpdateTime = ticks;
 		}
 	}
+
+	// Clear screen
+	if (m_pLCD)
+		m_pLCD->Clear();
+
+	m_bUITaskDone = true;
 }
 
 void CMT32Pi::AudioTask()
@@ -302,13 +300,13 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 void CMT32Pi::OnUnexpectedStatus()
 {
 	CMIDIParser::OnUnexpectedStatus();
-	LCDLog("Unexp. MIDI status!");
+	LCDLog(TLCDLogType::Error, "Unexp. MIDI status!");
 }
 
 void CMT32Pi::OnSysExOverflow()
 {
 	CMIDIParser::OnSysExOverflow();
-	LCDLog("SysEx overflow!");
+	LCDLog(TLCDLogType::Error, "SysEx overflow!");
 }
 
 bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
@@ -359,24 +357,24 @@ void CMT32Pi::UpdateSerialMIDI()
 		switch (nResult)
 		{
 			case -SERIAL_ERROR_BREAK:
-				errorString = "break error";
+				errorString = "UART break error!";
 				break;
 
 			case -SERIAL_ERROR_OVERRUN:
-				errorString = "overrun error";
+				errorString = "UART overrun error!";
 				break;
 
 			case -SERIAL_ERROR_FRAMING:
-				errorString = "framing error";
+				errorString = "UART framing error!";
 				break;
 
 			default:
-				errorString = "unknown error";
+				errorString = "Unknown UART error!";
 				break;
 		}
 
-		CLogger::Get()->Write("serialmidi", LogWarning, errorString);
-		LCDLog(errorString);
+		CLogger::Get()->Write(MT32PiName, LogWarning, errorString);
+		LCDLog(TLCDLogType::Error, errorString);
 		return;
 	}
 
@@ -386,8 +384,8 @@ void CMT32Pi::UpdateSerialMIDI()
 		int nSendResult = m_pSerial->Write(buffer, nResult);
 		if (nSendResult != nResult)
 		{
-			CLogger::Get()->Write("serialmidi", LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
-			LCDLog("serial TX error");
+			CLogger::Get()->Write(MT32PiName, LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
+			LCDLog(TLCDLogType::Error, "UART TX error!");
 		}
 	}
 
@@ -405,15 +403,21 @@ void CMT32Pi::LEDOn()
 	m_bLEDOn = true;
 }
 
-void CMT32Pi::LCDLog(const char* pMessage)
+void CMT32Pi::LCDLog(TLCDLogType Type, const char* pMessage)
 {
 	if (!m_pLCD)
 		return;
 
-	m_nLCDLogTime = m_pTimer->GetTicks();
+	// LCD task hasn't started yet; print directly
+	if (Type == TLCDLogType::Startup)
+	{
+		m_pLCD->Print("~", 0, 1);
+		m_pLCD->Print(pMessage, 2, 1, true, true);
+	}
 
-	m_pLCD->Print("~", 0, 1);
-	m_pLCD->Print(pMessage, 2, 1, true, true);
+	// Let LCD task pick up the message in its next update
+	else
+		m_pLCD->OnSystemMessage(pMessage);
 }
 
 // TODO: Generic configurable DAC init class

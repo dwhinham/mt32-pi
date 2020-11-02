@@ -315,11 +315,20 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 {
 	CMT32LCD::Update(Synth);
 
+	Clear(false);
 	UpdatePartLevels(Synth);
 	UpdatePeakLevels();
 
-	DrawPartLevels(0);
+	if (m_SystemState == TSystemState::DisplayingMessage)
+	{
+		u8 messageRow = m_nHeight == 32 ? 0 : 1;
+		Print(m_SystemMessageTextBuffer, 0, messageRow, true);
+	}
+	else
+		DrawPartLevels(0);
+
+	// MT-32 status row
 	u8 statusRow = m_nHeight == 32 ? 1 : 3;
-	Print(m_TextBuffer, 0, statusRow, true);
+	Print(m_MT32TextBuffer, 0, statusRow, true);
 	WriteFramebuffer();
 }

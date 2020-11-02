@@ -30,7 +30,13 @@ class CMT32Synth;
 class CMT32LCD : public CCharacterLCD
 {
 public:
-	enum class TState
+	enum class TSystemState
+	{
+		None,
+		DisplayingMessage,
+	};
+
+	enum class TMT32State
 	{
 		DisplayingPartStates,
 		DisplayingTimbreName,
@@ -39,7 +45,9 @@ public:
 
 	CMT32LCD();
 
-	void OnLCDMessage(const char* pMessage);
+	void OnSystemMessage(const char* pMessage);
+
+	void OnMT32Message(const char* pMessage);
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);
 
 	virtual void Update(const CMT32Synth& Synth) = 0;
@@ -52,17 +60,22 @@ protected:
 	// 20 characters plus null terminator
 	static constexpr size_t TextBufferLength = 20 + 1;
 
-	static constexpr unsigned MessageDisplayTimeMillis = 200;
+	static constexpr unsigned SystemMessageDisplayTimeMillis = 3000;
+	static constexpr unsigned MT32MessageDisplayTimeMillis = 200;
 	static constexpr unsigned TimbreDisplayTimeMillis = 1200;
 
 	static constexpr float BarFalloff  = 1.0f / 16.0f;
 	static constexpr float PeakFalloff = 1.0f / 64.0f;
 
-	TState m_State;
-	unsigned m_nStateTime;
+	// System state
+	TSystemState m_SystemState;
+	unsigned m_nSystemStateTime;
+	char m_SystemMessageTextBuffer[TextBufferLength];
 
 	// MT-32 state
-	char m_TextBuffer[TextBufferLength];
+	TMT32State m_MT32State;
+	unsigned m_nMT32StateTime;
+	char m_MT32TextBuffer[TextBufferLength];
 	u8 m_nPreviousMasterVolume;
 	float m_PartLevels[9];
 	float m_PeakLevels[9];

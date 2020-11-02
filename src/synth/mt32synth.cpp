@@ -161,7 +161,7 @@ bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	if (!m_ROMManager.GetROMSet(ROMSet, controlROMImage, pcmROMImage))
 	{
 		if (m_pLCD)
-			m_pLCD->OnLCDMessage("ROM set not avail!");
+			m_pLCD->OnSystemMessage("ROM set not avail!");
 		return false;
 	}
 
@@ -169,7 +169,7 @@ bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	if (controlROMImage == m_pControlROMImage)
 	{
 		if (m_pLCD)
-			m_pLCD->OnLCDMessage("Already selected!");
+			m_pLCD->OnSystemMessage("Already selected!");
 		return false;
 	}
 
@@ -183,7 +183,7 @@ bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
 	m_pPCMROMImage     = pcmROMImage;
 
 	if (m_pLCD)
-		m_pLCD->OnLCDMessage(GetControlROMName());
+		m_pLCD->OnSystemMessage(GetControlROMName());
 
 	return true;
 }
@@ -248,5 +248,5 @@ void CMT32Synth::showLCDMessage(const char* pMessage)
 {
 	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
 	if (m_pLCD)
-		m_pLCD->OnLCDMessage(pMessage);
+		m_pLCD->OnMT32Message(pMessage);
 }

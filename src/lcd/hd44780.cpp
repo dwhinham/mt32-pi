@@ -268,12 +268,25 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 
 	if (m_nRows == 2)
 	{
-		DrawPartLevelsSingle(0);
-		Print(m_TextBuffer, 0, 1, true);
+		if (m_SystemState == TSystemState::DisplayingMessage)
+			Print(m_SystemMessageTextBuffer, 0, 0, true);
+		else
+			DrawPartLevelsSingle(0);
+
+		Print(m_MT32TextBuffer, 0, 1, true);
 	}
 	else if (m_nRows == 4)
 	{
-		DrawPartLevelsDouble(0);
-		Print(m_TextBuffer, 0, 2, true);
+		if (m_SystemState == TSystemState::DisplayingMessage)
+		{
+			// Clear top line
+			Print("", 0, 0, true);
+			Print(m_SystemMessageTextBuffer, 0, 1, true);
+			Print("", 0, 2, true);
+		}
+		else
+			DrawPartLevelsDouble(0);
+
+		Print(m_MT32TextBuffer, 0, 2, true);
 	}
 }

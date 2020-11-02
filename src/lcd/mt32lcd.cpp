@@ -27,9 +27,13 @@
 #include "utility.h"
 
 CMT32LCD::CMT32LCD()
- 	: m_State(TState::DisplayingPartStates),
-	  m_nStateTime(0),
-	  m_TextBuffer{'\0'},
+	: m_SystemState(TSystemState::None),
+	  m_nSystemStateTime(0),
+	  m_SystemMessageTextBuffer{'\0'},
+
+	  m_MT32State(TMT32State::DisplayingPartStates),
+	  m_nMT32StateTime(0),
+	  m_MT32TextBuffer{'\0'},
 	  m_nPreviousMasterVolume(0),
 	  m_PartLevels{0},
 	  m_PeakLevels{0},
@@ -37,28 +41,38 @@ CMT32LCD::CMT32LCD()
 {
 }
 
-void CMT32LCD::OnLCDMessage(const char* pMessage)
+void CMT32LCD::OnSystemMessage(const char* pMessage)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
-	snprintf(m_TextBuffer, sizeof(m_TextBuffer), pMessage);
+	snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), pMessage);
 
-	m_State = TState::DisplayingMessage;
-	m_nStateTime = ticks;
+	m_SystemState = TSystemState::DisplayingMessage;
+	m_nSystemStateTime = ticks;
+}
+
+void CMT32LCD::OnMT32Message(const char* pMessage)
+{
+	unsigned ticks = CTimer::Get()->GetTicks();
+
+	snprintf(m_MT32TextBuffer, sizeof(m_MT32TextBuffer), pMessage);
+
+	m_MT32State = TMT32State::DisplayingMessage;
+	m_nMT32StateTime = ticks;
 }
 
 void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
-	// Bail out if displaying a message and it hasn't been on-screen long enough
-	if (m_State == TState::DisplayingMessage && (ticks - m_nStateTime) <= MSEC2HZ(MessageDisplayTimeMillis))
+	// Bail out if displaying an MT-32 message and it hasn't been on-screen long enough
+	if (m_MT32State == TMT32State::DisplayingMessage && (ticks - m_nMT32StateTime) <= MSEC2HZ(MT32MessageDisplayTimeMillis))
 		return;
 
-	snprintf(m_TextBuffer, sizeof(m_TextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
+	snprintf(m_MT32TextBuffer, sizeof(m_MT32TextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
 
-	m_State = TState::DisplayingTimbreName;
-	m_nStateTime = ticks;
+	m_MT32State = TMT32State::DisplayingTimbreName;
+	m_nMT32StateTime = ticks;
 }
 
 void CMT32LCD::Update(const CMT32Synth& Synth)
@@ -66,25 +80,32 @@ void CMT32LCD::Update(const CMT32Synth& Synth)
 	unsigned ticks = CTimer::Get()->GetTicks();
 	u8 masterVolume = Synth.GetMasterVolume();
 
+	// System message timeout
+	if (m_SystemState == TSystemState::DisplayingMessage && (ticks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
+	{
+		m_SystemState = TSystemState::None;
+		m_nSystemStateTime = ticks;
+	}
+
 	// Hide message if master volume changed and message has been displayed long enough
 	if (m_nPreviousMasterVolume != masterVolume)
 	{
-		if (m_State != TState::DisplayingMessage || (ticks - m_nStateTime) > MSEC2HZ(MessageDisplayTimeMillis))
+		if (m_MT32State != TMT32State::DisplayingMessage || (ticks - m_nMT32StateTime) > MSEC2HZ(MT32MessageDisplayTimeMillis))
 		{
 			m_nPreviousMasterVolume = masterVolume;
-			m_State = TState::DisplayingPartStates;
-			m_nStateTime = ticks;
+			m_MT32State = TMT32State::DisplayingPartStates;
+			m_nMT32StateTime = ticks;
 		}
 	}
 
 	// Timbre change timeout
-	if (m_State == TState::DisplayingTimbreName && (ticks - m_nStateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
+	if (m_MT32State == TMT32State::DisplayingTimbreName && (ticks - m_nMT32StateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
 	{
-		m_State = TState::DisplayingPartStates;
-		m_nStateTime = ticks;
+		m_MT32State = TMT32State::DisplayingPartStates;
+		m_nMT32StateTime = ticks;
 	}
 
-	if (m_State == TState::DisplayingPartStates)
+	if (m_MT32State == TMT32State::DisplayingPartStates)
 		UpdatePartStateText(Synth);
 }
 
@@ -96,16 +117,16 @@ void CMT32LCD::UpdatePartStateText(const CMT32Synth& Synth)
 	for (u8 i = 0; i < 5; ++i)
 	{
 		bool state = (partStates >> i) & 1;
-		m_TextBuffer[i * 2] = state ? '\xff' : ('1' + i);
-		m_TextBuffer[i * 2 + 1] = ' ';
+		m_MT32TextBuffer[i * 2] = state ? '\xff' : ('1' + i);
+		m_MT32TextBuffer[i * 2 + 1] = ' ';
 	}
 
 	// Rhythm
-	m_TextBuffer[10] = (partStates >> 8) ? '\xff' : 'R';
-	m_TextBuffer[11] = ' ';
+	m_MT32TextBuffer[10] = (partStates >> 8) ? '\xff' : 'R';
+	m_MT32TextBuffer[11] = ' ';
 
 	// Volume
-	sprintf(m_TextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
+	sprintf(m_MT32TextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
 }
 
 void CMT32LCD::UpdatePartLevels(const CMT32Synth& Synth)

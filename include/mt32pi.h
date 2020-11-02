@@ -50,6 +50,14 @@ public:
 	virtual void Run(unsigned nCore) override;
 
 private:
+	enum class TLCDLogType
+	{
+		Startup,
+		Error,
+		Warning,
+		Notice,
+	};
+
 	// CMIDIParser
 	virtual void OnShortMessage(u32 nMessage) override;
 	virtual void OnSysExMessage(const u8* pData, size_t nSize) override;
@@ -65,7 +73,7 @@ private:
 	void UpdateSerialMIDI();
 
 	void LEDOn();
-	void LCDLog(const char* pMessage);
+	void LCDLog(TLCDLogType Type, const char* pMessage);
 
 	bool InitPCM51xx(u8 nAddress);
 
@@ -78,7 +86,6 @@ private:
 	CUSBHCIDevice* m_pUSBHCI;
 
 	CMT32LCD* m_pLCD;
-	unsigned m_nLCDLogTime;
 	unsigned m_nLCDUpdateTime;
 
 	// Serial GPIO MIDI
@@ -88,6 +95,7 @@ private:
 	unsigned m_nActiveSenseTime;
 
 	volatile bool m_bRunning;
+	volatile bool m_bUITaskDone;
 	bool m_bLEDOn;
 	unsigned m_nLEDOnTime;
 
