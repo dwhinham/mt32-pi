@@ -206,6 +206,10 @@ void CMT32Pi::UITask()
 	CLogger& logger = *CLogger::Get();
 	logger.Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
 
+	// Display current MT-32 ROM version
+	if (m_pLCD)
+		m_pLCD->OnSystemMessage(m_pMT32Synth->GetControlROMName());
+
 	while (m_bRunning)
 	{
 		unsigned ticks = m_pTimer->GetTicks();
