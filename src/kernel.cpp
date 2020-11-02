@@ -92,8 +92,8 @@ bool CKernel::Initialize(void)
 	if (bSerialMIDIEnabled && !m_Serial.Initialize(m_Config.MIDIGPIOBaudRate))
 		return false;
 
-	if (!m_I2CMaster.Initialize())
-		return false;
+	// Init I2C; don't bother with Initialize() as it only sets the clock to 100/400KHz
+	m_I2CMaster.SetClock(m_Config.SystemI2CBaudRate);
 
 	if (!m_MT32Pi.Initialize(bSerialMIDIEnabled))
 		return false;

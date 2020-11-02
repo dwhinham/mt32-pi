@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ability to invert the display orientation for SSD1306 (new configuration file option).
 - Support for 64 pixel high SSD1306 OLED displays - many thanks to @ctrl_alt_rees for donating a screen!
+- Ability to set I2C clock speed (new configuration file option).
+  * This is useful for allowing larger displays to refresh at a faster speed; see config file for details.
 
 ### Changed
 

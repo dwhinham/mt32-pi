@@ -13,6 +13,10 @@
 #define END_SECTION
 #endif
 
+BEGIN_SECTION(system)
+CFG(i2c_baud_rate,			int,						SystemI2CBaudRate,			400000									)
+END_SECTION
+
 BEGIN_SECTION(midi)
 CFG(usb,					bool,						MIDIUSB,					true									)
 CFG(gpio_baud_rate,			int,						MIDIGPIOBaudRate,			31250									)
