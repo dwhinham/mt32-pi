@@ -260,6 +260,44 @@ void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
 	Print(line2Buf, 0, nFirstRow + 1, true);
 }
 
+void CHD44780Base::DrawPartLevelsTriple(u8 nFirstRow)
+{
+	char line1Buf[18 + 1];
+	char line2Buf[18 + 1];
+	char line3Buf[18 + 1];
+
+	for (u8 i = 0; i < 9; ++i)
+	{
+		const u8 partLevel = static_cast<u8>(m_PartLevels[i] * 24);
+		if (partLevel > 16)
+		{
+			line1Buf[i * 2] = BarChars[partLevel - 16];
+			line2Buf[i * 2] = BarChars[8];
+			line3Buf[i * 2] = BarChars[8];
+		}
+		else if (partLevel > 8)
+		{
+			line1Buf[i * 2] = BarChars[0];
+			line2Buf[i * 2] = BarChars[partLevel - 8];
+			line3Buf[i * 2] = BarChars[8];
+		}
+		else
+		{
+			line1Buf[i * 2] = BarChars[0];
+			line2Buf[i * 2] = BarChars[0];
+			line3Buf[i * 2] = BarChars[partLevel];
+		}
+
+		line1Buf[i * 2 + 1] = line2Buf[i * 2 + 1] = line3Buf[i * 2 + 1] = ' ';
+	}
+
+	line1Buf[18] = line2Buf[18] = line3Buf[18] = '\0';
+
+	Print(line1Buf, 0, nFirstRow, true);
+	Print(line2Buf, 0, nFirstRow + 1, true);
+	Print(line3Buf, 0, nFirstRow + 2, true);
+}
+
 void CHD44780Base::Update(const CMT32Synth& Synth)
 {
 	CMT32LCD::Update(Synth);
@@ -285,8 +323,8 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 			Print("", 0, 2, true);
 		}
 		else
-			DrawPartLevelsDouble(0);
+			DrawPartLevelsTriple(0);
 
-		Print(m_MT32TextBuffer, 0, 2, true);
+		Print(m_MT32TextBuffer, 0, 3, true);
 	}
 }
