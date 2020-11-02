@@ -63,7 +63,6 @@ protected:
 	void DrawPartLevelsSingle(u8 nRow);
 	void DrawPartLevelsDouble(u8 nFirstRow);
 
-	CScheduler* m_pScheduler;
 	u8 m_nRows;
 	u8 m_nColumns;
 

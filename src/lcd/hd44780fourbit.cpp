@@ -18,10 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <cmath>
-
-#include <circle/logger.h>
-#include <circle/sched/scheduler.h>
+#include <circle/timer.h>
 
 #include "lcd/hd44780.h"
 
@@ -58,7 +55,7 @@ void CHD44780FourBit::WriteNybble(u8 nNybble, TWriteMode Mode)
 
 	// Toggle enable
 	m_EN.Write(HIGH);
-	m_pScheduler->usSleep(5);
+	CTimer::SimpleusDelay(5);
 	m_EN.Write(LOW);
-	m_pScheduler->usSleep(100);
+	CTimer::SimpleusDelay(100);
 }

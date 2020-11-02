@@ -18,7 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <circle/sched/scheduler.h>
+#include <circle/timer.h>
 
 #include "lcd/hd44780.h"
 
@@ -43,10 +43,10 @@ void CHD44780I2C::WriteNybble(u8 nNybble, TWriteMode Mode)
 		bits |= 1;
 
 	m_pI2CMaster->Write(m_nAddress, &bits, 1);
-	m_pScheduler->usSleep(5);
+	CTimer::SimpleusDelay(5);
 
 	// Bring ENABLE low again
 	bits &= ~LCD_ENABLE;
 	m_pI2CMaster->Write(m_nAddress, &bits, 1);
-	m_pScheduler->usSleep(100);
+	CTimer::SimpleusDelay(100);
 }

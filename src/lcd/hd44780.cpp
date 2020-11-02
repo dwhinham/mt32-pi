@@ -18,10 +18,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <cmath>
-
 #include <circle/logger.h>
-#include <circle/sched/scheduler.h>
+#include <circle/timer.h>
 
 #include "lcd/hd44780.h"
 
@@ -106,7 +104,6 @@ const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', 
 
 CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
 	: CMT32LCD(),
-	  m_pScheduler(CScheduler::Get()),
 	  m_nRows(nRows),
 	  m_nColumns(nColumns)
 {
@@ -147,38 +144,36 @@ void CHD44780Base::SetCustomChar(u8 nIndex, const u8 nCharData[8])
 
 bool CHD44780Base::Initialize()
 {
-	assert(m_pScheduler != nullptr);
-
 	// Validate dimensions - only 20x2 and 20x4 supported for now
 	if (!(m_nRows == 2 || m_nRows == 4) || m_nColumns != 20)
 		return false;
 
 	// Give the LCD some time to start up
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 
 	// The following algorithm ensures the LCD is in the correct mode no matter what state it's currently in:
 	// https://en.wikipedia.org/wiki/Hitachi_HD44780_LCD_controller#Mode_selection
 	WriteNybble(0b0011, TWriteMode::Command);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 	WriteNybble(0b0011, TWriteMode::Command);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 	WriteNybble(0b0011, TWriteMode::Command);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 
 	// Switch to 4-bit mode
 	WriteNybble(0b0010, TWriteMode::Command);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 
 	// Turn off
 	WriteCommand(0b1000);
 
 	// Clear display
 	WriteCommand(0b0001);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 
 	// Home cursor
 	WriteCommand(0b0010);
-	m_pScheduler->MsSleep(2);
+	CTimer::SimpleMsDelay(2);
 
 	// Function set (4-bit, 2-line)
 	WriteCommand(0b101000);
@@ -215,7 +210,7 @@ void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClea
 void CHD44780Base::Clear()
 {
 	WriteCommand(0b0001);
-	m_pScheduler->MsSleep(50);
+	CTimer::SimpleMsDelay(50);
 }
 
 void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
