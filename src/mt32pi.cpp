@@ -80,12 +80,12 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 
 	m_bSerialMIDIEnabled = bSerialMIDIEnabled;
 
-	if (config.m_LCDType == CConfig::TLCDType::HD44780FourBit)
-		m_pLCD = new CHD44780FourBit(config.m_nLCDWidth, config.m_nLCDHeight);
-	else if (config.m_LCDType == CConfig::TLCDType::HD44780I2C)
-		m_pLCD = new CHD44780I2C(m_pI2CMaster, config.m_nLCDI2CLCDAddress, config.m_nLCDWidth, config.m_nLCDHeight);
-	else if (config.m_LCDType == CConfig::TLCDType::SSD1306I2C)
-		m_pLCD = new CSSD1306(m_pI2CMaster, config.m_nLCDI2CLCDAddress, config.m_nLCDHeight, config.m_nLCDRotation);
+	if (config.LCDType == CConfig::TLCDType::HD44780FourBit)
+		m_pLCD = new CHD44780FourBit(config.LCDWidth, config.LCDHeight);
+	else if (config.LCDType == CConfig::TLCDType::HD44780I2C)
+		m_pLCD = new CHD44780I2C(m_pI2CMaster, config.LCDI2CLCDAddress, config.LCDWidth, config.LCDHeight);
+	else if (config.LCDType == CConfig::TLCDType::SSD1306I2C)
+		m_pLCD = new CSSD1306(m_pI2CMaster, config.LCDI2CLCDAddress, config.LCDHeight, config.LCDRotation);
 
 	if (m_pLCD)
 	{
@@ -103,23 +103,20 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	// The USB driver is not supported under 64-bit QEMU, so
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
-	LCDLog("Init USB");
-	if (config.m_bMIDIUSB && !m_pUSBHCI->Initialize())
+	if (config.MIDIUSB && !m_pUSBHCI->Initialize())
 		return false;
 #endif
 
-	if (config.m_AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
+	if (config.AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
 	{
-		LCDLog("Init audio (I2S)");
-		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.m_nAudioSampleRate, config.m_nAudioChunkSize);
+		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
 
-		if (config.m_AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
-			InitPCM51xx(config.m_nAudioI2CDACAddress);
+		if (config.AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
+			InitPCM51xx(config.AudioI2CDACAddress);
 	}
 	else
 	{
-		LCDLog("Init audio (PWM)");
-		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, config.m_nAudioSampleRate, config.m_nAudioChunkSize);
+		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
 	}
 
 	if (!m_pSound->AllocateQueue(SOUND_QUEUE_SIZE_MILLIS))
@@ -127,8 +124,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 
 	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned16);
 
-	LCDLog("Init mt32emu");
-	m_pMT32Synth = new CMT32Synth(config.m_nAudioSampleRate, config.m_MT32EmuResamplerQuality);
+	m_pMT32Synth = new CMT32Synth(config.AudioSampleRate, config.MT32EmuResamplerQuality);
 	if (!m_pMT32Synth->Initialize())
 	{
 		logger.Write(MT32PiName, LogWarning, "mt32emu init failed; no ROMs present?");
@@ -137,8 +133,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	}
 
 	// Set initial MT-32 channel assignment from config
-	if (config.m_MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
-		m_pMT32Synth->SetMIDIChannels(config.m_MT32EmuMIDIChannels);
+	if (config.MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
+		m_pMT32Synth->SetMIDIChannels(config.MT32EmuMIDIChannels);
 
 	CUSBMIDIDevice* pMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
 	if (pMIDIDevice)
@@ -385,7 +381,7 @@ void CMT32Pi::UpdateSerialMIDI()
 	}
 
 	// Replay received MIDI data out via the serial port ('software thru')
-	if (CConfig::Get()->m_bMIDIGPIOThru)
+	if (CConfig::Get()->MIDIGPIOThru)
 	{
 		int nSendResult = m_pSerial->Write(buffer, nResult);
 		if (nSendResult != nResult)

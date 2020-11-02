@@ -60,7 +60,7 @@ bool CMT32Synth::Initialize()
 		return false;
 
 	// Try to load user's preferred initial ROM set, otherwise fall back on first available
-	CROMManager::TROMSet initialROMSet = CConfig::Get()->m_MT32EmuROMSet;
+	CROMManager::TROMSet initialROMSet = CConfig::Get()->MT32EmuROMSet;
 	if (!m_ROMManager.HaveROMSet(initialROMSet))
 		initialROMSet = CROMManager::TROMSet::Any;
 

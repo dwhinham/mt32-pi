@@ -89,7 +89,7 @@ bool CKernel::Initialize(void)
 		m_Logger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
 
 	// Init serial port for GPIO MIDI if not being used for logging
-	if (bSerialMIDIEnabled && !m_Serial.Initialize(m_Config.m_nMIDIGPIOBaudRate))
+	if (bSerialMIDIEnabled && !m_Serial.Initialize(m_Config.MIDIGPIOBaudRate))
 		return false;
 
 	if (!m_I2CMaster.Initialize())
