@@ -207,8 +207,11 @@ void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClea
 	}
 }
 
-void CHD44780Base::Clear()
+void CHD44780Base::Clear(bool bImmediate)
 {
+	if (!bImmediate)
+		return;
+
 	WriteCommand(0b0001);
 	CTimer::SimpleMsDelay(50);
 }

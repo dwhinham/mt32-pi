@@ -42,7 +42,7 @@ public:
 	// CCharacterLCD
 	virtual bool Initialize() override;
 	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = false) override;
-	virtual void Clear() override;
+	virtual void Clear(bool bImmediate = false) override;
 
 	// CMT32LCD
 	virtual void Update(const CMT32Synth& Synth) override;

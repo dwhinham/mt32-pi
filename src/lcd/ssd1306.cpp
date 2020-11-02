@@ -304,10 +304,11 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 		WriteFramebuffer();
 }
 
-void CSSD1306::Clear()
+void CSSD1306::Clear(bool bImmediate)
 {
 	memset(m_Framebuffer + 1, 0, Width * m_nHeight / 8);
-	WriteFramebuffer();
+	if (bImmediate)
+		WriteFramebuffer();
 }
 
 void CSSD1306::Update(const CMT32Synth& Synth)

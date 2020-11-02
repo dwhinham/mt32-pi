@@ -30,7 +30,7 @@ public:
 
 	virtual bool Initialize() = 0;
 	virtual void Print(const char* pText, u8 nCursorX = 0, u8 nCursorY = 0, bool bClearLine = false, bool bImmediate = true) = 0;
-	virtual void Clear() = 0;
+	virtual void Clear(bool bImmediate = true) = 0;
 };
 
 #endif
