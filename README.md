@@ -304,6 +304,8 @@ F0 7D { command } { parameters } F7
 
 - **Q:** I'm trying to play sounds on `mt32-pi` using my MIDI keyboard controller but I'm not hearing anything - what's wrong?  
   **A:** Your keyboard is probably sending note data on **channel 1**, but by default, on power-up the MT-32 is set to receive on MIDI **channels 2-10**. Check your keyboard's documentation to see if you can change the transmit channel. If this isn't possible, [see this wiki page](https://github.com/dwhinham/mt32-pi/wiki/MIDI-channel-assignment) for more information on how to reassign the emulated MT-32's channels.
+- **Q:** I'm getting sound distortion and/or the power LED on my Raspberry Pi is blinking - why?  
+  **A:** It's possible that the Pi is not receiving enough power. Try swapping the USB cable being used to power the Pi, or try another power supply. Check the [Raspberry Pi power supply page] for recommended power supply specifications.
 - **Q:** Why don't I see any video output on my HDMI-connected monitor or television? Has the Pi has failed to boot?  
   **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
 - **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
@@ -339,6 +341,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
 [PI-MIDI]: https://www.arananet.net/pedidos/product/pi-midi-a-baremetal-mt32-emulator-using-raspberry-pi3
+[Raspberry Pi power supply page]: https://www.raspberrypi.org/documentation/hardware/raspberrypi/power/README.md
 [REC002004B]: https://www.raystar-optronics.com/oled-character-display-module/REC002004B.html
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest
 [SoftMPU]: http://bjt42.github.io/softmpu/
