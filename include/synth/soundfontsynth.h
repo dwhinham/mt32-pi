@@ -30,7 +30,7 @@
 class CSoundFontSynth : public CSynthBase
 {
 public:
-	CSoundFontSynth(unsigned nSampleRate);
+	CSoundFontSynth(unsigned nSampleRate, u32 nPolyphony = 128);
 	virtual ~CSoundFontSynth() override;
 
 	// CSynthBase
@@ -47,6 +47,8 @@ private:
 
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
+
+	u32 m_nPolyphony;
 
 	static void FluidSynthLogCallback(int nLevel, const char* pMessage, void* pUser);
 };

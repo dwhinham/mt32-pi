@@ -38,6 +38,10 @@ CFG(midi_channels,			TMT32EmuMIDIChannels,		MT32EmuMIDIChannels,		TMT32EmuMIDICh
 CFG(rom_set,				TMT32EmuROMSet,				MT32EmuROMSet,				TMT32EmuROMSet::MT32Old					)
 END_SECTION
 
+BEGIN_SECTION(fluidsynth)
+CFG(polyphony,				int,						FluidSynthPolyphony,		256										)
+END_SECTION
+
 BEGIN_SECTION(lcd)
 CFG(type,					TLCDType,					LCDType,					TLCDType::None							)
 CFG(width,					int,						LCDWidth,					20										)

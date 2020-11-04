@@ -106,11 +106,13 @@ extern "C"
 	}
 }
 
-CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate)
+CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, u32 nPolyphony)
 	: m_nSampleRate(nSampleRate),
 
 	  m_pSettings(nullptr),
-	  m_pSynth(nullptr)
+	  m_pSynth(nullptr),
+
+	  m_nPolyphony(nPolyphony)
 {
 }
 
@@ -162,8 +164,7 @@ bool CSoundFontSynth::Initialize()
 		return false;
 	}
 
-	// TODO: Expose in config file
-	fluid_synth_set_polyphony(m_pSynth, 128);
+	fluid_synth_set_polyphony(m_pSynth, m_nPolyphony);
 
 	return true;
 }
