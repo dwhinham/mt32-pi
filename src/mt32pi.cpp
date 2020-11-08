@@ -156,6 +156,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	}
 
 	CCPUThrottle::Get()->DumpStatus();
+	SetPowerSaveTimeout(config.SystemPowerSaveTimeout);
 
 	// Attach LCD to MT32 synth
 	if (m_pLCD && m_pMT32Synth)

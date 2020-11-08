@@ -15,6 +15,7 @@
 
 BEGIN_SECTION(system)
 CFG(i2c_baud_rate,			int,						SystemI2CBaudRate,			400000									)
+CFG(power_save_timeout,		int,						SystemPowerSaveTimeout,		300										)
 END_SECTION
 
 BEGIN_SECTION(midi)
