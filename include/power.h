@@ -1,6 +1,7 @@
 //
-// synthbase.h
+// power.h
 //
+// mt32-pi - A bare-metal Roland MT-32 emulator for Raspberry Pi
 // Copyright (C) 2020  Dale Whinham <daleyo@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,23 +18,43 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _synth_h
-#define _synth_h
+#ifndef _power_h
+#define _power_h
 
+#include <circle/bcmpropertytags.h>
 #include <circle/types.h>
 
-class CSynthBase
+class CPower
 {
 public:
-	virtual ~CSynthBase() = default;
+	CPower();
 
-	virtual bool Initialize() = 0;
-	virtual void HandleMIDIShortMessage(u32 nMessage) = 0;
-	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) = 0;
-	virtual bool IsActive() const = 0;
-	virtual void AllSoundOff() = 0;
-	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
-	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
+	void Update();
+	void Awaken();
+	void SetPowerSaveTimeout(u16 nSeconds) { m_nPowerSaveTimeout = nSeconds; }
+
+protected:
+	virtual void OnEnterPowerSavingMode();
+	virtual void OnExitPowerSavingMode();
+
+	virtual void OnThrottleDetected();
+	virtual void OnUnderVoltageDetected();
+
+private:
+	enum class TState
+	{
+		Normal,
+		PowerSaving
+	};
+
+	void UpdateThrottledStatus();
+
+	u16 m_nPowerSaveTimeout;
+	unsigned int m_nLastActivityTime;
+	TState m_State;
+
+	CBcmPropertyTags m_Tags;
+	u32 m_LastThrottledStatus;
 };
 
 #endif

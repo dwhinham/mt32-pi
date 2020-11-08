@@ -37,9 +37,10 @@
 #include "config.h"
 #include "lcd/mt32lcd.h"
 #include "midiparser.h"
+#include "power.h"
 #include "synth/mt32synth.h"
 
-class CMT32Pi : public CMultiCoreSupport, CMIDIParser
+class CMT32Pi : public CMultiCoreSupport, CPower, CMIDIParser
 {
 public:
 	CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
@@ -57,6 +58,12 @@ private:
 		Warning,
 		Notice,
 	};
+
+	// CPower
+	virtual void OnEnterPowerSavingMode() override;
+	virtual void OnExitPowerSavingMode() override;
+	virtual void OnThrottleDetected() override;
+	virtual void OnUnderVoltageDetected() override;
 
 	// CMIDIParser
 	virtual void OnShortMessage(u32 nMessage) override;

@@ -176,6 +176,8 @@ void CMT32Pi::MainTask()
 	CLogger& logger = *CLogger::Get();
 	logger.Write(MT32PiName, LogNotice, "Main task on Core 0 starting up");
 
+	Awaken();
+
 	while (m_bRunning)
 	{
 		// Update serial GPIO MIDI
@@ -191,6 +193,12 @@ void CMT32Pi::MainTask()
 			m_bActiveSenseFlag = false;
 			logger.Write(MT32PiName, LogNotice, "Active sense timeout - turning notes off");
 		}
+
+		// Update power management
+		if (m_pMT32Synth->IsActive())
+			Awaken();
+
+		CPower::Update();
 	}
 
 	// Stop audio
@@ -276,6 +284,31 @@ void CMT32Pi::Run(unsigned nCore)
 	}
 }
 
+void CMT32Pi::OnEnterPowerSavingMode()
+{
+	CPower::OnEnterPowerSavingMode();
+	m_pSound->Cancel();
+	LCDLog(TLCDLogType::Notice, "Power save mode...");
+}
+
+void CMT32Pi::OnExitPowerSavingMode()
+{
+	CPower::OnExitPowerSavingMode();
+	m_pSound->Start();
+}
+
+void CMT32Pi::OnThrottleDetected()
+{
+	CPower::OnThrottleDetected();
+	LCDLog(TLCDLogType::Warning, "CPU throttl! Chk PSU");
+}
+
+void CMT32Pi::OnUnderVoltageDetected()
+{
+	CPower::OnUnderVoltageDetected();
+	LCDLog(TLCDLogType::Warning, "Low voltage! Chk PSU");
+}
+
 void CMT32Pi::OnShortMessage(u32 nMessage)
 {
 	// Active sensing
@@ -288,6 +321,9 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 	// Flash LED
 	LEDOn();
 
+	// Wake from power saving mode if necessary
+	Awaken();
+
 	m_pMT32Synth->HandleMIDIShortMessage(nMessage);
 }
 
@@ -295,6 +331,9 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 {
 	// Flash LED
 	LEDOn();
+
+	// Wake from power saving mode if necessary
+	Awaken();
 
 	// If we don't consume the SysEx message, forward it to mt32emu
 	if (!ParseCustomSysEx(pData, nSize))
