@@ -53,9 +53,10 @@ public:
 
 	// CSynthBase
 	virtual bool Initialize() override;
-	void HandleMIDIShortMessage(u32 nMessage) override;
-	void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
-	void AllSoundOff() override;
+	virtual void HandleMIDIShortMessage(u32 nMessage) override;
+	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
+
+	virtual void AllSoundOff() override;
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
 
