@@ -22,6 +22,8 @@
 
 #include "midiparser.h"
 
+const char MIDIParserName[] = "midiparser";
+
 CMIDIParser::CMIDIParser()
 	: m_State(TState::StatusByte),
 	  m_MessageBuffer{0},
@@ -107,14 +109,14 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 void CMIDIParser::OnUnexpectedStatus()
 {
 	if (m_State == TState::SysExByte)
-		CLogger::Get()->Write("midi", LogWarning, "Received illegal status byte during SysEx message; SysEx ignored");
+		CLogger::Get()->Write(MIDIParserName, LogWarning, "Received illegal status byte during SysEx message; SysEx ignored");
 	else
-		CLogger::Get()->Write("midi", LogWarning, "Received illegal status byte when data expected");
+		CLogger::Get()->Write(MIDIParserName, LogWarning, "Received illegal status byte when data expected");
 }
 
 void CMIDIParser::OnSysExOverflow()
 {
-	CLogger::Get()->Write("midi", LogWarning, "Buffer overrun when receiving SysEx message; SysEx ignored");
+	CLogger::Get()->Write(MIDIParserName, LogWarning, "Buffer overrun when receiving SysEx message; SysEx ignored");
 }
 
 void CMIDIParser::ParseStatusByte(u8 nByte)

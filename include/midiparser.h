@@ -21,7 +21,6 @@
 #ifndef _midiparser_h
 #define _midiparser_h
 
-#include <circle/logger.h>
 #include <circle/types.h>
 
 class CMIDIParser
