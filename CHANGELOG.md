@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for 64 pixel high SSD1306 OLED displays - many thanks to @ctrl_alt_rees for donating a screen!
 - Ability to set I2C clock speed (new configuration file option).
   * This is useful for allowing larger displays to refresh at a faster speed; see config file for details.
+- Power saving mode with configurable timeout (new configuration file option).
+  * The CPU clock speed will be lowered, audio device stopped, and LCD backlight turned off (when possible) after a configurable number of seconds to save energy.
+  * Any MIDI activity will instantly bring the system out of power saving mode.
+- Undervoltage/throttling detection - `mt32-pi` will now warn the user when the firmware detects an undervoltage/CPU throttling condition.
 
 ### Changed
 
