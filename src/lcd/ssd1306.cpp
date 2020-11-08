@@ -161,7 +161,7 @@ bool CSSD1306::Initialize()
 	for (auto byte : initSequence)
 	{
 		buffer[1] = byte;
-		m_pI2CMaster->Write(m_nAddress, buffer, 2);
+		m_pI2CMaster->Write(m_nAddress, buffer, sizeof(buffer));
 	}
 
 	return true;
@@ -311,8 +311,23 @@ void CSSD1306::Clear(bool bImmediate)
 		WriteFramebuffer();
 }
 
+void CSSD1306::SetBacklightEnabled(bool bEnabled)
+{
+	m_bBacklightEnabled = bEnabled;
+
+	// Power on/off display
+	u8 buffer[] = {0x80, 0};
+	buffer[1] = bEnabled ? 0xAF : 0xAE;
+
+	m_pI2CMaster->Write(m_nAddress, buffer, sizeof(buffer));
+}
+
 void CSSD1306::Update(const CMT32Synth& Synth)
 {
+	// Bail out if display is off
+	if (!m_bBacklightEnabled)
+		return;
+
 	CMT32LCD::Update(Synth);
 
 	Clear(false);

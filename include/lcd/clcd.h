@@ -26,11 +26,20 @@
 class CCharacterLCD
 {
 public:
+	CCharacterLCD()
+		: m_bBacklightEnabled(true)
+	{
+	}
+
 	virtual ~CCharacterLCD() = default;
 
 	virtual bool Initialize() = 0;
 	virtual void Print(const char* pText, u8 nCursorX = 0, u8 nCursorY = 0, bool bClearLine = false, bool bImmediate = true) = 0;
 	virtual void Clear(bool bImmediate = true) = 0;
+	virtual void SetBacklightEnabled(bool bEnabled) { m_bBacklightEnabled = bEnabled; }
+
+protected:
+	bool m_bBacklightEnabled;
 };
 
 #endif

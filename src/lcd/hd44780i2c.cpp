@@ -37,7 +37,10 @@ CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress, u8 nColumns, u8 nR
 void CHD44780I2C::WriteNybble(u8 nNybble, TWriteMode Mode)
 {
 	// Write bits with ENABLE pulsed high momentarily
-	u8 bits = ((nNybble << 4) & 0xF0) | LCD_BACKLIGHT | LCD_ENABLE;
+	u8 bits = ((nNybble << 4) & 0xF0) | LCD_ENABLE;
+
+	if (m_bBacklightEnabled)
+		bits |= LCD_BACKLIGHT;
 
 	if (Mode == TWriteMode::Data)
 		bits |= 1;
