@@ -15,6 +15,10 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	@echo "Configuring for Raspberry Pi $(RASPBERRYPI) ($(BITS) bit)"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
 
+	# Apply patches
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.1-queue-alloc-frames.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.1-fast-path-same-formats.patch
+
 	# Enable multi-core
 	echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
 
@@ -109,6 +113,8 @@ clean:
 #
 veryclean: clean
 	# Reverse patches
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.1-fast-path-same-formats.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.1-queue-alloc-frames.patch
 	@patch -R -N -p1 -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.1.5-circle.patch
 
 	# Clean circle-stdlib
