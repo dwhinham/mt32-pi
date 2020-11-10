@@ -30,11 +30,12 @@
 
 const char MT32PiName[] = "mt32-pi";
 
-#define SOUND_QUEUE_SIZE_MILLIS 5
 #define LCD_UPDATE_PERIOD_MILLIS 16
 #define LCD_LOG_TIME_MILLIS 2000
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 330
+
+constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
@@ -124,10 +125,10 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
 	}
 
-	if (!m_pSound->AllocateQueue(SOUND_QUEUE_SIZE_MILLIS))
+	if (!m_pSound->AllocateQueueFrames(config.AudioChunkSize))
 		logger.Write(MT32PiName, LogPanic, "Failed to allocate sound queue");
 
-	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned16);
+	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
 
 	LCDLog(TLCDLogType::Startup, "Init mt32emu");
 	m_pMT32Synth = new CMT32Synth(config.AudioSampleRate, config.MT32EmuResamplerQuality);
@@ -273,16 +274,21 @@ void CMT32Pi::AudioTask()
 	logger.Write(MT32PiName, LogNotice, "Audio task on Core 2 starting up");
 
 	const size_t nQueueSize = m_pSound->GetQueueSizeFrames();
-	s16* Buffer = new s16[nQueueSize * 2];
+	float FloatBuffer[nQueueSize * 2];
+	s32 IntBuffer[nQueueSize * 2];
 
 	while (m_bRunning)
 	{
 		const size_t nFrames = nQueueSize - m_pSound->GetQueueFramesAvail();
-		const size_t nWriteBytes = nFrames * 2 * sizeof(s16);
+		const size_t nWriteBytes = nFrames * 2 * sizeof(*IntBuffer);
 
-		m_pCurrentSynth->Render(Buffer, nFrames);
-		int nResult = m_pSound->Write(Buffer, nWriteBytes);
+		m_pCurrentSynth->Render(FloatBuffer, nFrames);
 
+		// Convert to 24-bit integers
+		for (size_t i = 0; i < nFrames * 2; ++i)
+			IntBuffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample24BitMax;
+
+		int nResult = m_pSound->Write(IntBuffer, nWriteBytes);
 		if (nResult != static_cast<int>(nWriteBytes))
 			logger.Write(MT32PiName, LogError, "Sound data dropped");
 	}
