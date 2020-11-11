@@ -2,8 +2,9 @@
 # Build configuration
 #
 
-# Path to ARM toolchain
+# Paths to ARM toolchains
 ARM_HOME?=$(HOME)/gcc-arm-9.2-2019.12-x86_64-arm-none-eabi
+AARCH64_HOME?=$(HOME)/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf
 
 # Valid options: pi0, pi2, pi3, pi4, pi4-64
 BOARD?=pi4
@@ -17,6 +18,42 @@ USERBAUD?=115200
 # Enable section garbage collection
 GC_SECTIONS?=0
 
+# Toolchain setup
+ifeq ($(BOARD), pi0)
+RASPBERRYPI=1
+BITS=32
+PREFIX=arm-none-eabi-
+else ifeq ($(BOARD), pi2)
+RASPBERRYPI=2
+BITS=32
+PREFIX=arm-none-eabi-
+else ifeq ($(BOARD), pi3)
+RASPBERRYPI=3
+BITS=32
+PREFIX=arm-none-eabi-
+else ifeq ($(BOARD), pi3-64)
+RASPBERRYPI=3
+BITS=64
+PREFIX=aarch64-none-elf-
+else ifeq ($(BOARD), pi4)
+RASPBERRYPI=4
+BITS=32
+PREFIX=arm-none-eabi-
+else ifeq ($(BOARD), pi4-64)
+RASPBERRYPI=4
+BITS=64
+PREFIX=aarch64-none-elf-
+else
+$(error Invalid board type "$(BOARD)"; please specify one of [ pi0 | pi2 | pi3 | pi3-64 | pi4 | pi4-64 ])
+endif
+
+ifeq ($(PREFIX), arm-none-eabi-)
+CMAKE_TOOLCHAIN_FLAGS=-DARM_HOME=$(ARM_HOME) -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi.cmake
+else
+CMAKE_TOOLCHAIN_FLAGS=-DAARCH64_HOME=$(AARCH64_HOME) -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-none-elf.cmake
+endif
+
+# Paths
 CIRCLESTDLIBHOME=$(realpath external/circle-stdlib)
 CIRCLE_STDLIB_CONFIG=$(CIRCLESTDLIBHOME)/Config.mk
 

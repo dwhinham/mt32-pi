@@ -4,6 +4,12 @@ disable_splash=1
 force_eeprom_read=0
 gpu_mem=16
 
-# Ensure that the Pi 4 doesn't try to boot the Pi 3-optimized kernel (kernel8-32.img)
+# Enable 64-bit mode (AArch64) for Pi 3 and 4
+[pi3]
+arm_64bit=1
+kernel=kernel8.img
+
 [pi4]
-kernel=kernel7l.img
+arm_64bit=1
+armstub=armstub8-rpi4.bin
+kernel=kernel8-rpi4.img

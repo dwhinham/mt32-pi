@@ -2,6 +2,9 @@ name: mt32-pi CI
 
 on: [push, pull_request]
 
+env:
+  toolchain-version: 9.2-2019.12
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [pi2, pi3, pi4]
+        board: [pi2, pi3-64, pi4-64]
     env:
       toolchain-version: 9.2-2019.12
 
@@ -18,22 +21,29 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Cache ARM toolchain
+    - name: Cache ARM toolchains
+      id: cache-toolchains
       uses: actions/cache@v2
       with:
-        path: ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
-        key: cache-arm-toolchain-${{ env.toolchain-version }}
+        path: |
+          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
+          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
+        key: cache-arm-toolchains-${{ env.toolchain-version }}
 
-    - name: Install toolchain if not retrieved from cache
+    - name: Install toolchains if not retrieved from cache
+      if: steps.cache-toolchains.outputs.cache-hit != 'true'
       run: |
-        if [ ! -d ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi ]; then
-          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-a/${{ env.toolchain-version }}/binrel/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz
-          tar -xf gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz -C ~
-          rm gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi.tar.xz
-        fi
+        for triplet in arm-none-eabi aarch64-none-elf; do
+          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-a/${{ env.toolchain-version }}/binrel/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
+          tar -xf gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz -C ~
+          rm gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
+        done
 
     - name: Update PATH
-      run: echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
+      run: |
+        for triplet in arm-none-eabi aarch64-none-elf; do
+          echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
+        done
 
     - name: Build
       run: make -j BOARD=${{ matrix.board }}
@@ -56,9 +66,11 @@ jobs:
         submodules: recursive
 
     - name: Cache boot files
+      id: cache-boot-files
       uses: actions/cache@v2
       with:
         path: |
+          sdcard/armstub8-rpi4.bin
           sdcard/bcm2711-rpi-4-b.dtb
           sdcard/bootcode.bin
           sdcard/COPYING.linux
@@ -69,20 +81,36 @@ jobs:
           sdcard/start4cd.elf
         key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
 
-    - name: Download boot files if not retrieved from cache
+    - name: Cache ARM toolchains
+      if: steps.cache-boot-files.outputs.cache-hit != 'true'
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
+          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
+        key: cache-arm-toolchains-${{ env.toolchain-version }}
+
+    - name: Update PATH
+      if: steps.cache-boot-files.outputs.cache-hit != 'true'
       run: |
-        if [ ! -f sdcard/bootcode.bin ]; then
-          make -C ${{ env.boot-home }}
-          cp  ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
-              ${{ env.boot-home }}/bootcode.bin \
-              ${{ env.boot-home }}/COPYING.linux \
-              ${{ env.boot-home }}/fixup_cd.dat \
-              ${{ env.boot-home }}/fixup4cd.dat \
-              ${{ env.boot-home }}/LICENCE.broadcom \
-              ${{ env.boot-home }}/start_cd.elf \
-              ${{ env.boot-home }}/start4cd.elf \
-              sdcard
-        fi
+        for triplet in arm-none-eabi aarch64-none-elf; do
+          echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
+        done
+
+    - name: Download boot files and build ARM stub if not retrieved from cache
+      if: steps.cache-boot-files.outputs.cache-hit != 'true'
+      run: |
+        make -C ${{ env.boot-home }} firmware armstub64
+        cp  ${{ env.boot-home }}/armstub8-rpi4.bin \
+            ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
+            ${{ env.boot-home }}/bootcode.bin \
+            ${{ env.boot-home }}/COPYING.linux \
+            ${{ env.boot-home }}/fixup_cd.dat \
+            ${{ env.boot-home }}/fixup4cd.dat \
+            ${{ env.boot-home }}/LICENCE.broadcom \
+            ${{ env.boot-home }}/start_cd.elf \
+            ${{ env.boot-home }}/start4cd.elf \
+            sdcard
 
     - name: Retrieve built kernels
       uses: actions/download-artifact@v2
