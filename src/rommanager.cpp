@@ -48,10 +48,10 @@ public:
 		if (Result != FR_OK)
 			return false;
 
-		size_t nSize = f_size(&m_File);
-		m_pData      = new MT32Emu::Bit8u[nSize];
+		FSIZE_t nSize = f_size(&m_File);
+		m_pData       = new MT32Emu::Bit8u[nSize];
 
-		size_t nRead;
+		UINT nRead;
 		Result = f_read(&m_File, m_pData, nSize, &nRead);
 
 		return Result == FR_OK;
