@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Kernels for Pi 3 and 4 are now compiled for AArch64 (64-bit) for better performance.
+  * When upgrading, you **must** replace the `config.txt` file on your SD card and add the new `armstub8-rpi4.bin` file for Pi 4.
+  * You should remove old `kernel*.img` files from your SD card.
+  * It's recommended that you clear your SD card (except for your `roms` directory) and reconfigure `mt32-pi` for this release.
 - Kernel size significantly reduced by removing mt32emu ROM loader dependency on C++ iostreams.
 - Improved layout of 4-line HD44780 LCD.
   * MT-32 status line moved to bottom row.
