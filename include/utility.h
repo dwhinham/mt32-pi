@@ -31,33 +31,33 @@
 #define CONFIG_ENUM(NAME, VALUES) enum class NAME { VALUES(CONFIG_ENUM_VALUE) }
 
 // Macro to declare an array of string representations for an enum
-#define CONFIG_ENUM_STRINGS(NAME, DATA) static const char* NAME##Strings[] = {DATA(CONFIG_ENUM_STRING)}
+#define CONFIG_ENUM_STRINGS(NAME, DATA) static const char* NAME##Strings[] = { DATA(CONFIG_ENUM_STRING) }
 
 namespace Utility
 {
 	// Templated function for clamping a value between a minimum and a maximum
 	template <class T>
-	static inline T Clamp(T value, T min, T max)
+	constexpr T Clamp(T value, T min, T max)
 	{
 		return (value < min) ? min : (value > max) ? max : value;
 	}
 
 	// Templated function for taking the minimum of two values
 	template <class T>
-	static inline T Min(T lhs, T rhs)
+	constexpr T Min(T lhs, T rhs)
 	{
 		return lhs < rhs ? lhs : rhs;
 	}
 
 	// Templated function for taking the maximum of two values
 	template <class T>
-	static inline T Max(T lhs, T rhs)
+	constexpr T Max(T lhs, T rhs)
 	{
 		return lhs > rhs ? lhs : rhs;
 	}
 
 	// Return number of elements in an array
-	template<class T, size_t N>
+	template <class T, size_t N>
 	constexpr size_t ArraySize(const T(&)[N]) { return N; }
 }
 
