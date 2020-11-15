@@ -21,8 +21,6 @@
 #ifndef _rommanager_h
 #define _rommanager_h
 
-#include <fatfs/ff.h>
-
 #include <mt32emu/mt32emu.h>
 
 #include "utility.h"
