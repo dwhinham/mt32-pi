@@ -21,6 +21,9 @@
 #ifndef _utility_h
 #define _utility_h
 
+#include <circle/string.h>
+#include <circle/util.h>
+
 // Macro to extract the string representation of an enum
 #define CONFIG_ENUM_VALUE(VALUE, STRING) VALUE,
 
@@ -59,6 +62,86 @@ namespace Utility
 	// Return number of elements in an array
 	template <class T, size_t N>
 	constexpr size_t ArraySize(const T(&)[N]) { return N; }
+
+	// Comparators for sorting
+	namespace Comparator
+	{
+		template<class T>
+		using TComparator = bool (*)(const T&, const T&);
+
+		template<class T>
+		inline bool LessThan(const T& lhs, const T& rhs)
+		{
+			return lhs < rhs;
+		}
+
+		template<class T>
+		inline bool GreaterThan(const T& ItemA, const T& ItemB)
+		{
+			return ItemA > ItemB;
+		}
+
+		inline bool CaseInsensitiveAscending(const CString& lhs, const CString& rhs)
+		{
+			return strcasecmp(lhs, rhs) < 0;
+		}
+	}
+
+	// Swaps two objects in-place
+	template<class T>
+	inline void Swap(T& lhs, T& rhs)
+	{
+		u8 temp[sizeof(T)];
+		memcpy(temp, &lhs, sizeof(T));
+		memcpy(&lhs, &rhs, sizeof(T));
+		memcpy(&rhs, temp, sizeof(T));
+	}
+
+	namespace
+	{
+		// Quicksort partition function (private)
+		template<class T, size_t N>
+		size_t Partition(T(&Items)[N], Comparator::TComparator<T> Comparator, size_t nLow, size_t nHigh)
+		{
+			const size_t nPivotIndex = (nHigh + nLow) / 2;
+			T* Pivot = &Items[nPivotIndex];
+
+			while (true)
+			{
+				while (Comparator(Items[nLow], *Pivot))
+					++nLow;
+
+				while (Comparator(*Pivot, Items[nHigh]))
+					--nHigh;
+
+				if (nLow >= nHigh)
+					return nHigh;
+
+				Swap(Items[nLow], Items[nHigh]);
+
+				// Update pointer if pivot was swapped
+				if (nPivotIndex == nLow)
+					Pivot = &Items[nHigh];
+				else if (nPivotIndex == nHigh)
+					Pivot = &Items[nLow];
+
+				++nLow;
+				--nHigh;
+			}
+		}
+	}
+
+	// Sorts an array in-place using the Tony Hoare Quicksort algorithm
+	template <class T, size_t N>
+	void QSort(T(&Items)[N], Comparator::TComparator<T> Comparator = Comparator::LessThan<T>, size_t nLow = 0, size_t nHigh = N - 1)
+	{
+		if (nLow < nHigh)
+		{
+			size_t p = Partition(Items, Comparator, nLow, nHigh);
+			QSort(Items, Comparator, nLow, p);
+			QSort(Items, Comparator, p + 1, nHigh);
+		}
+	}
 }
 
 #endif
