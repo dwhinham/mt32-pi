@@ -1,0 +1,2 @@
+Place your SoundFonts in this directory.
+The file names or extensions don't matter; mt32-pi will scan and detect their types automatically.

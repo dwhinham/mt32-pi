@@ -403,7 +403,7 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		return true;
 	}
 
-	// Switch ROM set (F0 7D 01 xx F7)
+	// Switch MT-32 ROM set (F0 7D 01 xx F7)
 	else if (pData[2] == 0x01 && nSize == 5)
 	{
 		u8 romSet = pData[3];
@@ -414,8 +414,26 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		return m_pMT32Synth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
 	}
 
-	// Switch synthesizer (F0 7D 02 xx F7)
+	// Switch SoundFont (F0 7D 02 xx F7)
 	else if (pData[2] == 0x02 && nSize == 5)
+	{
+		u8 index = pData[3];
+		CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", index);
+
+		// Wait for audio to stop
+		m_pSound->Cancel();
+		while (m_pSound->IsActive())
+			;
+
+		m_pSoundFontSynth->SwitchSoundFont(index);
+		m_pSound->Start();
+
+		// This could have involved a long period of disk I/O; update power management
+		Awaken();
+	}
+
+	// Switch synthesizer (F0 7D 03 xx F7)
+	else if (pData[2] == 0x03 && nSize == 5)
 	{
 		u8 synth = pData[3];
 		if (synth > 1)

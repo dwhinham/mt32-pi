@@ -25,6 +25,7 @@
 
 #include <fluidsynth.h>
 
+#include "soundfontmanager.h"
 #include "synth/synthbase.h"
 
 class CSoundFontSynth : public CSynthBase
@@ -42,6 +43,8 @@ public:
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 
+	bool SwitchSoundFont(size_t nIndex);
+
 private:
 	unsigned m_nSampleRate;
 
@@ -49,6 +52,10 @@ private:
 	fluid_synth_t* m_pSynth;
 
 	u32 m_nPolyphony;
+	int m_nSoundFontID;
+	size_t m_nCurrentSoundFontIndex;
+
+	CSoundFontManager m_SoundFontManager;
 
 	static void FluidSynthLogCallback(int nLevel, const char* pMessage, void* pUser);
 };

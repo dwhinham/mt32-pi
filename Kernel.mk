@@ -16,6 +16,7 @@ OBJS		:=	src/config.o \
 				src/mt32pi.o \
 				src/power.o \
 				src/rommanager.o \
+				src/soundfontmanager.o \
 				src/synth/mt32synth.o \
 				src/synth/soundfontsynth.o
 
