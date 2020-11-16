@@ -152,13 +152,15 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		m_pSoundFontSynth = nullptr;
 	}
 
-	// TODO: Config option
 	// Set initial synthesizer
-	m_pCurrentSynth = m_pMT32Synth;
+	if (config.SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
+		m_pCurrentSynth = m_pMT32Synth;
+	else if (config.SystemDefaultSynth == CConfig::TSystemDefaultSynth::SoundFont)
+		m_pCurrentSynth = m_pSoundFontSynth;
 
 	if (!m_pCurrentSynth)
 	{
-		logger.Write(MT32PiName, LogError, "No synthesizers initialized successfully");
+		logger.Write(MT32PiName, LogError, "Preferred synth failed to initialize successfully");
 		LCDLog(TLCDLogType::Startup, "Synth init failed!");
 		return false;
 	}

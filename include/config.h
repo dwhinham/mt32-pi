@@ -29,6 +29,10 @@
 class CConfig
 {
 public:
+	#define ENUM_SYSTEMDEFAULTSYNTH(ENUM) \
+		ENUM(MT32, mt32)                  \
+		ENUM(SoundFont, soundfont)
+
 	#define ENUM_AUDIOOUTPUTDEVICE(ENUM) \
 		ENUM(PWM, pwm)                   \
 		ENUM(I2SDAC, i2s)
@@ -49,6 +53,7 @@ public:
 		ENUM(HD44780I2C, hd44780_i2c)      \
 		ENUM(SSD1306I2C, ssd1306_i2c)
 
+	CONFIG_ENUM(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);
 	CONFIG_ENUM(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
 	CONFIG_ENUM(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
 	CONFIG_ENUM(TLCDType, ENUM_LCDTYPE);
@@ -68,6 +73,7 @@ private:
 	// Overloaded function to parse config options based on their types specified in the definition file
 	static bool ParseOption(const char* pString, bool* pOut);
 	static bool ParseOption(const char* pString, int* pOut, bool bHex = false);
+	static bool ParseOption(const char* pString, TSystemDefaultSynth* pOut);
 	static bool ParseOption(const char* pString, TAudioOutputDevice* pOut);
 	static bool ParseOption(const char* pString, TAudioI2CDACInit* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuResamplerQuality* pOut);
