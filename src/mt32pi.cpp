@@ -241,7 +241,7 @@ void CMT32Pi::UITask()
 	logger.Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
 
 	// Display current MT-32 ROM version
-	if (m_pLCD)
+	if (m_pLCD && m_pCurrentSynth == m_pMT32Synth)
 		m_pLCD->OnSystemMessage(m_pMT32Synth->GetControlROMName());
 
 	while (m_bRunning)
@@ -258,7 +258,8 @@ void CMT32Pi::UITask()
 		// Update LCD
 		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
 		{
-			m_pLCD->Update(*m_pMT32Synth);
+			if (m_pCurrentSynth == m_pMT32Synth)
+				m_pLCD->Update(*m_pMT32Synth);
 			m_nLCDUpdateTime = ticks;
 		}
 	}
