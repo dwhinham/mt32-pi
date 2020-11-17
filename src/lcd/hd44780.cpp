@@ -103,7 +103,7 @@ const u8 CHD44780Base::CustomCharData[7][8] =
 const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7', '\xff' };
 
 CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
-	: CMT32LCD(),
+	: CSynthLCD(),
 	  m_nRows(nRows),
 	  m_nColumns(nColumns)
 {
@@ -300,7 +300,7 @@ void CHD44780Base::DrawPartLevelsTriple(u8 nFirstRow)
 
 void CHD44780Base::Update(const CMT32Synth& Synth)
 {
-	CMT32LCD::Update(Synth);
+	CSynthLCD::Update(Synth);
 
 	UpdatePartLevels(Synth);
 

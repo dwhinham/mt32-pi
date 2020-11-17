@@ -9,8 +9,8 @@ OBJS		:=	src/config.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
 				src/lcd/hd44780i2c.o \
-				src/lcd/mt32lcd.o \
 				src/lcd/ssd1306.o \
+				src/lcd/synthlcd.o \
 				src/main.o \
 				src/midiparser.o \
 				src/mt32pi.o \

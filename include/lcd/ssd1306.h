@@ -24,11 +24,11 @@
 #include <circle/i2cmaster.h>
 #include <circle/types.h>
 
-#include "lcd/mt32lcd.h"
+#include "lcd/synthlcd.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
 
-class CSSD1306 : public CMT32LCD
+class CSSD1306 : public CSynthLCD
 {
 public:
 	#define ENUM_LCDROTATION(ENUM) \
@@ -45,7 +45,7 @@ public:
 	virtual void Clear(bool bImmediate = false) override;
 	virtual void SetBacklightEnabled(bool bEnabled) override;
 
-	// CMT32LCD
+	// CSynthLCD
 	virtual void Update(const CMT32Synth& Synth) override;
 
 private:

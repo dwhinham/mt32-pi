@@ -27,10 +27,10 @@
 #include <circle/types.h>
 
 #include "lcd/clcd.h"
-#include "lcd/mt32lcd.h"
+#include "lcd/synthlcd.h"
 #include "synth/mt32synth.h"
 
-class CHD44780Base : public CMT32LCD
+class CHD44780Base : public CSynthLCD
 {
 public:
 	CHD44780Base(u8 nColumns = 20, u8 nRows = 2);
@@ -41,7 +41,7 @@ public:
 	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = true) override;
 	virtual void Clear(bool bImmediate = true) override;
 
-	// CMT32LCD
+	// CSynthLCD
 	virtual void Update(const CMT32Synth& Synth) override;
 
 protected:

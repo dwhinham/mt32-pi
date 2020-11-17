@@ -92,7 +92,7 @@ constexpr u8 BarSpacing = 2;
 constexpr u8 BarOffset  = 2;
 
 CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nHeight, TLCDRotation Rotation)
-	: CMT32LCD(),
+	: CSynthLCD(),
 	  m_pI2CMaster(pI2CMaster),
 	  m_nAddress(nAddress),
 	  m_nHeight(nHeight),
@@ -328,7 +328,7 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 	if (!m_bBacklightEnabled)
 		return;
 
-	CMT32LCD::Update(Synth);
+	CSynthLCD::Update(Synth);
 
 	Clear(false);
 	UpdatePartLevels(Synth);

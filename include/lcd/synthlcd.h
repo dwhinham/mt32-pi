@@ -1,5 +1,5 @@
 //
-// mt32lcd.h
+// synthlcd.h
 //
 // mt32-pi - A bare-metal Roland MT-32 emulator for Raspberry Pi
 // Copyright (C) 2020  Dale Whinham <daleyo@gmail.com>
@@ -18,8 +18,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _mt32lcd_h
-#define _mt32lcd_h
+#ifndef _synthlcd_h
+#define _synthlcd_h
 
 #include <circle/types.h>
 
@@ -27,7 +27,7 @@
 
 class CMT32Synth;
 
-class CMT32LCD : public CCharacterLCD
+class CSynthLCD : public CCharacterLCD
 {
 public:
 	enum class TSystemState
@@ -43,7 +43,7 @@ public:
 		DisplayingMessage,
 	};
 
-	CMT32LCD();
+	CSynthLCD();
 
 	void OnSystemMessage(const char* pMessage);
 

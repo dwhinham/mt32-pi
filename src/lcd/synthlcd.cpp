@@ -1,5 +1,5 @@
 //
-// mt32lcd.cpp
+// synthlcd.cpp
 //
 // mt32-pi - A bare-metal Roland MT-32 emulator for Raspberry Pi
 // Copyright (C) 2020  Dale Whinham <daleyo@gmail.com>
@@ -22,11 +22,11 @@
 
 #include <cmath>
 
-#include "lcd/mt32lcd.h"
+#include "lcd/synthlcd.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
 
-CMT32LCD::CMT32LCD()
+CSynthLCD::CSynthLCD()
 	: m_SystemState(TSystemState::None),
 	  m_nSystemStateTime(0),
 	  m_SystemMessageTextBuffer{'\0'},
@@ -41,7 +41,7 @@ CMT32LCD::CMT32LCD()
 {
 }
 
-void CMT32LCD::OnSystemMessage(const char* pMessage)
+void CSynthLCD::OnSystemMessage(const char* pMessage)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
@@ -51,7 +51,7 @@ void CMT32LCD::OnSystemMessage(const char* pMessage)
 	m_nSystemStateTime = ticks;
 }
 
-void CMT32LCD::OnMT32Message(const char* pMessage)
+void CSynthLCD::OnMT32Message(const char* pMessage)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
@@ -61,7 +61,7 @@ void CMT32LCD::OnMT32Message(const char* pMessage)
 	m_nMT32StateTime = ticks;
 }
 
-void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
+void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 
@@ -75,7 +75,7 @@ void CMT32LCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const 
 	m_nMT32StateTime = ticks;
 }
 
-void CMT32LCD::Update(const CMT32Synth& Synth)
+void CSynthLCD::Update(const CMT32Synth& Synth)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 	u8 masterVolume = Synth.GetMasterVolume();
@@ -109,7 +109,7 @@ void CMT32LCD::Update(const CMT32Synth& Synth)
 		UpdatePartStateText(Synth);
 }
 
-void CMT32LCD::UpdatePartStateText(const CMT32Synth& Synth)
+void CSynthLCD::UpdatePartStateText(const CMT32Synth& Synth)
 {
 	u32 partStates = Synth.GetPartStates();
 
@@ -129,7 +129,7 @@ void CMT32LCD::UpdatePartStateText(const CMT32Synth& Synth)
 	sprintf(m_MT32TextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
 }
 
-void CMT32LCD::UpdatePartLevels(const CMT32Synth& Synth)
+void CSynthLCD::UpdatePartLevels(const CMT32Synth& Synth)
 {
 	u32 partStates = Synth.GetPartStates();
 	for (u8 i = 0; i < 9; ++i)
@@ -148,7 +148,7 @@ void CMT32LCD::UpdatePartLevels(const CMT32Synth& Synth)
 	}
 }
 
-void CMT32LCD::UpdatePeakLevels()
+void CSynthLCD::UpdatePeakLevels()
 {
 	for (u8 i = 0; i < 9; ++i)
 	{

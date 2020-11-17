@@ -35,7 +35,7 @@
 #include <circle/usb/usbhcidevice.h>
 
 #include "config.h"
-#include "lcd/mt32lcd.h"
+#include "lcd/synthlcd.h"
 #include "midiparser.h"
 #include "power.h"
 #include "synth/mt32synth.h"
@@ -93,7 +93,7 @@ private:
 	CSerialDevice* m_pSerial;
 	CUSBHCIDevice* m_pUSBHCI;
 
-	CMT32LCD* m_pLCD;
+	CSynthLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
 
 	// Serial GPIO MIDI
