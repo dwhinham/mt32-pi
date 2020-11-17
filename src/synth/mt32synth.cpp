@@ -39,9 +39,7 @@ CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
 	  m_pSampleRateConverter(nullptr),
 
 	  m_pControlROMImage(nullptr),
-	  m_pPCMROMImage(nullptr),
-
-	  m_pLCD(nullptr)
+	  m_pPCMROMImage(nullptr)
 {
 }
 

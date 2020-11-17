@@ -26,7 +26,6 @@
 
 #include <mt32emu/mt32emu.h>
 
-#include "lcd/synthlcd.h"
 #include "rommanager.h"
 #include "synth/synthbase.h"
 #include "utility.h"
@@ -61,7 +60,6 @@ public:
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
 
-	void SetLCD(CSynthLCD* pLCD) { m_pLCD = pLCD; }
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
 	const char* GetControlROMName() const;
@@ -91,8 +89,6 @@ private:
 	CROMManager m_ROMManager;
 	const MT32Emu::ROMImage* m_pControlROMImage;
 	const MT32Emu::ROMImage* m_pPCMROMImage;
-
-	CSynthLCD* m_pLCD;
 };
 
 #endif

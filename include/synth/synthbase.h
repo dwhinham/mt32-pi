@@ -22,9 +22,16 @@
 
 #include <circle/types.h>
 
+#include "lcd/synthlcd.h"
+
 class CSynthBase
 {
 public:
+	CSynthBase()
+		: m_pLCD(nullptr)
+	{
+	}
+
 	virtual ~CSynthBase() = default;
 
 	virtual bool Initialize() = 0;
@@ -34,6 +41,10 @@ public:
 	virtual void AllSoundOff() = 0;
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
+	void SetLCD(CSynthLCD* pLCD) { m_pLCD = pLCD; }
+
+protected:
+	CSynthLCD* m_pLCD;
 };
 
 #endif
