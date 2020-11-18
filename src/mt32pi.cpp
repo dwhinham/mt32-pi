@@ -183,9 +183,14 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(config.SystemPowerSaveTimeout);
 
-	// Attach LCD to MT32 synth
-	if (m_pLCD && m_pMT32Synth)
-		m_pMT32Synth->SetLCD(m_pLCD);
+	// Attach LCD to synths
+	if (m_pLCD)
+	{
+		if (m_pMT32Synth)
+			m_pMT32Synth->SetLCD(m_pLCD);
+		if (m_pSoundFontSynth)
+			m_pSoundFontSynth->SetLCD(m_pLCD);
+	}
 
 	// Start audio
 	m_pSound->Start();
@@ -260,6 +265,8 @@ void CMT32Pi::UITask()
 		{
 			if (m_pCurrentSynth == m_pMT32Synth)
 				m_pLCD->Update(*m_pMT32Synth);
+			else
+				m_pLCD->Update(*m_pSoundFontSynth);
 			m_nLCDUpdateTime = ticks;
 		}
 	}

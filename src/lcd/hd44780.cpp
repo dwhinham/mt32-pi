@@ -328,3 +328,8 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 		Print(m_MT32TextBuffer, 0, 3, true);
 	}
 }
+
+void CHD44780Base::Update(const CSoundFontSynth& Synth)
+{
+	CSynthLCD::Update(Synth);
+}

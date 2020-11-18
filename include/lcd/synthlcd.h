@@ -26,6 +26,7 @@
 #include "lcd/clcd.h"
 
 class CMT32Synth;
+class CSoundFontSynth;
 
 class CSynthLCD : public CCharacterLCD
 {
@@ -51,8 +52,10 @@ public:
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);
 
 	virtual void Update(const CMT32Synth& Synth) = 0;
+	virtual void Update(const CSoundFontSynth& Synth) = 0;
 
 protected:
+	void UpdateSystem(unsigned int nTicks);
 	void UpdatePartStateText(const CMT32Synth& Synth);
 	void UpdatePartLevels(const CMT32Synth& Synth);
 	void UpdatePeakLevels();

@@ -347,3 +347,12 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 	Print(m_MT32TextBuffer, 0, statusRow, true);
 	WriteFramebuffer();
 }
+
+void CSSD1306::Update(const CSoundFontSynth& Synth)
+{
+	// Bail out if display is off
+	if (!m_bBacklightEnabled)
+		return;
+
+	CSynthLCD::Update(Synth);
+}

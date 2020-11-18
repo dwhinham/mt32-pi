@@ -78,14 +78,9 @@ void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const
 void CSynthLCD::Update(const CMT32Synth& Synth)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
-	u8 masterVolume = Synth.GetMasterVolume();
+	UpdateSystem(ticks);
 
-	// System message timeout
-	if (m_SystemState == TSystemState::DisplayingMessage && (ticks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
-	{
-		m_SystemState = TSystemState::None;
-		m_nSystemStateTime = ticks;
-	}
+	u8 masterVolume = Synth.GetMasterVolume();
 
 	// Hide message if master volume changed and message has been displayed long enough
 	if (m_nPreviousMasterVolume != masterVolume)
@@ -107,6 +102,22 @@ void CSynthLCD::Update(const CMT32Synth& Synth)
 
 	if (m_MT32State == TMT32State::DisplayingPartStates)
 		UpdatePartStateText(Synth);
+}
+
+void CSynthLCD::Update(const CSoundFontSynth& Synth)
+{
+	unsigned ticks = CTimer::Get()->GetTicks();
+	UpdateSystem(ticks);
+}
+
+void CSynthLCD::UpdateSystem(unsigned int nTicks)
+{
+	// System message timeout
+	if (m_SystemState == TSystemState::DisplayingMessage && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
+	{
+		m_SystemState = TSystemState::None;
+		m_nSystemStateTime = nTicks;
+	}
 }
 
 void CSynthLCD::UpdatePartStateText(const CMT32Synth& Synth)

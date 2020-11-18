@@ -47,6 +47,7 @@ public:
 
 	// CSynthLCD
 	virtual void Update(const CMT32Synth& Synth) override;
+	virtual void Update(const CSoundFontSynth& Synth) override;
 
 private:
 	void WriteFramebuffer() const;
