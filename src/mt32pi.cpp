@@ -365,10 +365,10 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 	// Flash LED
 	LEDOn();
 
+	m_pCurrentSynth->HandleMIDIShortMessage(nMessage);
+
 	// Wake from power saving mode if necessary
 	Awaken();
-
-	m_pCurrentSynth->HandleMIDIShortMessage(nMessage);
 }
 
 void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
@@ -376,12 +376,12 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 	// Flash LED
 	LEDOn();
 
-	// Wake from power saving mode if necessary
-	Awaken();
-
 	// If we don't consume the SysEx message, forward it to mt32emu
 	if (!ParseCustomSysEx(pData, nSize))
 		m_pCurrentSynth->HandleMIDISysExMessage(pData, nSize);
+
+	// Wake from power saving mode if necessary
+	Awaken();
 }
 
 void CMT32Pi::OnUnexpectedStatus()
@@ -437,9 +437,6 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 
 		m_pSoundFontSynth->SwitchSoundFont(index);
 		m_pSound->Start();
-
-		// This could have involved a long period of disk I/O; update power management
-		Awaken();
 	}
 
 	// Switch synthesizer (F0 7D 03 xx F7)
@@ -520,11 +517,11 @@ void CMT32Pi::UpdateSerialMIDI()
 		}
 	}
 
-	// Reset the Active Sense timer
-	m_nActiveSenseTime = m_pTimer->GetTicks();
-
 	// Process MIDI messages
 	ParseMIDIBytes(buffer, nResult);
+
+	// Reset the Active Sense timer
+	m_nActiveSenseTime = m_pTimer->GetTicks();
 }
 
 void CMT32Pi::LEDOn()
@@ -582,9 +579,9 @@ void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLengt
 {
 	assert(s_pThis != nullptr);
 
-	// Reset the Active Sense timer
-	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
-
 	// Process MIDI messages
 	s_pThis->ParseMIDIBytes(pPacket, nLength);
+
+	// Reset the Active Sense timer
+	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
 }
