@@ -31,15 +31,25 @@ public:
 
 	bool ScanSoundFonts();
 	const char* GetSoundFontPath(size_t nIndex) const;
+	const char* GetSoundFontName(size_t nIndex) const;
 	const char* GetFirstValidSoundFontPath() const;
 
 private:
+	struct TSoundFontListEntry
+	{
+		CString Name;
+		CString Path;
+	};
+
 	static constexpr size_t MaxSoundFonts = 256;
+	static constexpr size_t MaxSoundFontNameLength = 256;
 
 	void CheckSoundFont(const char* pPath);
 
 	size_t m_nSoundFonts;
-	CString m_SoundFontPaths[MaxSoundFonts];
+	TSoundFontListEntry m_SoundFontList[MaxSoundFonts];
+
+	inline static bool SoundFontListComparator(const TSoundFontListEntry& lhs, const TSoundFontListEntry& rhs);
 };
 
 #endif
