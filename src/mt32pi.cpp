@@ -406,7 +406,7 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		return false;
 
 	// Reboot (F0 7D 00 F7)
-	if (pData[2] == 0x00)
+	if (pData[2] == 0x00 && nSize == 4)
 	{
 		CLogger::Get()->Write(MT32PiName, LogNotice, "Reboot command received");
 		m_bRunning = false;
