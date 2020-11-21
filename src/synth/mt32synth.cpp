@@ -31,10 +31,10 @@ const u8 CMT32Synth::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x0
 const u8 CMT32Synth::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
 CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
-	: m_Lock(TASK_LEVEL),
+	: CSynthBase(nSampleRate),
+
 	  m_pSynth(nullptr),
 
-	  m_nSampleRate(nSampleRate),
 	  m_ResamplerQuality(ResamplerQuality),
 	  m_pSampleRateConverter(nullptr),
 

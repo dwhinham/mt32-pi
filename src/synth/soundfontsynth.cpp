@@ -108,7 +108,7 @@ extern "C"
 }
 
 CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, u32 nPolyphony)
-	: m_nSampleRate(nSampleRate),
+	: CSynthBase(nSampleRate),
 
 	  m_pSettings(nullptr),
 	  m_pSynth(nullptr),

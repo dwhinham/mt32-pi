@@ -21,7 +21,6 @@
 #ifndef _mt32synth_h
 #define _mt32synth_h
 
-#include <circle/synchronize.h>
 #include <circle/types.h>
 
 #include <mt32emu/mt32emu.h>
@@ -78,10 +77,8 @@ private:
 	static const u8 StandardMIDIChannelsSysEx[];
 	static const u8 AlternateMIDIChannelsSysEx[];
 
-	CSpinLock m_Lock;
 	MT32Emu::Synth* m_pSynth;
 
-	unsigned int m_nSampleRate;
 	TResamplerQuality m_ResamplerQuality;
 	MT32Emu::SampleRateConverter* m_pSampleRateConverter;
 

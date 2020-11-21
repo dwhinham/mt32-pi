@@ -46,8 +46,6 @@ public:
 	bool SwitchSoundFont(size_t nIndex);
 
 private:
-	unsigned m_nSampleRate;
-
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
 

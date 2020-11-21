@@ -20,6 +20,7 @@
 #ifndef _synth_h
 #define _synth_h
 
+#include <circle/synchronize.h>
 #include <circle/types.h>
 
 #include "lcd/synthlcd.h"
@@ -27,8 +28,10 @@
 class CSynthBase
 {
 public:
-	CSynthBase()
-		: m_pLCD(nullptr)
+	CSynthBase(unsigned int nSampleRate)
+		: m_Lock(TASK_LEVEL),
+		  m_nSampleRate(nSampleRate),
+		  m_pLCD(nullptr)
 	{
 	}
 
@@ -44,6 +47,8 @@ public:
 	void SetLCD(CSynthLCD* pLCD) { m_pLCD = pLCD; }
 
 protected:
+	CSpinLock m_Lock;
+	unsigned int m_nSampleRate;
 	CSynthLCD* m_pLCD;
 };
 
