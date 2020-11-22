@@ -27,8 +27,8 @@ END_SECTION
 
 BEGIN_SECTION(audio)
 CFG(output_device,			TAudioOutputDevice,			AudioOutputDevice,			TAudioOutputDevice::PWM					)
-CFG(sample_rate,			int,						AudioSampleRate,			96000									)
-CFG(chunk_size,				int,						AudioChunkSize,				512										)
+CFG(sample_rate,			int,						AudioSampleRate,			48000									)
+CFG(chunk_size,				int,						AudioChunkSize,				256										)
 CFG(i2c_dac_address,		int,						AudioI2CDACAddress,			0x4c,							true	)
 CFG(i2c_dac_init,			TAudioI2CDACInit,			AudioI2CDACInit,			TAudioI2CDACInit::None					)
 END_SECTION

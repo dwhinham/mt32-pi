@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved layout of 4-line HD44780 LCD.
   * MT-32 status line moved to bottom row.
   * Part levels now 3 rows high.
+- Default sample rate and chunk size reduced to 48000Hz and 256 samples.
 
 ### Fixed
 
