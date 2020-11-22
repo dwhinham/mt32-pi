@@ -52,6 +52,13 @@ protected:
 		Command
 	};
 
+	enum class TBarCharSet
+	{
+		None,
+		Wide,
+		Narrow
+	};
+
 	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) = 0;
 	void WriteByte(u8 nByte, TWriteMode Mode);
 
@@ -60,13 +67,13 @@ protected:
 	void WriteData(const u8* pBytes, size_t nSize);
 
 	void SetCustomChar(u8 nIndex, const u8 nCharData[8]);
+	void SetBarChars(TBarCharSet CharSet);
 	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels);
 
 	u8 m_nRows;
 	u8 m_nColumns;
 
-	static const u8 CustomCharData[7][8];
-	static const char BarChars[9];
+	TBarCharSet m_BarCharSet;
 };
 
 class CHD44780FourBit : public CHD44780Base

@@ -21,91 +21,14 @@
 #include <circle/logger.h>
 #include <circle/timer.h>
 
+#include "lcd/barchars.h"
 #include "lcd/hd44780.h"
-
-// Custom characters for drawing bar graphs
-// Empty (0x20) and full blocks (0xFF) already exist in the character set
-const u8 CHD44780Base::CustomCharData[7][8] =
-{
-	{
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111
-	},
-	{
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111
-	},
-	{
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111
-	},
-	{
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	},
-	{
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	},
-	{
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	},
-	{
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	}
-};
-
-// Use ASCII space for empty bar, custom chars for 1-7 rows, 0xFF for full bar
-const char CHD44780Base::BarChars[] = { ' ', '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7', '\xff' };
 
 CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
 	: CSynthLCD(),
 	  m_nRows(nRows),
-	  m_nColumns(nColumns)
+	  m_nColumns(nColumns),
+	  m_BarCharSet(TBarCharSet::None)
 {
 }
 
@@ -140,6 +63,25 @@ void CHD44780Base::SetCustomChar(u8 nIndex, const u8 nCharData[8])
 
 	for (u8 i = 0; i < 8; ++i)
 		WriteData(nCharData[i]);
+}
+
+void CHD44780Base::SetBarChars(TBarCharSet CharSet)
+{
+	if (CharSet == m_BarCharSet)
+		return;
+
+	if (CharSet == TBarCharSet::Wide)
+	{
+		for (size_t i = 0; i < Utility::ArraySize(CustomBarCharDataWide); ++i)
+			SetCustomChar(i, CustomBarCharDataWide[i]);
+	}
+	else
+	{
+		for (size_t i = 0; i < Utility::ArraySize(CustomBarCharDataNarrow); ++i)
+			SetCustomChar(i, CustomBarCharDataNarrow[i]);
+	}
+
+	m_BarCharSet = CharSet;
 }
 
 bool CHD44780Base::Initialize()
@@ -182,8 +124,7 @@ bool CHD44780Base::Initialize()
 	WriteCommand(0b0110);
 
 	// Set custom characters
-	for (size_t i = 0; i < sizeof(CustomCharData) / sizeof(*CustomCharData); ++i)
-		SetCustomChar(i + 1, CustomCharData[i]);
+	SetBarChars(TBarCharSet::Wide);
 
 	// Turn on
 	WriteCommand(0b1100);
@@ -253,6 +194,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 {
 	CSynthLCD::Update(Synth);
 
+	SetBarChars(TBarCharSet::Wide);
 	UpdateChannelLevels(Synth);
 
 	if (m_nRows == 2)
@@ -284,6 +226,7 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 {
 	CSynthLCD::Update(Synth);
 
+	SetBarChars(TBarCharSet::Narrow);
 	UpdateChannelLevels(Synth);
 
 	if (m_nRows == 2)
