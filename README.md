@@ -3,8 +3,13 @@
 
 ## 🎹🎶 mt32-pi
 
-A work-in-progress baremetal Roland MT-32 and CM-32L emulator for the Raspberry Pi 3 or above, based on [Munt] and [Circle].
-Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module](https://en.wikipedia.org/wiki/Roland_MT-32) used by countless classic MS-DOS and Sharp X68000 games, that starts up in seconds!
+- A work-in-progress baremetal MIDI synthesizer for the Raspberry Pi 3 or above, based on [Munt], [FluidSynth] and [Circle].
+- Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module](https://en.wikipedia.org/wiki/Roland_MT-32) used by countless classic MS-DOS, PC-98 and Sharp X68000 games!
+- 🆕 Add your favorite [SoundFonts][SoundFont] to expand your synthesizer with [General MIDI], [Roland GS], or even [Yamaha XG] support for endless MIDI possibilities.
+- 🆕 Includes General MIDI and Roland GS support out of the box thanks to [GeneralUser GS] by S. Christian Collins.
+- No operating system, no complex Linux audio configuration; just super-low latency audio.
+- Easy to configure and ready to play from cold-boot in a matter of seconds.
+- The perfect companion for your vintage PC or [MiSTer] FPGA setup.
 
 ## 🔖 Table of contents
 
@@ -25,17 +30,20 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
     + [Serial ports](#serial-ports)
 - [🔊 I2S DAC support](#-i2s-dac-support)
   * [Setup](#setup)
-  * [Compatibility](#compatibility-1)
+  * [Compatibility](#compatibility)
   * [Finding the I2C address of your DAC](#finding-the-i2c-address-of-your-dac)
 - [📺 LCD and OLED displays](#-lcd-and-oled-displays)
   * [Drivers](#drivers)
     + [Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)](#hitachi-hd44780-compatible-4-bit-driver-hd44780_4bit)
     + [Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-i2c-driver-hd44780_i2c)
     + [SSD1306 I2C driver (`ssd1306_i2c`)](#ssd1306-i2c-driver-ssd1306_i2c)
-  * [Compatibility](#compatibility-2)
-- [🧠 ROM support](#-rom-support)
+  * [Compatibility](#compatibility-1)
+- [🧠 MT-32 ROM support](#-mt-32-rom-support)
   * [ROM scanning](#rom-scanning)
   * [Switching ROM sets](#switching-rom-sets)
+- [🎺 SoundFont support](#-soundfont-support)
+  * [SoundFont scanning](#soundfont-scanning)
+  * [Switching SoundFonts](#switching-soundfonts)
 - [🔩 Custom hardware](#-custom-hardware)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
@@ -46,7 +54,7 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 
 ## ✔️ Project status
 
-- Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model B & B+.
+- Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model A+, B, and B+.
   * Pi 2 works, but only with concessions on playback quality.
   * Pi 0 and 1 are unfortunately too slow, even with an overclock.
 - PWM headphone jack audio.
@@ -58,7 +66,6 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 - [Config file](#-configuration-file) for selecting hardware options and fine tuning.
 - [LCD status screen support](#-lcd-and-oled-displays) (for MT-32 SysEx messages and status information).
 - Control buttons, rotary encoder etc. is _planned_.
-- A port of FluidSynth is _planned_.
 - Network MIDI and auto-update is _planned_.
 
 ## ✨ Quick-start guide
@@ -66,9 +73,13 @@ Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre so
 - Download the latest release from the [Releases] section.
 - Extract contents to a blank FAT32-formatted SD card.
   * If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
-- Add your MT-32 or CM-32L ROM images to the `roms` directory - you have to provide these for copyright reasons.
-  * You will need at least one control ROM and one PCM ROM. For information on using multiple ROM sets and switching between them, see the [ROM support](#-rom-support) section.
+- For MT-32 support, add your MT-32 or CM-32L ROM images to the `roms` directory - you have to provide these for copyright reasons.
+  * You will need at least one control ROM and one PCM ROM.
+  * For information on using multiple ROM sets and switching between them, see the [MT-32 ROM support](#-mt-32-rom-support) section.
   * The file names or extensions don't matter; `mt32-pi` will scan and detect their types automatically.
+- Optionally add your favorite SoundFonts to the `soundfonts` directory.
+  * For information on using multiple SoundFonts and switching between them, see the [SoundFont support](#-soundfont-support) section.
+  * Again, file names/extensions don't matter.
 - Connect a [USB MIDI interface](#usb-midi-interfaces) or [GPIO MIDI circuit](#gpio-midi-interface) to the Pi, and connect some speakers to the headphone jack.
 - Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
 
@@ -241,7 +252,7 @@ The following displays and configurations have been confirmed as working by our 
 | Generic        | [128x64 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Similar to the 32 pixel high OLED, just with more rows. Tested by @dwhinham.                                 |
 | Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                        |
 
-## 🧠 ROM support
+## 🧠 MT-32 ROM support
 
 `mt32-pi` can make use of all ROMs that [Munt] supports, and allows switching between ROM sets on-the-fly for greater compatibility with various games. For further information about which games work best with each ROM set, consult the [MT-32 game compatibility list].
 
@@ -250,7 +261,7 @@ A ROM set consists of:
 - a **control ROM** (contains the code that runs on the MT-32's CPU).
 - a **PCM ROM** (contains the sound samples).
 
-For simplicity, `mt32-pi` categorises the known control ROMs into three types:
+For simplicity, `mt32-pi` categorizes the known control ROMs into three types:
 
 1. **MT-32 (old)**: The original version of the MT-32, ROM versions 1.xx.
 2. **MT-32 (new)**: The later version of the MT-32, ROM versions 2.xx.
@@ -259,6 +270,8 @@ For simplicity, `mt32-pi` categorises the known control ROMs into three types:
 As for PCM ROMs, there are only two known versions - the MT-32 version (common to both models of MT-32), and the CM-32L version.
 
 To summarize, to get the most out of `mt32-pi`, you'll need **5 ROM files in total** - old/new/CM-32L control ROMs, and MT-32/CM-32L PCM ROMs.
+
+> ⚠️ **Note:** To use the MT-32 synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages).
 
 ### ROM scanning
 
@@ -273,6 +286,34 @@ You can use a [custom SysEx message](#-custom-system-exclusive-messages) to make
 It may be useful to create scripts (e.g. a DOS batch file) that send `mt32-pi` ROM set swap messages before launching a game.
 
 In the future, `mt32-pi` will allow you to switch ROM sets from a menu or button combination.
+
+## 🎺 SoundFont support
+
+[SoundFont] is a file format that allows sound samples, instrument mappings and synthesizer behaviors to be stored in a self-contained package. Any SoundFont-compliant synthesizer software or hardware can then load the SoundFont and, in theory, produce the same audio output. The SoundFont was made popular by the Creative Labs Sound Blaster AWE32 and later family of sound cards, which used it to provide reconfigurable MIDI synthesis for use with games and for music production purposes.
+
+The flexibility of the SoundFont standard means that several MIDI specifications such as [General MIDI], [Roland GS], and [Yamaha XG] can be implemented with the same synthesizer engine, opening up a wide range of possibilities.
+
+`mt32-pi` uses the [FluidSynth] engine to provide SoundFont support, and comes with the [GeneralUser GS] SoundFont so that you have excellent General MIDI and Roland GS compatibility out of the box.
+
+> ⚠️ **Note:** To use the SoundFont synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages).
+
+### SoundFont scanning
+
+On startup, `mt32-pi` will scan the `soundfonts` directory and perform a quick test on each file to search for valid SoundFonts. SoundFonts are then added to a list, and sorted into lexicographical order (i.e. 0-9, A-Z).
+
+The [configuration file](#-configuration-file) allows you to change which SoundFont should be loaded when multiple SoundFonts are available.
+
+### Switching SoundFonts
+
+Just like with MT-32 ROMs, you can use a [custom SysEx message](#-custom-system-exclusive-messages) to make `mt32-pi` swap SoundFonts at runtime.
+
+The configuration file and custom SysEx messages for SoundFont switching use a **zero-based index** into a sorted list of valid SoundFonts. This means that `0` is the first, `1` is the second, and so on.
+
+When switching, the current SoundFont is unloaded from memory, and the chosen SoundFont is (re)loaded from SD card. This may take some seconds depending on the size of the file, speed of the SD card, and model of Raspberry Pi.
+
+This behavior may be improved in the future - it will be possible to implement a (pre)caching system to keep frequently-used SoundFonts in memory. There are also some caveats with large SoundFonts and Pi models with low RAM - see the [FAQ](#-faq) for notes on this.
+
+In the future, `mt32-pi` will allow you to switch SoundFonts from a menu or button combination.
 
 ## 🔩 Custom hardware
 
@@ -294,10 +335,12 @@ F0 7D { command } { parameters } F7
 
 > ⚠️ **Note:** These commands are subject to change until the project reaches a mature state.
 
-| Command   | Description              | Parameters                                                                  |
-|-----------|--------------------------|-----------------------------------------------------------------------------|
-| `00`      | Reboot the Raspberry Pi. | None                                                                        |
-| `01` `xx` | Switch ROM set.          | `xx` = `00`: MT-32 (old)<br>`xx` = `01`: MT-32 (new)<br>`xx` = `02`: CM-32L |
+| Command   | Description              | Parameters                                                                                  |
+|-----------|--------------------------|---------------------------------------------------------------------------------------------|
+| `00`      | Reboot the Raspberry Pi. | None                                                                                        |
+| `01` `xx` | Switch ROM set.          | `xx` = `00`: MT-32 (old)<br>`xx` = `01`: MT-32 (new)<br>`xx` = `02`: CM-32L                 |
+| `02` `xx` | Switch SoundFont.        | `xx` = Zero-based index into contents of `soundfonts` directory (lexicographically sorted). |
+| `03` `xx` | Switch synthesizer.      | `xx` = `00`: MT-32<br>`xx` = `01`: SoundFont                                                |
 
 ## ❓ FAQ
 
@@ -305,6 +348,8 @@ F0 7D { command } { parameters } F7
   **A:** Your keyboard is probably sending note data on **channel 1**, but by default, on power-up the MT-32 is set to receive on MIDI **channels 2-10**. Check your keyboard's documentation to see if you can change the transmit channel. If this isn't possible, [see this wiki page](https://github.com/dwhinham/mt32-pi/wiki/MIDI-channel-assignment) for more information on how to reassign the emulated MT-32's channels.
 - **Q:** I'm getting sound distortion and/or the power LED on my Raspberry Pi is blinking - why?  
   **A:** It's possible that the Pi is not receiving enough power. Try swapping the USB cable being used to power the Pi, or try another power supply. Check the [Raspberry Pi power supply page] for recommended power supply specifications.
+- **Q:** I'm trying to switch between very large (>200MB) SoundFonts and received an error message/crash - what's wrong?  
+  **A:** This is probably due to memory fragmentation. When using a Raspberry Pi with a lower amount of RAM such as the Pi 3A+ (512MB), the memory allocator may struggle to find enough free contiguous space after unloading a large SoundFont and attempting to load another one. This is a difficult problem to solve, but may be improved in the future. For now, stick to smaller SoundFonts, avoid switching between large ones, or choose a Pi with more RAM.
 - **Q:** Why don't I see any video output on my HDMI-connected monitor or television? Has the Pi has failed to boot?  
   **A:** This is completely normal - `mt32-pi` is designed to run headless and therefore there is no video output. For troubleshooting purposes, it's possible to compile `mt32-pi` with HDMI debug logs enabled, but these builds will hang on a Raspberry Pi 4 if **no** HDMI display is attached due to a quirk of the Pi 4 and Circle. Hence, for regular use, video output is disabled.
 - **Q:** What happened to the old `mt32-pi` project that was based on a minimal Linux distro built with Buildroot?  
@@ -318,6 +363,8 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 
 - Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
 - The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
+- The [FluidSynth] team for their excellent and easily-portable SoundFont synthesizer project.
+- [S. Christian Collins][GeneralUser GS] for the excellent GeneralUser GS SoundFont and for kindly giving permission to include it in the project.
 - The [Circle] and [circle-stdlib] projects for providing the best C++ baremetal framework for the Raspberry Pi.
 - The [inih] project for a nice, lightweight config file parser.
 
@@ -325,17 +372,21 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [128x32 OLED]: https://www.aliexpress.com/item/32661842518.html
 [128x64 OLED]: https://www.aliexpress.com/item/32233334632.html
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
-[3]: http://www.fm-alive.com/Pages/DXMidi.aspx
 [2002-1 Series]: https://www.buydisplay.com/character-lcd-display-module/20x2-character
+[3]: http://www.fm-alive.com/Pages/DXMidi.aspx
 [Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
+[FluidSynth]: http://www.fluidsynth.org/
+[General MIDI]: https://en.wikipedia.org/wiki/General_MIDI
+[GeneralUser GS]: http://schristiancollins.com/generaluser.php
 [GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
 [Hairless MIDI]: https://projectgus.github.io/hairless-midiserial/
 [HiFi DAC HAT]: https://www.amazon.com/gp/product/B07D13QWV9/
 [I2C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
+[MiSTer]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
 [MT-32 game compatibility list]: https://en.wikipedia.org/wiki/List_of_MT-32-compatible_computer_games#IBM_PC_compatibles
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
@@ -344,4 +395,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Raspberry Pi power supply page]: https://www.raspberrypi.org/documentation/hardware/raspberrypi/power/README.md
 [REC002004B]: https://www.raystar-optronics.com/oled-character-display-module/REC002004B.html
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest
+[Roland GS]: https://en.wikipedia.org/wiki/Roland_GS
 [SoftMPU]: http://bjt42.github.io/softmpu/
+[SoundFont]: https://en.wikipedia.org/wiki/SoundFont
+[Yamaha XG]: https://en.wikipedia.org/wiki/Yamaha_XG
