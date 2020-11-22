@@ -443,15 +443,9 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 	else if (pData[2] == 0x02 && nSize == 5)
 	{
 		u8 index = pData[3];
+
 		CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", index);
-
-		// Wait for audio to stop
-		m_pSound->Cancel();
-		while (m_pSound->IsActive())
-			;
-
-		m_pSoundFontSynth->SwitchSoundFont(index);
-		m_pSound->Start();
+		return m_pSoundFontSynth->SwitchSoundFont(index);
 	}
 
 	// Switch synthesizer (F0 7D 03 xx F7)
