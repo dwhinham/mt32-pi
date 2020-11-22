@@ -315,3 +315,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 
 	return true;
 }
+
+const char* CSoundFontSynth::GetSoundFontName() const
+{
+	return m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex);
+}

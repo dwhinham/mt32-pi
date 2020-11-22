@@ -44,6 +44,7 @@ public:
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 
 	bool SwitchSoundFont(size_t nIndex);
+	const char* GetSoundFontName() const;
 
 private:
 	fluid_settings_t* m_pSettings;
