@@ -291,8 +291,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	// Is this SoundFont already active?
 	if (m_nCurrentSoundFontIndex == nIndex)
 	{
-		// if (m_pLCD)
-		// 	m_pLCD->OnSystemMessage("Already selected!");
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("Already selected!");
 		return false;
 	}
 
@@ -300,8 +300,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	const char* soundFontPath = m_SoundFontManager.GetSoundFontPath(nIndex);
 	if (!soundFontPath)
 	{
-		// if (m_pLCD)
-		// 	m_pLCD->OnSystemMessage("SoundFont not avail!");
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("SoundFont not avail!");
 		return false;
 	}
 
@@ -309,8 +309,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 
 	if (m_nSoundFontID >= 0 && fluid_synth_sfunload(m_pSynth, m_nSoundFontID, true) == FLUID_FAILED)
 	{
-		// if (m_pLCD)
-		// 	m_pLCD->OnSystemMessage("SF unload failed!");
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("SF unload failed!");
 
 		m_Lock.Release();
 		return false;
@@ -322,8 +322,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	int result = fluid_synth_sfload(m_pSynth, soundFontPath, true);
 	if (result == FLUID_FAILED)
 	{
-		// if (m_pLCD)
-		// 	m_pLCD->OnSystemMessage("SF load failed!");
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("SF load failed!");
 
 		m_Lock.Release();
 		return false;
@@ -331,15 +331,10 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 
 	m_Lock.Release();
 
-	if (fluid_sfont_t* soundFont = fluid_synth_get_sfont_by_id(m_pSynth, result))
-	{
-		if (const char* name = fluid_sfont_get_name(soundFont))
-		{
-			CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", name);
-			// if (m_pLCD)
-			// 	m_pLCD->OnSystemMessage(name);
-		}
-	}
+	const char* name = m_SoundFontManager.GetSoundFontName(nIndex);
+	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", name);
+	if (m_pLCD)
+		m_pLCD->OnSystemMessage(name);
 
 	m_nCurrentSoundFontIndex = nIndex;
 	m_nSoundFontID = result;
