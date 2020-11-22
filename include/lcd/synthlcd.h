@@ -24,9 +24,9 @@
 #include <circle/types.h>
 
 #include "lcd/clcd.h"
-
-class CMT32Synth;
-class CSoundFontSynth;
+#include "synth/mt32synth.h"
+#include "synth/soundfontsynth.h"
+#include "synth/synthbase.h"
 
 class CSynthLCD : public CCharacterLCD
 {
@@ -51,14 +51,14 @@ public:
 	void OnMT32Message(const char* pMessage);
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);
 
-	virtual void Update(const CMT32Synth& Synth) = 0;
-	virtual void Update(const CSoundFontSynth& Synth) = 0;
+	virtual void Update(CMT32Synth& Synth) = 0;
+	virtual void Update(CSoundFontSynth& Synth) = 0;
 
 protected:
 	void UpdateSystem(unsigned int nTicks);
 	void UpdatePartStateText(const CMT32Synth& Synth);
-	void UpdatePartLevels(const CMT32Synth& Synth);
-	void UpdatePeakLevels();
+	void UpdateChannelLevels(CSynthBase& Synth);
+	void UpdateChannelPeakLevels();
 
 	static constexpr size_t MIDIChannelCount = 16;
 	static constexpr size_t MT32ChannelCount = 9;
@@ -83,9 +83,12 @@ protected:
 	unsigned m_nMT32StateTime;
 	char m_MT32TextBuffer[TextBufferLength];
 	u8 m_nPreviousMasterVolume;
-	float m_PartLevels[9];
-	float m_PeakLevels[9];
-	u8 m_PeakTimes[9];
+
+	// Channel levels for all synths
+	u8 m_ChannelVelocities[MIDIChannelCount];
+	float m_ChannelLevels[MIDIChannelCount];
+	float m_ChannelPeakLevels[MIDIChannelCount];
+	u8 m_ChannelPeakTimes[MIDIChannelCount];
 };
 
 #endif

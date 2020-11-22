@@ -231,7 +231,7 @@ void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 
 		const u8 nCharIndex = i + i * nBarSpacing + nBarXOffset;
 		assert(nCharIndex < 20);
 
-		const u8 nLevelPixels = static_cast<u8>(m_PartLevels[i] * nRows * 8);
+		const u8 nLevelPixels = static_cast<u8>(m_ChannelLevels[i] * nRows * 8);
 		const u8 nFullRows    = nLevelPixels / 8;
 		const u8 nRemainder   = nLevelPixels % 8;
 
@@ -249,11 +249,11 @@ void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 
 		Print(LineBuf[i], 0, nFirstRow + i, true);
 }
 
-void CHD44780Base::Update(const CMT32Synth& Synth)
+void CHD44780Base::Update(CMT32Synth& Synth)
 {
 	CSynthLCD::Update(Synth);
 
-	UpdatePartLevels(Synth);
+	UpdateChannelLevels(Synth);
 
 	if (m_nRows == 2)
 	{
@@ -280,7 +280,33 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 	}
 }
 
-void CHD44780Base::Update(const CSoundFontSynth& Synth)
+void CHD44780Base::Update(CSoundFontSynth& Synth)
 {
 	CSynthLCD::Update(Synth);
+
+	UpdateChannelLevels(Synth);
+
+	if (m_nRows == 2)
+	{
+		if (m_SystemState == TSystemState::DisplayingMessage)
+		{
+			Print(m_SystemMessageTextBuffer, 0, 0, true);
+			Print("", 0, 1, true);
+		}
+		else
+			DrawChannelLevels(0, m_nRows, 2, 0, MIDIChannelCount);
+	}
+	else if (m_nRows == 4)
+	{
+		if (m_SystemState == TSystemState::DisplayingMessage)
+		{
+			// Clear top line
+			Print("", 0, 0, true);
+			Print(m_SystemMessageTextBuffer, 0, 1, true);
+			Print("", 0, 2, true);
+			Print("", 0, 3, true);
+		}
+		else
+			DrawChannelLevels(0, m_nRows, 2, 0, MIDIChannelCount);
+	}
 }

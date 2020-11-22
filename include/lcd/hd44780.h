@@ -42,8 +42,8 @@ public:
 	virtual void Clear(bool bImmediate = true) override;
 
 	// CSynthLCD
-	virtual void Update(const CMT32Synth& Synth) override;
-	virtual void Update(const CSoundFontSynth& Synth) override;
+	virtual void Update(CMT32Synth& Synth) override;
+	virtual void Update(CSoundFontSynth& Synth) override;
 
 protected:
 	enum class TWriteMode

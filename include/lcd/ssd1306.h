@@ -46,8 +46,8 @@ public:
 	virtual void SetBacklightEnabled(bool bEnabled) override;
 
 	// CSynthLCD
-	virtual void Update(const CMT32Synth& Synth) override;
-	virtual void Update(const CSoundFontSynth& Synth) override;
+	virtual void Update(CMT32Synth& Synth) override;
+	virtual void Update(CSoundFontSynth& Synth) override;
 
 private:
 	void WriteFramebuffer() const;
@@ -55,7 +55,7 @@ private:
 	void ClearPixel(u8 nX, u8 nY);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
 
-	void DrawPartLevels(u8 nFirstRow, bool bDrawPeaks = true);
+	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true);
 
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;

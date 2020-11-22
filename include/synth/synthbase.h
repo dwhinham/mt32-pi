@@ -23,7 +23,7 @@
 #include <circle/synchronize.h>
 #include <circle/types.h>
 
-#include "lcd/synthlcd.h"
+class CSynthLCD;
 
 class CSynthBase
 {
@@ -44,6 +44,7 @@ public:
 	virtual void AllSoundOff() = 0;
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
+	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) = 0;
 	void SetLCD(CSynthLCD* pLCD) { m_pLCD = pLCD; }
 
 protected:

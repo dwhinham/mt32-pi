@@ -87,9 +87,7 @@ constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleCol
 
 // Drawing constants
 constexpr u8 Width      = 128;
-constexpr u8 BarWidth   = 12;
 constexpr u8 BarSpacing = 2;
-constexpr u8 BarOffset  = 2;
 
 CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nHeight, TLCDRotation Rotation)
 	: CSynthLCD(),
@@ -226,18 +224,18 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 	}
 }
 
-void CSSD1306::DrawPartLevels(u8 nFirstRow, bool bDrawPeaks)
+void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks)
 {
 	const size_t firstPageOffset = nFirstRow * Width;
-	const u8 totalPages          = m_nHeight / 8 - 2;
-	const u8 barHeight           = m_nHeight - 8 * 2;
+	const u8 totalPages          = nRows;
+	const u8 barHeight           = nRows * 8;
 
-	// For each part
-	for (u8 i = 0; i < 9; ++i)
+	// For each channel
+	for (u8 i = 0; i < nChannels; ++i)
 	{
 		u8 pageValues[totalPages];
-		const u8 partLevelPixels = m_PartLevels[i] * barHeight;
-		const u8 peakLevelPixels = m_PeakLevels[i] * barHeight;
+		const u8 partLevelPixels = m_ChannelLevels[i] * barHeight;
+		const u8 peakLevelPixels = m_ChannelPeakLevels[i] * barHeight;
 		const u8 fullPages       = partLevelPixels / 8;
 		const u8 remainder       = partLevelPixels % 8;
 
@@ -263,21 +261,21 @@ void CSSD1306::DrawPartLevels(u8 nFirstRow, bool bDrawPeaks)
 		}
 
 		// For each bar column
-		for (u8 j = 0; j < BarWidth; ++j)
+		for (u8 j = 0; j < nBarWidth; ++j)
 		{
 			// For each bar row
 			for (u8 k = 0; k < totalPages; ++k)
 			{
 				size_t offset = firstPageOffset;
 
-				// Start BarOffset pixels from the left
-				offset += BarOffset;
+				// Start BarXOffset pixels from the left
+				offset += nBarXOffset;
 
 				// Start from bottom-most page
 				offset += (totalPages - 1) * Width - k * Width;
 
 				// i'th bar + j'th bar column
-				offset += i * (BarWidth + BarSpacing) + j;
+				offset += i * (nBarWidth + nBarSpacing) + j;
 
 				// +1 to skip 0x40 byte
 				m_Framebuffer[offset + 1] = pageValues[k];
@@ -322,7 +320,7 @@ void CSSD1306::SetBacklightEnabled(bool bEnabled)
 	m_pI2CMaster->Write(m_nAddress, buffer, sizeof(buffer));
 }
 
-void CSSD1306::Update(const CMT32Synth& Synth)
+void CSSD1306::Update(CMT32Synth& Synth)
 {
 	// Bail out if display is off
 	if (!m_bBacklightEnabled)
@@ -331,8 +329,8 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 	CSynthLCD::Update(Synth);
 
 	Clear(false);
-	UpdatePartLevels(Synth);
-	UpdatePeakLevels();
+	UpdateChannelLevels(Synth);
+	UpdateChannelPeakLevels();
 
 	if (m_SystemState == TSystemState::DisplayingMessage)
 	{
@@ -340,7 +338,11 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 		Print(m_SystemMessageTextBuffer, 0, messageRow, true);
 	}
 	else
-		DrawPartLevels(0);
+	{
+		const u8 nRows = m_nHeight / 8 - 2;
+		constexpr u8 nBarWidth = (Width - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
+		DrawChannelLevels(0, nRows, 2, nBarWidth, BarSpacing, MT32ChannelCount);
+	}
 
 	// MT-32 status row
 	u8 statusRow = m_nHeight == 32 ? 1 : 3;
@@ -348,11 +350,29 @@ void CSSD1306::Update(const CMT32Synth& Synth)
 	WriteFramebuffer();
 }
 
-void CSSD1306::Update(const CSoundFontSynth& Synth)
+void CSSD1306::Update(CSoundFontSynth& Synth)
 {
 	// Bail out if display is off
 	if (!m_bBacklightEnabled)
 		return;
 
 	CSynthLCD::Update(Synth);
+
+	Clear(false);
+	UpdateChannelLevels(Synth);
+	UpdateChannelPeakLevels();
+
+	if (m_SystemState == TSystemState::DisplayingMessage)
+	{
+		const u8 messageRow = m_nHeight == 32 ? 0 : 1;
+		Print(m_SystemMessageTextBuffer, 0, messageRow, true);
+	}
+	else
+	{
+		const u8 nRows = m_nHeight / 8;
+		constexpr u8 nBarWidth = (Width - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
+		DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
+	}
+
+	WriteFramebuffer();
 }

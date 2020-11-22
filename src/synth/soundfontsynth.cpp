@@ -286,6 +286,38 @@ size_t CSoundFontSynth::Render(s16* pOutBuffer, size_t nFrames)
 	return nFrames;
 }
 
+u8 CSoundFontSynth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels)
+{
+	nMaxChannels = Utility::Min(nMaxChannels, static_cast<size_t>(16));
+
+	m_Lock.Acquire();
+
+	const size_t nVoices = fluid_synth_get_polyphony(m_pSynth);
+
+	// Null-terminated
+	fluid_voice_t* Voices[nVoices + 1];
+	fluid_voice_t** pCurrentVoice = Voices;
+
+	// Initialize output array
+	memset(Voices, 0, (nVoices + 1) * sizeof(*Voices));
+	memset(pOutVelocities, 0, nMaxChannels);
+
+	fluid_synth_get_voicelist(m_pSynth, Voices, nVoices, -1);
+
+	while (*pCurrentVoice)
+	{
+		const u8 nChannel = fluid_voice_get_channel(*pCurrentVoice);
+		const u8 nVelocity = fluid_voice_is_on(*pCurrentVoice) ? fluid_voice_get_actual_velocity(*pCurrentVoice) : 0;
+
+		pOutVelocities[nChannel] = Utility::Max(pOutVelocities[nChannel], nVelocity);
+		++pCurrentVoice;
+	}
+
+	m_Lock.Release();
+
+	return nMaxChannels;
+}
+
 bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 {
 	// Is this SoundFont already active?

@@ -142,6 +142,31 @@ size_t CMT32Synth::Render(float* pOutBuffer, size_t nFrames)
 	return nFrames;
 }
 
+u8 CMT32Synth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels)
+{
+	u8 Keys[MT32Emu::DEFAULT_MAX_PARTIALS];
+	u8 Velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
+	u32 nPartStates = m_pSynth->getPartStates();
+	nMaxChannels = Utility::Min(nMaxChannels, static_cast<size_t>(9));
+
+	// Initialize output array
+	memset(pOutVelocities, 0, nMaxChannels);
+
+	for (u8 nPart = 0; nPart < nMaxChannels; ++nPart)
+	{
+		// No active partials on this part; skip
+		if (!(nPartStates & 1 << nPart))
+			continue;
+
+		// Store maximum velocity for this part
+		u32 nPlayingNotes = m_pSynth->getPlayingNotes(nPart, Keys, Velocities);
+		for (u8 nNote = 0; nNote < nPlayingNotes; ++nNote)
+			pOutVelocities[nPart] = Utility::Max(pOutVelocities[nPart], Velocities[nNote]);
+	}
+
+	return nMaxChannels;
+}
+
 void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
 {
 	if (Channels == TMIDIChannels::Standard)
@@ -202,20 +227,6 @@ const char* CMT32Synth::GetControlROMName() const
 		offset = 0x4015;
 
 	return reinterpret_cast<const char*>(romData + offset);
-}
-
-u8 CMT32Synth::GetVelocityForPart(u8 nPart) const
-{
-	u8 keys[MT32Emu::DEFAULT_MAX_PARTIALS];
-	u8 velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
-	u32 playingNotes = m_pSynth->getPlayingNotes(nPart, keys, velocities);
-
-	u8 maxVelocity = 0;
-	for (u32 i = 0; i < playingNotes; ++i)
-		if (velocities[i] > maxVelocity)
-			maxVelocity = velocities[i];
-
-	return maxVelocity;
 }
 
 u8 CMT32Synth::GetMasterVolume() const

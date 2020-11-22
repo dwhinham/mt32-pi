@@ -20,10 +20,9 @@
 
 #include <circle/timer.h>
 
-#include <cmath>
-
 #include "lcd/synthlcd.h"
 #include "synth/mt32synth.h"
+#include "synth/soundfontsynth.h"
 #include "utility.h"
 
 CSynthLCD::CSynthLCD()
@@ -35,9 +34,10 @@ CSynthLCD::CSynthLCD()
 	  m_nMT32StateTime(0),
 	  m_MT32TextBuffer{'\0'},
 	  m_nPreviousMasterVolume(0),
-	  m_PartLevels{0},
-	  m_PeakLevels{0},
-	  m_PeakTimes{0}
+	  m_ChannelVelocities{0},
+	  m_ChannelLevels{0},
+	  m_ChannelPeakLevels{0},
+	  m_ChannelPeakTimes{0}
 {
 }
 
@@ -75,7 +75,7 @@ void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const
 	m_nMT32StateTime = ticks;
 }
 
-void CSynthLCD::Update(const CMT32Synth& Synth)
+void CSynthLCD::Update(CMT32Synth& Synth)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 	UpdateSystem(ticks);
@@ -104,7 +104,7 @@ void CSynthLCD::Update(const CMT32Synth& Synth)
 		UpdatePartStateText(Synth);
 }
 
-void CSynthLCD::Update(const CSoundFontSynth& Synth)
+void CSynthLCD::Update(CSoundFontSynth& Synth)
 {
 	unsigned ticks = CTimer::Get()->GetTicks();
 	UpdateSystem(ticks);
@@ -122,56 +122,52 @@ void CSynthLCD::UpdateSystem(unsigned int nTicks)
 
 void CSynthLCD::UpdatePartStateText(const CMT32Synth& Synth)
 {
-	u32 partStates = Synth.GetPartStates();
-
 	// First 5 parts
 	for (u8 i = 0; i < 5; ++i)
 	{
-		bool state = (partStates >> i) & 1;
-		m_MT32TextBuffer[i * 2] = state ? '\xff' : ('1' + i);
+		bool bState = m_ChannelVelocities[i] > 0;
+		m_MT32TextBuffer[i * 2] = bState ? '\xFF' : ('1' + i);
 		m_MT32TextBuffer[i * 2 + 1] = ' ';
 	}
 
 	// Rhythm
-	m_MT32TextBuffer[10] = (partStates >> 8) ? '\xff' : 'R';
+	bool bState = m_ChannelVelocities[8] > 0;
+	m_MT32TextBuffer[10] = bState ? '\xFF' : 'R';
 	m_MT32TextBuffer[11] = ' ';
 
 	// Volume
 	sprintf(m_MT32TextBuffer + 12, "|vol:%3d", Synth.GetMasterVolume());
 }
 
-void CSynthLCD::UpdatePartLevels(const CMT32Synth& Synth)
+void CSynthLCD::UpdateChannelLevels(CSynthBase& Synth)
 {
-	u32 partStates = Synth.GetPartStates();
-	for (u8 i = 0; i < 9; ++i)
-	{
-		// If part active
-		if ((partStates >> i) & 1)
-		{
-			// MIDI velocity range [0-127] to normalized range [0-1]
-			float partLevel = Synth.GetVelocityForPart(i) / 127.0f;
+	const u8 nChannelCount = Synth.GetChannelVelocities(m_ChannelVelocities, Utility::ArraySize(m_ChannelVelocities));
 
-			if (partLevel >= m_PartLevels[i])
-				m_PartLevels[i] = partLevel;
-		}
+	for (u8 nChannel = 0; nChannel < nChannelCount; ++nChannel)
+	{
+		// MIDI velocity range [0-127] to normalized range [0-1]
+		float nLevel = m_ChannelVelocities[nChannel] / 127.0f;
+
+		if (nLevel >= m_ChannelLevels[nChannel])
+			m_ChannelLevels[nChannel] = nLevel;
 		else
-			m_PartLevels[i] = Utility::Max(m_PartLevels[i] - BarFalloff, 0.0f);
+			m_ChannelLevels[nChannel] = Utility::Max(m_ChannelLevels[nChannel] - BarFalloff, 0.0f);
 	}
 }
 
-void CSynthLCD::UpdatePeakLevels()
+void CSynthLCD::UpdateChannelPeakLevels()
 {
-	for (u8 i = 0; i < 9; ++i)
+	for (u8 i = 0; i < MIDIChannelCount; ++i)
 	{
-		if (m_PartLevels[i] >= m_PeakLevels[i])
+		if (m_ChannelLevels[i] >= m_ChannelPeakLevels[i])
 		{
-			m_PeakLevels[i] = m_PartLevels[i];
-			m_PeakTimes[i] = 100;
+			m_ChannelPeakLevels[i] = m_ChannelLevels[i];
+			m_ChannelPeakTimes[i] = 100;
 		}
 
-		if (m_PeakTimes[i] == 0 && m_PeakLevels[i] > 0.0f)
-			m_PeakLevels[i] = Utility::Max(m_PeakLevels[i] - PeakFalloff, 0.0f);
+		if (m_ChannelPeakTimes[i] == 0 && m_ChannelPeakLevels[i] > 0.0f)
+			m_ChannelPeakLevels[i] = Utility::Max(m_ChannelPeakLevels[i] - PeakFalloff, 0.0f);
 		else
-			--m_PeakTimes[i];
+			--m_ChannelPeakTimes[i];
 	}
 }

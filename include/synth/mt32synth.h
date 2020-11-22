@@ -57,13 +57,12 @@ public:
 	virtual void AllSoundOff() override;
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
+	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
 
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
 	const char* GetControlROMName() const;
 
-	u32 GetPartStates() const { return m_pSynth->getPartStates(); }
-	u8 GetVelocityForPart(u8 nPart) const;
 	u8 GetMasterVolume() const;
 
 private:
