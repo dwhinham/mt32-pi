@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2020-11-22
+
 ### Added
 
+- FluidSynth synthesizer engine v2.1.5 for using SoundFonts for General MIDI support and more.
+  * You can switch between MT-32 and SoundFont mode at runtime using SysEx.
+  * SoundFonts can be switched at runtime using SysEx, with some caveats for large SoundFonts (see FAQ section of README).
+  * New configuration file options for changing default synthesizer and SoundFont.
+- GeneralUser GS v1.471 included as default SoundFont - many thanks to S. Christian Collins for kindly giving permission!
 - Ability to invert the display orientation for SSD1306 (new configuration file option).
 - Support for 64 pixel high SSD1306 OLED displays - many thanks to @ctrl_alt_rees for donating a screen!
 - Ability to set I2C clock speed (new configuration file option).
@@ -21,10 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update to circle-stdlib v15.4.
+- New multi-core architecture; audio rendering and LCD updates moved to their own dedicated CPU cores, leaving MIDI and interrupt processing on the primary core.
 - Kernels for Pi 3 and 4 are now compiled for AArch64 (64-bit) for better performance.
   * When upgrading, you **must** replace the `config.txt` file on your SD card and add the new `armstub8-rpi4.bin` file for Pi 4.
   * You should remove old `kernel*.img` files from your SD card.
   * It's recommended that you clear your SD card (except for your `roms` directory) and reconfigure `mt32-pi` for this release.
+- Synth engines now compiled with more aggressive optimizations enabled to benefit from ARM NEON instructions.
+- Due to the above three changes, it's possible that Raspberry Pi 2 may be more usable with this release, but this is **untested**.
 - Kernel size significantly reduced by removing mt32emu ROM loader dependency on C++ iostreams.
 - Improved layout of 4-line HD44780 LCD.
   * MT-32 status line moved to bottom row.
@@ -160,7 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.6.2...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/dwhinham/mt32-pi/compare/v0.6.2..v0.7.0
 [0.6.2]: https://github.com/dwhinham/mt32-pi/compare/v0.6.1..v0.6.2
 [0.6.1]: https://github.com/dwhinham/mt32-pi/compare/v0.6.0..v0.6.1
 [0.6.0]: https://github.com/dwhinham/mt32-pi/compare/v0.5.0..v0.6.0
