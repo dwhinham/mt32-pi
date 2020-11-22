@@ -112,11 +112,33 @@ jobs:
             ${{ env.boot-home }}/start4cd.elf \
             sdcard
 
+    - name: Cache GeneralUser GS SoundFont
+      id: cache-generaluser-gs
+      uses: actions/cache@v2
+      with:
+        path: GeneralUser GS 1.471
+        key: cache-generaluser-gs-1.471
+
+    - name: Download GeneralUser GS SoundFont if not retrieved from cache
+      if: steps.cache-generaluser-gs.outputs.cache-hit != 'true'
+      run: |
+        wget -q --content-disposition https://www.dropbox.com/s/4x27l49kxcwamp5/GeneralUser_GS_1.471.zip?dl=1
+        unzip GeneralUser_GS_1.471.zip
+
     - name: Retrieve built kernels
       uses: actions/download-artifact@v2
       with:
         name: kernels
         path: sdcard
+
+    - name: Add extra files to SD card directory
+      run: |
+        mkdir sdcard/docs
+        cp "GeneralUser GS 1.471/GeneralUser GS v1.471.sf2" sdcard/soundfonts
+        cp "GeneralUser GS 1.471/README.txt" sdcard/docs/README.GeneralUserGS
+        cp "GeneralUser GS 1.471/LICENSE.txt" sdcard/docs/LICENSE.GeneralUserGS
+        cp LICENSE sdcard/docs
+        cp README.md sdcard/docs
 
     - name: Upload SD card archive
       uses: actions/upload-artifact@v2
