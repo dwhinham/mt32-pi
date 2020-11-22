@@ -161,8 +161,18 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	if (!m_pCurrentSynth)
 	{
 		logger.Write(MT32PiName, LogError, "Preferred synth failed to initialize successfully");
-		LCDLog(TLCDLogType::Startup, "Synth init failed!");
-		return false;
+
+		// Activate any working synth
+		if (m_pMT32Synth)
+			m_pCurrentSynth = m_pMT32Synth;
+		else if (m_pSoundFontSynth)
+			m_pCurrentSynth = m_pSoundFontSynth;
+		else
+		{
+			logger.Write(MT32PiName, LogError, "No synths available");
+			LCDLog(TLCDLogType::Startup, "Synth init failed!");
+			return false;
+		}
 	}
 
 	CUSBMIDIDevice* pMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
