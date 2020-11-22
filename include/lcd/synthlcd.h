@@ -60,6 +60,9 @@ protected:
 	void UpdatePartLevels(const CMT32Synth& Synth);
 	void UpdatePeakLevels();
 
+	static constexpr size_t MIDIChannelCount = 16;
+	static constexpr size_t MT32ChannelCount = 9;
+
 	// 20 characters plus null terminator
 	static constexpr size_t TextBufferLength = 20 + 1;
 

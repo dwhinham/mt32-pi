@@ -60,10 +60,7 @@ protected:
 	void WriteData(const u8* pBytes, size_t nSize);
 
 	void SetCustomChar(u8 nIndex, const u8 nCharData[8]);
-
-	void DrawPartLevelsSingle(u8 nRow);
-	void DrawPartLevelsDouble(u8 nFirstRow);
-	void DrawPartLevelsTriple(u8 nFirstRow);
+	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels);
 
 	u8 m_nRows;
 	u8 m_nColumns;

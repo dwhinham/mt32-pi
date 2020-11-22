@@ -216,86 +216,37 @@ void CHD44780Base::Clear(bool bImmediate)
 	CTimer::SimpleMsDelay(50);
 }
 
-void CHD44780Base::DrawPartLevelsSingle(u8 nRow)
+void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels)
 {
-	char lineBuf[18 + 1];
+	char LineBuf[4][TextBufferLength];
 
-	for (u8 i = 0; i < 9; ++i)
+	// Initialize with ASCII spaces, terminate each row with a null
+	memset(LineBuf, ' ', sizeof(LineBuf));
+	for (u8 i = 0; i < 4; ++i)
+		LineBuf[i][20] = '\0';
+
+	// For each channel
+	for (u8 i = 0; i < nChannels; ++i)
 	{
-		const u8 charIndex = static_cast<u8>(m_PartLevels[i] * 8);
-		lineBuf[i * 2] = BarChars[charIndex];
-		lineBuf[i * 2 + 1] = ' ';
+		const u8 nCharIndex = i + i * nBarSpacing + nBarXOffset;
+		assert(nCharIndex < 20);
+
+		const u8 nLevelPixels = static_cast<u8>(m_PartLevels[i] * nRows * 8);
+		const u8 nFullRows    = nLevelPixels / 8;
+		const u8 nRemainder   = nLevelPixels % 8;
+
+		for (u8 j = 0; j < nFullRows; ++j)
+			LineBuf[nRows - j - 1][nCharIndex] = BarChars[8];
+
+		for (u8 j = nFullRows; j < nRows; ++j)
+			LineBuf[nRows - j - 1][nCharIndex] = BarChars[0];
+
+		if (nRemainder)
+			LineBuf[nRows - nFullRows - 1][nCharIndex] = BarChars[nRemainder];
 	}
 
-	lineBuf[18] = '\0';
-
-	Print(lineBuf, 0, nRow, true);
-}
-
-void CHD44780Base::DrawPartLevelsDouble(u8 nFirstRow)
-{
-	char line1Buf[18 + 1];
-	char line2Buf[18 + 1];
-
-	for (u8 i = 0; i < 9; ++i)
-	{
-		const u8 partLevel = static_cast<u8>(m_PartLevels[i] * 16);
-		if (partLevel > 8)
-		{
-			line1Buf[i * 2] = BarChars[partLevel - 8];
-			line2Buf[i * 2] = BarChars[8];
-		}
-		else
-		{
-			line1Buf[i * 2] = BarChars[0];
-			line2Buf[i * 2] = BarChars[partLevel];
-		}
-
-		line1Buf[i * 2 + 1] = line2Buf[i * 2 + 1] = ' ';
-	}
-
-	line1Buf[18] = line2Buf[18] = '\0';
-
-	Print(line1Buf, 0, nFirstRow, true);
-	Print(line2Buf, 0, nFirstRow + 1, true);
-}
-
-void CHD44780Base::DrawPartLevelsTriple(u8 nFirstRow)
-{
-	char line1Buf[18 + 1];
-	char line2Buf[18 + 1];
-	char line3Buf[18 + 1];
-
-	for (u8 i = 0; i < 9; ++i)
-	{
-		const u8 partLevel = static_cast<u8>(m_PartLevels[i] * 24);
-		if (partLevel > 16)
-		{
-			line1Buf[i * 2] = BarChars[partLevel - 16];
-			line2Buf[i * 2] = BarChars[8];
-			line3Buf[i * 2] = BarChars[8];
-		}
-		else if (partLevel > 8)
-		{
-			line1Buf[i * 2] = BarChars[0];
-			line2Buf[i * 2] = BarChars[partLevel - 8];
-			line3Buf[i * 2] = BarChars[8];
-		}
-		else
-		{
-			line1Buf[i * 2] = BarChars[0];
-			line2Buf[i * 2] = BarChars[0];
-			line3Buf[i * 2] = BarChars[partLevel];
-		}
-
-		line1Buf[i * 2 + 1] = line2Buf[i * 2 + 1] = line3Buf[i * 2 + 1] = ' ';
-	}
-
-	line1Buf[18] = line2Buf[18] = line3Buf[18] = '\0';
-
-	Print(line1Buf, 0, nFirstRow, true);
-	Print(line2Buf, 0, nFirstRow + 1, true);
-	Print(line3Buf, 0, nFirstRow + 2, true);
+	for (u8 i = 0; i < nRows; ++i)
+		Print(LineBuf[i], 0, nFirstRow + i, true);
 }
 
 void CHD44780Base::Update(const CMT32Synth& Synth)
@@ -309,7 +260,7 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 		if (m_SystemState == TSystemState::DisplayingMessage)
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 		else
-			DrawPartLevelsSingle(0);
+			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount);
 
 		Print(m_MT32TextBuffer, 0, 1, true);
 	}
@@ -323,7 +274,7 @@ void CHD44780Base::Update(const CMT32Synth& Synth)
 			Print("", 0, 2, true);
 		}
 		else
-			DrawPartLevelsTriple(0);
+			DrawChannelLevels(0, 3, 0, 1, MT32ChannelCount);
 
 		Print(m_MT32TextBuffer, 0, 3, true);
 	}
