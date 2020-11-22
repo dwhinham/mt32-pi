@@ -196,9 +196,13 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 	// Handle system real-time messages
 	if (status == 0xFF)
 	{
+		m_Lock.Acquire();
 		fluid_synth_system_reset(m_pSynth);
+		m_Lock.Release();
 		return;
 	}
+
+	m_Lock.Acquire();
 
 	// Handle channel messages
 	switch (status & 0xF0)
@@ -238,28 +242,47 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 			fluid_synth_pitch_bend(m_pSynth, channel, (data2 << 7) | data1);
 			break;
 	}
+
+	m_Lock.Release();
 }
 
 void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
+	m_Lock.Acquire();
 	// Exclude leading 0xF0 and trailing 0xF7
 	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 1, nullptr, nullptr, nullptr, false);
+	m_Lock.Release();
+}
+
+bool CSoundFontSynth::IsActive()
+{
+	m_Lock.Acquire();
+	int nVoices = fluid_synth_get_active_voice_count(m_pSynth);
+	m_Lock.Release();
+
+	return nVoices > 0;
 }
 
 void CSoundFontSynth::AllSoundOff()
 {
+	m_Lock.Acquire();
 	fluid_synth_all_sounds_off(m_pSynth, -1);
+	m_Lock.Release();
 }
 
 size_t CSoundFontSynth::Render(float* pOutBuffer, size_t nFrames)
 {
+	m_Lock.Acquire();
 	assert(fluid_synth_write_float(m_pSynth, nFrames, pOutBuffer, 0, 2, pOutBuffer, 1, 2) == FLUID_OK);
+	m_Lock.Release();
 	return nFrames;
 }
 
 size_t CSoundFontSynth::Render(s16* pOutBuffer, size_t nFrames)
 {
+	m_Lock.Acquire();
 	assert(fluid_synth_write_s16(m_pSynth, nFrames, pOutBuffer, 0, 2, pOutBuffer, 1, 2) == FLUID_OK);
+	m_Lock.Release();
 	return nFrames;
 }
 
@@ -282,10 +305,14 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 		return false;
 	}
 
+	m_Lock.Acquire();
+
 	if (m_nSoundFontID >= 0 && fluid_synth_sfunload(m_pSynth, m_nSoundFontID, true) == FLUID_FAILED)
 	{
 		// if (m_pLCD)
 		// 	m_pLCD->OnSystemMessage("SF unload failed!");
+
+		m_Lock.Release();
 		return false;
 	}
 
@@ -297,8 +324,12 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	{
 		// if (m_pLCD)
 		// 	m_pLCD->OnSystemMessage("SF load failed!");
+
+		m_Lock.Release();
 		return false;
 	}
+
+	m_Lock.Release();
 
 	if (fluid_sfont_t* soundFont = fluid_synth_get_sfont_by_id(m_pSynth, result))
 	{

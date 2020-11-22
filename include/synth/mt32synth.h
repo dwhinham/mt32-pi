@@ -53,8 +53,7 @@ public:
 	virtual bool Initialize() override;
 	virtual void HandleMIDIShortMessage(u32 nMessage) override;
 	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
-	virtual bool IsActive() const override { return m_pSynth->isActive(); }
-
+	virtual bool IsActive() override { return m_pSynth->isActive(); }
 	virtual void AllSoundOff() override;
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;

@@ -40,7 +40,7 @@ public:
 	virtual bool Initialize() = 0;
 	virtual void HandleMIDIShortMessage(u32 nMessage) = 0;
 	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) = 0;
-	virtual bool IsActive() const = 0;
+	virtual bool IsActive() = 0;
 	virtual void AllSoundOff() = 0;
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
