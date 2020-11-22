@@ -35,6 +35,7 @@ const char MT32PiName[] = "mt32-pi";
 #define LED_TIMEOUT_MILLIS 50
 #define ACTIVE_SENSE_TIMEOUT_MILLIS 330
 
+constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
@@ -115,6 +116,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	{
 		LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
 		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
+		m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
 
 		if (config.AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
 			InitPCM51xx(config.AudioI2CDACAddress);
@@ -123,12 +125,11 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	{
 		LCDLog(TLCDLogType::Startup, "Init audio (PWM)");
 		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
+		m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned16);
 	}
 
 	if (!m_pSound->AllocateQueueFrames(config.AudioChunkSize))
 		logger.Write(MT32PiName, LogPanic, "Failed to allocate sound queue");
-
-	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
 
 	LCDLog(TLCDLogType::Startup, "Init mt32emu");
 	m_pMT32Synth = new CMT32Synth(config.AudioSampleRate, config.MT32EmuResamplerQuality);
@@ -298,22 +299,41 @@ void CMT32Pi::AudioTask()
 	CLogger& logger = *CLogger::Get();
 	logger.Write(MT32PiName, LogNotice, "Audio task on Core 2 starting up");
 
+	const bool bUse24Bit    = CConfig::Get()->AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC;
 	const size_t nQueueSize = m_pSound->GetQueueSizeFrames();
 	float FloatBuffer[nQueueSize * 2];
-	s32 IntBuffer[nQueueSize * 2];
+	s16 Int16Buffer[nQueueSize * 2];
+	s32 Int32Buffer[nQueueSize * 2];
 
 	while (m_bRunning)
 	{
 		const size_t nFrames = nQueueSize - m_pSound->GetQueueFramesAvail();
-		const size_t nWriteBytes = nFrames * 2 * sizeof(*IntBuffer);
-
 		m_pCurrentSynth->Render(FloatBuffer, nFrames);
 
-		// Convert to 24-bit integers
-		for (size_t i = 0; i < nFrames * 2; ++i)
-			IntBuffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample24BitMax;
+		size_t nWriteBytes;
+		int nResult;
 
-		int nResult = m_pSound->Write(IntBuffer, nWriteBytes);
+		if (bUse24Bit)
+		{
+			nWriteBytes = nFrames * 2 * sizeof(*Int32Buffer);
+
+			// Convert to signed 24-bit integers
+			for (size_t i = 0; i < nFrames * 2; ++i)
+				Int32Buffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample24BitMax;
+
+			nResult = m_pSound->Write(Int32Buffer, nWriteBytes);
+		}
+		else
+		{
+			nWriteBytes = nFrames * 2 * sizeof(*Int16Buffer);
+
+			// Convert to signed 16-bit integers
+			for (size_t i = 0; i < nFrames * 2; ++i)
+				Int16Buffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample16BitMax;
+
+			nResult = m_pSound->Write(Int16Buffer, nWriteBytes);
+		}
+
 		if (nResult != static_cast<int>(nWriteBytes))
 			logger.Write(MT32PiName, LogError, "Sound data dropped");
 	}
