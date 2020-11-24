@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to GeneralUser GS v1.511.
+  * This is a currently-unpublished version from the author, who has made several important fixes to the SoundFont to improve compatibility with FluidSynth v2.1.0+.
+
 ### Fixed
 
 - Incorrect `-dirty` suffix on version string on clean builds (again!).
