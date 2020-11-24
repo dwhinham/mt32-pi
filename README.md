@@ -28,15 +28,15 @@
     + [Schematic](#schematic)
     + [Breadboard example](#breadboard-example)
     + [Serial ports](#serial-ports)
-- [🔊 I2S DAC support](#-i2s-dac-support)
+- [🔊 I²S DAC support](#-is-dac-support)
   * [Setup](#setup)
   * [Compatibility](#compatibility)
-  * [Finding the I2C address of your DAC](#finding-the-i2c-address-of-your-dac)
+  * [Finding the I²C address of your DAC](#finding-the-ic-address-of-your-dac)
 - [📺 LCD and OLED displays](#-lcd-and-oled-displays)
   * [Drivers](#drivers)
     + [Hitachi HD44780 compatible 4-bit driver (`hd44780_4bit`)](#hitachi-hd44780-compatible-4-bit-driver-hd44780_4bit)
-    + [Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-i2c-driver-hd44780_i2c)
-    + [SSD1306 I2C driver (`ssd1306_i2c`)](#ssd1306-i2c-driver-ssd1306_i2c)
+    + [Hitachi HD44780 compatible I²C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-ic-driver-hd44780_i2c)
+    + [SSD1306 I²C driver (`ssd1306_i2c`)](#ssd1306-ic-driver-ssd1306_i2c)
   * [Compatibility](#compatibility-1)
 - [🧠 MT-32 ROM support](#-mt-32-rom-support)
   * [ROM scanning](#rom-scanning)
@@ -60,7 +60,7 @@
 - PWM headphone jack audio.
   * Quality is known to be poor (aliasing/distortion on quieter sounds).
   * It is not currently known whether this can be improved or not.
-- [I2S Hi-Fi DAC support](#-i2s-dac-support).
+- [I²S Hi-Fi DAC support](#-is-dac-support).
   * This is the recommended audio output method for the best quality audio.
 - [USB](#usb-midi-interfaces) or [GPIO](#gpio-midi-interface) MIDI interface.
 - [Config file](#-configuration-file) for selecting hardware options and fine tuning.
@@ -128,17 +128,17 @@ You can also skip the MIDI circuitry and drive `mt32-pi` using a serial port dir
 
 > ⚠️ **Note:** Remember that the Raspberry Pi expects no more than 3.3V on its GPIO pins, so make sure that you use appropriate level shifting when interfacing with other hardware to prevent damage to the Pi.
 
-## 🔊 I2S DAC support
+## 🔊 I²S DAC support
 
 The Raspberry Pi's headphone jack is a simple PWM device, and not designed for high-fidelity audio. This becomes very obvious when you use `mt32-pi` - distortion in the sound is apparent when quieter sounds are playing.
 
-Luckily, a plethora of inexpensive DAC ([digital-to-analog converter]) hardware is available for the Raspberry Pi, giving it true hi-fi quality audio output. These often take the form of an easy-to-install "HAT" board that you place onto the Raspberry Pi's GPIO pins. They make use of the Raspberry Pi's I2S bus for interfacing.
+Luckily, a plethora of inexpensive DAC ([digital-to-analog converter]) hardware is available for the Raspberry Pi, giving it true hi-fi quality audio output. These often take the form of an easy-to-install "HAT" board that you place onto the Raspberry Pi's GPIO pins. They make use of the Raspberry Pi's I²S bus for interfacing.
 
 > ⚠️ **Note:** We do not support any kind of USB DAC audio output device, due to the lack of drivers in the [Circle] baremetal framework that we depend on. Adding USB audio support to Circle would be a huge undertaking, although if that changes in the future and Circle gains USB audio support, we could certainly make use of it.
 
 ### Setup
 
-- `mt32-pi` defaults to PWM (headphone) output. Edit `mt32-pi.cfg` and change `output_device` to `i2s` to enable the I2S DAC driver.
+- `mt32-pi` defaults to PWM (headphone) output. Edit `mt32-pi.cfg` and change `output_device` to `i2s` to enable the I²S DAC driver.
 - If your DAC requires software configuration, you may need to edit the `i2c_dac_address` and `i2c_dac_init` options to suit your particular DAC. Continue reading for further details.
 
 ### Compatibility
@@ -148,7 +148,7 @@ The NXP UDA1334 is also reportedly working well.
 
 Some more advanced DACs are configured by software (normally a Linux driver), whereas others need no configuration as they are preconfigured in hardware. This will vary between manufacturers, and so some editing of `mt32-pi.cfg` may be required.
 
-> ⚠️ **Note:** If a DAC requires software configuration, they will not produce any sound until they have been properly initialized. This initialization is done by sending it a special sequence of commands over the I2C (not I2S) bus. For the PCM5xxx family, you can set `i2c_dac_init = pcm51xx` to enable this.
+> ⚠️ **Note:** If a DAC requires software configuration, they will not produce any sound until they have been properly initialized. This initialization is done by sending it a special sequence of commands over the I²C (not I²S) bus. For the PCM5xxx family, you can set `i2c_dac_init = pcm51xx` to enable this.
 
 Feel free to open an issue if you'd like to help us support your DAC, or even just to report success or failure so that we can build a list of supported DACs.
 
@@ -162,17 +162,17 @@ The following models of DAC have been confirmed as working by our testers. Pleas
 | innomaker    | [HiFi DAC HAT]    | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                       |
 | IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                           |
 
-### Finding the I2C address of your DAC
+### Finding the I²C address of your DAC
 
-The `i2c_dac_address` configuration file option determines what address on the I2C bus that `mt32-pi` will send initialization commands to, if `i2c_dac_init` is not set to `none`.
+The `i2c_dac_address` configuration file option determines what address on the I²C bus that `mt32-pi` will send initialization commands to, if `i2c_dac_init` is not set to `none`.
 
 If your DAC does not appear in the compatibility table above, you can help by carrying out the following:
 
 - Connect the DAC to your Raspberry Pi.
 - Insert an SD card containing the latest version of Raspberry Pi OS (aka. Raspbian) and boot the Pi.
 - Run the command `sudo raspi-config`.
-- Select "Interfacing Options", followed by "I2C" and "Yes" to enable the I2C kernel modules.
-- Exit `raspi-config`, and run the command `sudo apt-get install i2c-tools` to install some I2C utilities.
+- Select "Interfacing Options", followed by "I²C" and "Yes" to enable the I²C kernel modules.
+- Exit `raspi-config`, and run the command `sudo apt-get install i2c-tools` to install some I²C utilities.
 - Run the command `i2cdetect -y 1`. The output should be like the following:
   ```
        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
@@ -223,23 +223,23 @@ You will also need to connect a power source and ground to your display. Consult
 
 > ⚠️ **Note:** The GPIO assignment could change in later versions as more functionality is added, so **BE WARNED** if you are thinking about designing hardware.
 
-#### Hitachi HD44780 compatible I2C driver (`hd44780_i2c`)
+#### Hitachi HD44780 compatible I²C driver (`hd44780_i2c`)
 
 [<img width="280rem" align="right" src="docs/hd44780_20x2.jpg">](docs/hd44780_20x2.jpg)
 
-This driver is functionally equivalent to the 4-bit driver, but instead of using GPIOs to drive the LCD's data signals directly, the Pi communicates with the display via an I2C-connected I/O expander. Some vendors refer to these as an "[I2C backpack]".
+This driver is functionally equivalent to the 4-bit driver, but instead of using GPIOs to drive the LCD's data signals directly, the Pi communicates with the display via an I²C-connected I/O expander. Some vendors refer to these as an "[I²C backpack]".
 
 These displays are very convenient as they only need 4 wires to connect to the Pi. Your display will connect to the Pi's `SDA` and `SCL` lines (pins 3 and 5 respectively), as well as power and ground. As always, **check your display's datasheet** for power requirements.
 
-As with all I2C devices, you must know the LCD's I2C address in order for it to work. You should be able to find its address on the datasheet, or the "backpack" may have jumpers to configure the address. In case of doubt, you can connect the display and use Linux to discover your display using the [same procedure described in the DAC section](#-finding-the-i2c-address-of-your-DAC).
+As with all I²C devices, you must know the LCD's I²C address in order for it to work. You should be able to find its address on the datasheet, or the "backpack" may have jumpers to configure the address. In case of doubt, you can connect the display and use Linux to discover your display using the [same procedure described in the DAC section](#-finding-the-i2c-address-of-your-DAC).
 
-#### SSD1306 I2C driver (`ssd1306_i2c`)
+#### SSD1306 I²C driver (`ssd1306_i2c`)
 
 [<img width="280rem" align="right" src="docs/ssd1306_128x32.jpg">](docs/ssd1306_128x32.jpg)
 
 The SSD1306 controller is found in mini 128x32 and 128x64 OLED displays, which are well-known for their use in FlashFloppy/Gotek devices. They can be found for very little money on eBay and AliExpress.
 
-Both 32 and 64 pixel high variants are supported. These displays usually have an I2C address of `0x3c`. 
+Both 32 and 64 pixel high variants are supported. These displays usually have an I²C address of `0x3c`. 
 
 ### Compatibility
 
@@ -384,7 +384,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [GY-PCM5102]: https://www.aliexpress.com/item/4000049720221.html
 [Hairless MIDI]: https://projectgus.github.io/hairless-midiserial/
 [HiFi DAC HAT]: https://www.amazon.com/gp/product/B07D13QWV9/
-[I2C backpack]: https://www.adafruit.com/product/292
+[I²C backpack]: https://www.adafruit.com/product/292
 [inih]: https://github.com/benhoyt/inih
 [MiSTer]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
 [MT-32 game compatibility list]: https://en.wikipedia.org/wiki/List_of_MT-32-compatible_computer_games#IBM_PC_compatibles
