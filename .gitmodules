@@ -13,3 +13,4 @@
 [submodule "external/fluidsynth"]
 	path = external/fluidsynth
 	url = git@github.com:FluidSynth/fluidsynth.git
+	ignore = dirty

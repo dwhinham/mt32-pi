@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Incorrect `-dirty` suffix on version string on clean builds (again!).
+
 ## [0.7.0] - 2020-11-22
 
 ### Added
