@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to GeneralUser GS v1.511.
   * This is a currently-unpublished version from the author, who has made several important fixes to the SoundFont to improve compatibility with FluidSynth v2.1.0+.
+- Update to circle-stdlib v15.5/Circle Step 43.2.
 
 ### Fixed
 
