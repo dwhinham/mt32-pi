@@ -25,11 +25,12 @@
 #include <circle/cputhrottle.h>
 #include <circle/devicenameservice.h>
 #include <circle/i2cmaster.h>
-#include <circle/soundbasedevice.h>
 #include <circle/interrupt.h>
 #include <circle/logger.h>
 #include <circle/multicore.h>
 #include <circle/sched/scheduler.h>
+#include <circle/soundbasedevice.h>
+#include <circle/synchronize.h>
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
@@ -60,6 +61,9 @@ private:
 		Notice,
 	};
 
+	static constexpr size_t USBMIDIRxBufferSize = 2048;
+	static constexpr size_t USBMIDIRxBufferMask = USBMIDIRxBufferSize - 1;
+
 	// CPower
 	virtual void OnEnterPowerSavingMode() override;
 	virtual void OnExitPowerSavingMode() override;
@@ -79,6 +83,7 @@ private:
 
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 	void UpdateSerialMIDI();
+	void UpdateUSBMIDI();
 
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pMessage);
@@ -114,6 +119,12 @@ private:
 	CSynthBase* m_pCurrentSynth;
 	CMT32Synth* m_pMT32Synth;
 	CSoundFontSynth* m_pSoundFontSynth;
+
+	// USB receive buffer
+	CSpinLock m_USBMIDIRxLock;
+	u8 m_USBMIDIRxBuffer[USBMIDIRxBufferSize];
+	volatile size_t m_nUSBMIDIRxInPtr;
+	volatile size_t m_nUSBMIDIRxOutPtr;
 
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 

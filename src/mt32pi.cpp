@@ -68,7 +68,12 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_pSound(nullptr),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
-	  m_pSoundFontSynth(nullptr)
+	  m_pSoundFontSynth(nullptr),
+
+	  m_USBMIDIRxLock(IRQ_LEVEL),
+	  m_USBMIDIRxBuffer{0},
+	  m_nUSBMIDIRxInPtr(0),
+	  m_nUSBMIDIRxOutPtr(0)
 {
 	s_pThis = this;
 }
@@ -225,6 +230,8 @@ void CMT32Pi::MainTask()
 		// Update serial GPIO MIDI
 		if (m_bSerialMIDIEnabled)
 			UpdateSerialMIDI();
+		else
+			UpdateUSBMIDI();
 
 		unsigned ticks = m_pTimer->GetTicks();
 
@@ -553,6 +560,27 @@ void CMT32Pi::UpdateSerialMIDI()
 	m_nActiveSenseTime = m_pTimer->GetTicks();
 }
 
+void CMT32Pi::UpdateUSBMIDI()
+{
+	size_t nBytes = 0;
+	u8 Buffer[USBMIDIRxBufferSize];
+
+	// Read MIDI messages from circular buffer
+	m_USBMIDIRxLock.Acquire();
+	while (m_nUSBMIDIRxInPtr != m_nUSBMIDIRxOutPtr)
+	{
+		Buffer[nBytes++] = m_USBMIDIRxBuffer[m_nUSBMIDIRxOutPtr++];
+		m_nUSBMIDIRxOutPtr &= USBMIDIRxBufferMask;
+	}
+	m_USBMIDIRxLock.Release();
+
+	// Process MIDI messages
+	ParseMIDIBytes(Buffer, nBytes);
+
+	// Reset the Active Sense timer
+	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+}
+
 void CMT32Pi::LEDOn()
 {
 	m_pActLED->On();
@@ -604,13 +632,30 @@ bool CMT32Pi::InitPCM51xx(u8 nAddress)
 	return true;
 }
 
+// Called from interrupt context, enqueue into buffer for main thread
 void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength)
 {
 	assert(s_pThis != nullptr);
 
-	// Process MIDI messages
-	s_pThis->ParseMIDIBytes(pPacket, nLength);
+	s_pThis->m_USBMIDIRxLock.Acquire();
+	auto& RxBuffer  = s_pThis->m_USBMIDIRxBuffer;
+	auto& nRxInPtr  = s_pThis->m_nUSBMIDIRxInPtr;
+	auto& nRxOutPtr = s_pThis->m_nUSBMIDIRxOutPtr;
 
-	// Reset the Active Sense timer
-	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+	// Enqueue data into circular buffer
+	for (size_t i = 0; i < nLength; ++i)
+	{
+		if (((nRxInPtr + 1) & USBMIDIRxBufferMask) != nRxOutPtr)
+		{
+			RxBuffer[nRxInPtr++] = pPacket[i];
+			nRxInPtr &= USBMIDIRxBufferMask;
+		}
+		else
+		{
+			// Overrun
+			s_pThis->LCDLog(TLCDLogType::Error, "USB overrun error!");
+		}
+	}
+
+	s_pThis->m_USBMIDIRxLock.Release();
 }
