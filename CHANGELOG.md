@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- "Loading" message when switching SoundFonts.
+
 ### Changed
 
 - Update to GeneralUser GS v1.511.
