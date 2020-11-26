@@ -16,7 +16,7 @@ FLASHBAUD?=3000000
 USERBAUD?=115200
 
 # Enable section garbage collection
-GC_SECTIONS?=0
+GC_SECTIONS?=1
 
 # Toolchain setup
 ifeq ($(BOARD), pi0)
