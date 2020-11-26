@@ -94,7 +94,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	else if (config.LCDType == CConfig::TLCDType::HD44780I2C)
 		m_pLCD = new CHD44780I2C(m_pI2CMaster, config.LCDI2CLCDAddress, config.LCDWidth, config.LCDHeight);
 	else if (config.LCDType == CConfig::TLCDType::SSD1306I2C)
-		m_pLCD = new CSSD1306(m_pI2CMaster, config.LCDI2CLCDAddress, config.LCDHeight, config.LCDRotation);
+		m_pLCD = new CSSD1306(m_pI2CMaster, config.LCDI2CLCDAddress, config.LCDWidth, config.LCDHeight, config.LCDRotation);
 
 	if (m_pLCD)
 	{

@@ -86,13 +86,13 @@ constexpr auto FontSingle = Font<Utility::ArraySize(Font6x8), decltype(SingleCol
 constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleColumn)>(Font6x8, DoubleColumn);
 
 // Drawing constants
-constexpr u8 Width      = 128;
 constexpr u8 BarSpacing = 2;
 
-CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nHeight, TLCDRotation Rotation)
+CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation)
 	: CSynthLCD(),
 	  m_pI2CMaster(pI2CMaster),
 	  m_nAddress(nAddress),
+	  m_nWidth(nWidth),
 	  m_nHeight(nHeight),
 	  m_Rotation(Rotation),
 
@@ -104,7 +104,8 @@ bool CSSD1306::Initialize()
 {
 	assert(m_pI2CMaster != nullptr);
 
-	if (!(m_nHeight == 32 || m_nHeight == 64))
+	// Validate dimensions - only 128x32 and 128x64 supported for now
+	if (!(m_nHeight == 32 || m_nHeight == 64) || m_nWidth != 128)
 		return false;
 
 	const u8 pageAddrRange  = m_nHeight == 32 ? 0x03 : 0x07;
@@ -192,7 +193,7 @@ void CSSD1306::ClearPixel(u8 nX, u8 nY)
 
 void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
-	size_t rowOffset = nCursorY * Width * 2;
+	size_t rowOffset = nCursorY * m_nWidth * 2;
 	size_t columnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 5;
 
 	// FIXME: Won't be needed when the full font is implemented in font6x8.h
@@ -214,18 +215,18 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 		size_t offset = rowOffset + columnOffset + (bDoubleWidth ? i * 2 : i);
 
 		m_Framebuffer[offset] = fontColumn & 0xFF;
-		m_Framebuffer[offset + Width] = (fontColumn >> 8) & 0xFF;
+		m_Framebuffer[offset + m_nWidth] = (fontColumn >> 8) & 0xFF;
 		if (bDoubleWidth)
 		{
 			m_Framebuffer[offset + 1] = m_Framebuffer[offset];
-			m_Framebuffer[offset + Width + 1] = m_Framebuffer[offset + Width];
+			m_Framebuffer[offset + m_nWidth + 1] = m_Framebuffer[offset + m_nWidth];
 		}
 	}
 }
 
 void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
 {
-	const size_t firstPageOffset = nFirstRow * Width;
+	const size_t firstPageOffset = nFirstRow * m_nWidth;
 	const u8 totalPages          = nRows;
 	const u8 barHeight           = nRows * 8;
 
@@ -274,7 +275,7 @@ void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBar
 				offset += nBarXOffset;
 
 				// Start from bottom-most page
-				offset += (totalPages - 1) * Width - k * Width;
+				offset += (totalPages - 1) * m_nWidth - k * m_nWidth;
 
 				// i'th bar + j'th bar column
 				offset += i * (nBarWidth + nBarSpacing) + j;
@@ -306,7 +307,7 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 
 void CSSD1306::Clear(bool bImmediate)
 {
-	memset(m_Framebuffer + 1, 0, Width * m_nHeight / 8);
+	memset(m_Framebuffer + 1, 0, m_nWidth * m_nHeight / 8);
 	if (bImmediate)
 		WriteFramebuffer();
 }
@@ -342,7 +343,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	else
 	{
 		const u8 nRows = m_nHeight / 8 - 2;
-		constexpr u8 nBarWidth = (Width - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
+		const u8 nBarWidth = (m_nWidth - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
 		DrawChannelLevels(0, nRows, 2, nBarWidth, BarSpacing, MT32ChannelCount, true, false);
 	}
 
@@ -372,7 +373,7 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	else
 	{
 		const u8 nRows = m_nHeight / 8;
-		constexpr u8 nBarWidth = (Width - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
+		const u8 nBarWidth = (m_nWidth - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
 		DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
 	}
 
