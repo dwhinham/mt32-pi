@@ -44,7 +44,7 @@ private:
 	static constexpr size_t MaxSoundFonts = 256;
 	static constexpr size_t MaxSoundFontNameLength = 256;
 
-	void CheckSoundFont(const char* pPath);
+	void CheckSoundFont(const char* pFullPath, const char* pFileName);
 
 	size_t m_nSoundFonts;
 	TSoundFontListEntry m_SoundFontList[MaxSoundFonts];

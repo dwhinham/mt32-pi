@@ -22,8 +22,6 @@
 #include <circle/util.h>
 #include <fatfs/ff.h>
 
-#include <fluidsynth.h>
-
 #include "soundfontmanager.h"
 #include "utility.h"
 
@@ -60,39 +58,44 @@ bool CSoundFontManager::ScanSoundFonts()
 	for (size_t i = 0; i < m_nSoundFonts; ++i)
 		m_SoundFontList[i] = TSoundFontListEntry();
 
-	DIR dir;
-	FILINFO fileInfo;
-	FRESULT result = f_findfirst(&dir, &fileInfo, SoundFontPath, "*");
+	DIR Dir;
+	FILINFO FileInfo;
+	FRESULT Result = f_findfirst(&Dir, &FileInfo, SoundFontPath, "*");
 
-	char path[sizeof(SoundFontPath) + FF_LFN_BUF];
-	strcpy(path, SoundFontPath);
-	path[sizeof(SoundFontPath) - 1] = '/';
+	char Path[sizeof(SoundFontPath) + FF_LFN_BUF];
+	strcpy(Path, SoundFontPath);
+	Path[sizeof(SoundFontPath) - 1] = '/';
 
 	// Loop over each file in the directory
-	while (result == FR_OK && *fileInfo.fname && m_nSoundFonts < MaxSoundFonts)
+	while (Result == FR_OK && *FileInfo.fname && m_nSoundFonts < MaxSoundFonts)
 	{
 		// Ensure not directory, hidden, or system file
-		if (!(fileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+		if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
 		{
 			// Assemble path
-			strcpy(path + sizeof(SoundFontPath), fileInfo.fname);
+			strcpy(Path + sizeof(SoundFontPath), FileInfo.fname);
 
-			CheckSoundFont(path);
+			CheckSoundFont(Path, FileInfo.fname);
 		}
 
-		result = f_findnext(&dir, &fileInfo);
+		Result = f_findnext(&Dir, &FileInfo);
 	}
-
-	CLogger::Get()->Write(SoundFontManagerName, LogNotice, "%d SoundFonts found:", m_nSoundFonts);
 
 	// Sort into alphabetical order
 	if (m_nSoundFonts > 0)
+	{
+		// Sort into lexicographical order
 		Utility::QSort(m_SoundFontList, SoundFontListComparator, 0, m_nSoundFonts - 1);
 
-	for (size_t i = 0; i < m_nSoundFonts; ++i)
-		CLogger::Get()->Write(SoundFontManagerName, LogNotice, "\t%s (%s)", static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
+		CLogger& Logger = *CLogger::Get();
+		Logger.Write(SoundFontManagerName, LogNotice, "%d SoundFonts found:", m_nSoundFonts);
+		for (size_t i = 0; i < m_nSoundFonts; ++i)
+			Logger.Write(SoundFontManagerName, LogNotice, "%d: %s (%s)", i, static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
 
-	return m_nSoundFonts > 0;
+		return true;
+	}
+
+	return false;
 }
 
 const char* CSoundFontManager::GetSoundFontPath(size_t nIndex) const
@@ -119,9 +122,9 @@ const char* CSoundFontManager::GetFirstValidSoundFontPath() const
 	return m_nSoundFonts > 0 ? static_cast<const char*>(m_SoundFontList[0].Path) : nullptr;
 }
 
-void CSoundFontManager::CheckSoundFont(const char* pPath)
+void CSoundFontManager::CheckSoundFont(const char* pFullPath, const char* pFileName)
 {
-	FIL pFile;
+	FIL File;
 	UINT nBytesRead;
 	TSoundFontChunk Chunk;
 	u32 nFourCC;
@@ -132,21 +135,21 @@ void CSoundFontManager::CheckSoundFont(const char* pPath)
 	Name[0] = '\0';
 
 	// Try to open file
-	if (f_open(&pFile, pPath, FA_READ) != FR_OK)
+	if (f_open(&File, pFullPath, FA_READ) != FR_OK)
 		return;
 
-#define CHECK_CHUNK_ID(EXPECTED_CHUNK_ID)                                                                 \
-	if (f_read(&pFile, &Chunk, sizeof(Chunk), &nBytesRead) != FR_OK || Chunk.FourCC != EXPECTED_CHUNK_ID) \
-	{                                                                                                     \
-		f_close(&pFile);                                                                                  \
-		return;                                                                                           \
+#define CHECK_CHUNK_ID(EXPECTED_CHUNK_ID)                                                                \
+	if (f_read(&File, &Chunk, sizeof(Chunk), &nBytesRead) != FR_OK || Chunk.FourCC != EXPECTED_CHUNK_ID) \
+	{                                                                                                    \
+		f_close(&File);                                                                                  \
+		return;                                                                                          \
 	}
 
-#define CHECK_FORM_ID(EXPECTED_FORM_ID)                                                                 \
-	if (f_read(&pFile, &nFourCC, sizeof(nFourCC), &nBytesRead) != FR_OK || nFourCC != EXPECTED_FORM_ID) \
-	{                                                                                                   \
-		f_close(&pFile);                                                                                \
-		return;                                                                                         \
+#define CHECK_FORM_ID(EXPECTED_FORM_ID)                                                                \
+	if (f_read(&File, &nFourCC, sizeof(nFourCC), &nBytesRead) != FR_OK || nFourCC != EXPECTED_FORM_ID) \
+	{                                                                                                  \
+		f_close(&File);                                                                                \
+		return;                                                                                        \
 	}
 
 	CHECK_CHUNK_ID(FourCCRIFF);
@@ -161,7 +164,7 @@ void CSoundFontManager::CheckSoundFont(const char* pPath)
 	nInfoListChunkSize = Chunk.Size;
 	size_t nTotalBytesRead = 4;
 
-	while (nTotalBytesRead < nInfoListChunkSize && f_read(&pFile, &Chunk, sizeof(Chunk), &nBytesRead) == FR_OK)
+	while (nTotalBytesRead < nInfoListChunkSize && f_read(&File, &Chunk, sizeof(Chunk), &nBytesRead) == FR_OK)
 	{
 		nTotalBytesRead += nBytesRead;
 
@@ -169,28 +172,29 @@ void CSoundFontManager::CheckSoundFont(const char* pPath)
 		if (Chunk.FourCC == FourCCINAM)
 		{
 			if (Chunk.Size <= sizeof(Name))
-				f_read(&pFile, Name, Chunk.Size, &nBytesRead);
+				f_read(&File, Name, Chunk.Size, &nBytesRead);
 
 			break;
 		}
 
 		// Skip to start of next chunk
 		else
-			f_lseek(&pFile, f_tell(&pFile) + Chunk.Size);
+			f_lseek(&File, f_tell(&File) + Chunk.Size);
 
 		nTotalBytesRead += Chunk.Size;
 	}
 
 	// Clean up
-	f_close(&pFile);
+	f_close(&File);
 
 	TSoundFontListEntry& entry = m_SoundFontList[m_nSoundFonts++];
-	entry.Path  = pPath;
+	entry.Path  = pFullPath;
 
-	// If we got a name, use it
-	// TODO: fall back on filename
+	// If we got a name, use it, otherwise fall back on filename
 	if (Name[0] != '\0')
 		entry.Name = Name;
+	else
+		entry.Name = pFileName;
 }
 
 inline bool CSoundFontManager::SoundFontListComparator(const TSoundFontListEntry& lhs, const TSoundFontListEntry& rhs)
