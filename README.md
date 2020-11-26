@@ -205,7 +205,7 @@ There are currently three different LCD drivers, which are detailed in the follo
 [<img width="280rem" align="right" src="docs/hd44780_20x4.jpg">](docs/hd44780_20x4.jpg)
 
 This driver is for connecting a traditional HD44780 or compatible (e.g. Winstar WS0010/Raystar RS0010) character display directly to the Pi's GPIO pins in 4-bit mode.
-Currently, only 20x2 and 20x4 displays have been tested. In theory, other widths should work, but there is currently no special handling/scrolling for narrower displays.
+Currently, only 20x2 and 20x4 displays are supported.
 
 Consult your display's datasheet to determine the correct LCD pins to connect to the GPIOs. The current pinout is as follows:
 
@@ -239,7 +239,7 @@ As with all I²C devices, you must know the LCD's I²C address in order for it t
 
 The SSD1306 controller is found in mini 128x32 and 128x64 OLED displays, which are well-known for their use in FlashFloppy/Gotek devices. They can be found for very little money on eBay and AliExpress.
 
-Both 32 and 64 pixel high variants are supported. These displays usually have an I²C address of `0x3c`. 
+Currently, only 128x32 and 128x64 variants are supported. These displays usually have an I²C address of `0x3c`.
 
 ### Compatibility
 
