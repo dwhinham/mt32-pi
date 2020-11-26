@@ -98,7 +98,6 @@ CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nHeight, TLCDRotation
 
 	  m_Framebuffer{0x40}
 {
-	assert(nHeight == 32 || nHeight == 64);
 }
 
 bool CSSD1306::Initialize()

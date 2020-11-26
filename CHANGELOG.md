@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incorrect `-dirty` suffix on version string on clean builds (again!).
 - Crash when using USB MIDI interface in SoundFont mode, or when resuming from power saving mode.
+- Hang on startup if unsupported LCD size is set in configuration file.
 
 ## [0.7.0] - 2020-11-22
 
