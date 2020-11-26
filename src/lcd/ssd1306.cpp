@@ -224,7 +224,7 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 	}
 }
 
-void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks)
+void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
 {
 	const size_t firstPageOffset = nFirstRow * Width;
 	const u8 totalPages          = nRows;
@@ -234,7 +234,10 @@ void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBar
 	for (u8 i = 0; i < nChannels; ++i)
 	{
 		u8 pageValues[totalPages];
-		const u8 partLevelPixels = m_ChannelLevels[i] * barHeight;
+		u8 partLevelPixels = m_ChannelLevels[i] * barHeight;
+		if (bDrawBarBases && partLevelPixels == 0)
+			partLevelPixels = 1;
+
 		const u8 peakLevelPixels = m_ChannelPeakLevels[i] * barHeight;
 		const u8 fullPages       = partLevelPixels / 8;
 		const u8 remainder       = partLevelPixels % 8;
@@ -341,7 +344,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	{
 		const u8 nRows = m_nHeight / 8 - 2;
 		constexpr u8 nBarWidth = (Width - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
-		DrawChannelLevels(0, nRows, 2, nBarWidth, BarSpacing, MT32ChannelCount);
+		DrawChannelLevels(0, nRows, 2, nBarWidth, BarSpacing, MT32ChannelCount, true, false);
 	}
 
 	// MT-32 status row

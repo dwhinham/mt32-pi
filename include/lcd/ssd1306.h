@@ -55,7 +55,7 @@ private:
 	void ClearPixel(u8 nX, u8 nY);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
 
-	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true);
+	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true, bool bDrawBarBases = true);
 
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;
