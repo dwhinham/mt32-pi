@@ -45,6 +45,8 @@
   * [SoundFont scanning](#soundfont-scanning)
   * [Switching SoundFonts](#switching-soundfonts)
 - [🔩 Custom hardware](#-custom-hardware)
+    + [clumsyMIDI](#clumsymidi)
+    + [PI-MIDI](#pi-midi)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
 - [⚖️ Disclaimer](#%EF%B8%8F-disclaimer)
@@ -154,13 +156,14 @@ Feel free to open an issue if you'd like to help us support your DAC, or even ju
 
 The following models of DAC have been confirmed as working by our testers. Please note the necessary configuration file options.
 
-| Manufacturer | Device            | DAC chip | Config file options                              | Comments                                                                                    |
-|--------------|-------------------|----------|--------------------------------------------------|---------------------------------------------------------------------------------------------|
-| Arananet     | [PI-MIDI]         | UDA1334  | None required                                    | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.  |
-| Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham. |
-| Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                               |
-| innomaker    | [HiFi DAC HAT]    | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                       |
-| IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                           |
+| Manufacturer | Device            | DAC chip | Additional config file options                   | Comments                                                                                                               |
+|--------------|-------------------|----------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Arananet     | [PI-MIDI]         | UDA1334  | None required                                    | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.                             |
+| Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham.                            |
+| Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                                                          |
+| gmcn42       | [clumsyMIDI]      | PCM5102A | None required                                    | Stereo 3.5mm output. Custom free/open source design by @gmcn42 also with GPIO MIDI in and out/thru. Tested by @gmcn42. |
+| innomaker    | [HiFi DAC HAT]    | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                                                  |
+| IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                                                      |
 
 ### Finding the I²C address of your DAC
 
@@ -317,13 +320,25 @@ In the future, `mt32-pi` will allow you to switch SoundFonts from a menu or butt
 
 ## 🔩 Custom hardware
 
-[<img width="280rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
-
-The community has been designing some excellent custom hardware for use with `mt32-pi`. The [PI-MIDI] by @arananet is the first example, which provides an OLED display, MIDI input, and a DAC for a complete plug 'n' play experience!
-
-If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
+The community has been designing some excellent custom hardware for use with `mt32-pi`. If you have created something cool with `mt32-pi`, please get in touch if you'd like to share it and have it featured here.
 
 > ⚠️ **Note:** If you are designing custom hardware for `mt32-pi`, and want to add features that are not documented here, open an issue so we can work together on supporting it.
+
+### clumsyMIDI
+
+[<img width="180rem" align="right" src="https://raw.githubusercontent.com/gmcn42/clumsyMIDI/main/pictures/IMGP8907-1.jpg">][clumsyMIDI]
+
+[clumsyMIDI] is a free and open source PCB by @gmcn42 aimed at DIYers, which features an OLED display, MIDI input, MIDI output (or thru), and space for an inexpensive DAC module with stereo 3.5mm output. The board is designed to be easy to assemble, using only through-hole components so that even the "clumsiest" electronics enthusiasts can build their own interface for `mt32-pi`!
+
+<br clear="right"/>
+
+### PI-MIDI
+
+[<img width="180rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
+
+The [PI-MIDI] by @arananet is a pre-assembled device which provides an OLED display, MIDI input, and a DAC with stereo RCA outputs for a complete plug 'n' play experience. The newest versions also feature a useful input jack with volume control for mixing-in stereo audio from a host computer.
+
+<br clear="right"/>
 
 ## 💬 Custom System Exclusive messages
 
@@ -377,6 +392,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
+[clumsyMIDI]: https://github.com/gmcn42/clumsyMIDI
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
 [FluidSynth]: http://www.fluidsynth.org/
 [General MIDI]: https://en.wikipedia.org/wiki/General_MIDI
