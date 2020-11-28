@@ -63,6 +63,13 @@ namespace Utility
 	template <class T, size_t N>
 	constexpr size_t ArraySize(const T(&)[N]) { return N; }
 
+	// Returns whether some value is a power of 2
+	template <class T>
+	constexpr bool IsPowerOfTwo(T value)
+	{
+		return value && ((value & (value-1)) == 0);
+	}
+
 	// Comparators for sorting
 	namespace Comparator
 	{

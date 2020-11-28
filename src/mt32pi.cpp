@@ -68,12 +68,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_pSound(nullptr),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
-	  m_pSoundFontSynth(nullptr),
-
-	  m_USBMIDIRxLock(IRQ_LEVEL),
-	  m_USBMIDIRxBuffer{0},
-	  m_nUSBMIDIRxInPtr(0),
-	  m_nUSBMIDIRxOutPtr(0)
+	  m_pSoundFontSynth(nullptr)
 {
 	s_pThis = this;
 }
@@ -227,11 +222,8 @@ void CMT32Pi::MainTask()
 
 	while (m_bRunning)
 	{
-		// Update serial GPIO MIDI
-		if (m_bSerialMIDIEnabled)
-			UpdateSerialMIDI();
-		else
-			UpdateUSBMIDI();
+		// Process MIDI data
+		UpdateMIDI();
 
 		unsigned ticks = m_pTimer->GetTicks();
 
@@ -504,15 +496,35 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 	return false;
 }
 
-void CMT32Pi::UpdateSerialMIDI()
+void CMT32Pi::UpdateMIDI()
+{
+	size_t nBytes;
+	u8 Buffer[MIDIRxBufferSize];
+
+	// Read MIDI messages from serial device or ring buffer
+	if (m_bSerialMIDIEnabled)
+		nBytes = ReceiveSerialMIDI(Buffer, sizeof(Buffer));
+	else
+		nBytes = m_MIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer));
+
+	if (nBytes == 0)
+		return;
+
+	// Process MIDI messages
+	ParseMIDIBytes(Buffer, nBytes);
+
+	// Reset the Active Sense timer
+	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+}
+
+size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 {
 	// Read serial MIDI data
-	u8 buffer[SERIAL_BUF_SIZE];
-	int nResult = m_pSerial->Read(buffer, sizeof(buffer));
+	int nResult = m_pSerial->Read(pOutData, nSize);
 
 	// No data
 	if (nResult == 0)
-		return;
+		return 0;
 
 	// Error
 	if (nResult < 0)
@@ -539,13 +551,13 @@ void CMT32Pi::UpdateSerialMIDI()
 
 		CLogger::Get()->Write(MT32PiName, LogWarning, errorString);
 		LCDLog(TLCDLogType::Error, errorString);
-		return;
+		return 0;
 	}
 
 	// Replay received MIDI data out via the serial port ('software thru')
 	if (CConfig::Get()->MIDIGPIOThru)
 	{
-		int nSendResult = m_pSerial->Write(buffer, nResult);
+		int nSendResult = m_pSerial->Write(pOutData, nResult);
 		if (nSendResult != nResult)
 		{
 			CLogger::Get()->Write(MT32PiName, LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
@@ -553,32 +565,7 @@ void CMT32Pi::UpdateSerialMIDI()
 		}
 	}
 
-	// Process MIDI messages
-	ParseMIDIBytes(buffer, nResult);
-
-	// Reset the Active Sense timer
-	m_nActiveSenseTime = m_pTimer->GetTicks();
-}
-
-void CMT32Pi::UpdateUSBMIDI()
-{
-	size_t nBytes = 0;
-	u8 Buffer[USBMIDIRxBufferSize];
-
-	// Read MIDI messages from circular buffer
-	m_USBMIDIRxLock.Acquire();
-	while (m_nUSBMIDIRxInPtr != m_nUSBMIDIRxOutPtr)
-	{
-		Buffer[nBytes++] = m_USBMIDIRxBuffer[m_nUSBMIDIRxOutPtr++];
-		m_nUSBMIDIRxOutPtr &= USBMIDIRxBufferMask;
-	}
-	m_USBMIDIRxLock.Release();
-
-	// Process MIDI messages
-	ParseMIDIBytes(Buffer, nBytes);
-
-	// Reset the Active Sense timer
-	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+	return static_cast<size_t>(nResult);
 }
 
 void CMT32Pi::LEDOn()
@@ -632,30 +619,21 @@ bool CMT32Pi::InitPCM51xx(u8 nAddress)
 	return true;
 }
 
-// Called from interrupt context, enqueue into buffer for main thread
+// The following handlers are called from interrupt context, enqueue into ring buffer for main thread
 void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength)
+{
+	MIDIReceiveHandler(pPacket, nLength);
+}
+
+void CMT32Pi::MIDIReceiveHandler(const u8* pData, size_t nSize)
 {
 	assert(s_pThis != nullptr);
 
-	s_pThis->m_USBMIDIRxLock.Acquire();
-	auto& RxBuffer  = s_pThis->m_USBMIDIRxBuffer;
-	auto& nRxInPtr  = s_pThis->m_nUSBMIDIRxInPtr;
-	auto& nRxOutPtr = s_pThis->m_nUSBMIDIRxOutPtr;
-
-	// Enqueue data into circular buffer
-	for (size_t i = 0; i < nLength; ++i)
+	// Enqueue data into ring buffer
+	if (s_pThis->m_MIDIRxBuffer.Enqueue(pData, nSize) != nSize)
 	{
-		if (((nRxInPtr + 1) & USBMIDIRxBufferMask) != nRxOutPtr)
-		{
-			RxBuffer[nRxInPtr++] = pPacket[i];
-			nRxInPtr &= USBMIDIRxBufferMask;
-		}
-		else
-		{
-			// Overrun
-			s_pThis->LCDLog(TLCDLogType::Error, "USB overrun error!");
-		}
+		static const char* pErrorString = "MIDI overrun error!";
+		CLogger::Get()->Write(MT32PiName, LogWarning, pErrorString);
+		s_pThis->LCDLog(TLCDLogType::Error, pErrorString);
 	}
-
-	s_pThis->m_USBMIDIRxLock.Release();
 }

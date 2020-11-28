@@ -30,7 +30,6 @@
 #include <circle/multicore.h>
 #include <circle/sched/scheduler.h>
 #include <circle/soundbasedevice.h>
-#include <circle/synchronize.h>
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
@@ -39,6 +38,7 @@
 #include "lcd/synthlcd.h"
 #include "midiparser.h"
 #include "power.h"
+#include "ringbuffer.h"
 #include "synth/mt32synth.h"
 #include "synth/soundfontsynth.h"
 
@@ -61,8 +61,7 @@ private:
 		Notice,
 	};
 
-	static constexpr size_t USBMIDIRxBufferSize = 2048;
-	static constexpr size_t USBMIDIRxBufferMask = USBMIDIRxBufferSize - 1;
+	static constexpr size_t MIDIRxBufferSize = 2048;
 
 	// CPower
 	virtual void OnEnterPowerSavingMode() override;
@@ -81,9 +80,9 @@ private:
 	void UITask();
 	void AudioTask();
 
+	void UpdateMIDI();
+	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
-	void UpdateSerialMIDI();
-	void UpdateUSBMIDI();
 
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pMessage);
@@ -120,13 +119,11 @@ private:
 	CMT32Synth* m_pMT32Synth;
 	CSoundFontSynth* m_pSoundFontSynth;
 
-	// USB receive buffer
-	CSpinLock m_USBMIDIRxLock;
-	u8 m_USBMIDIRxBuffer[USBMIDIRxBufferSize];
-	volatile size_t m_nUSBMIDIRxInPtr;
-	volatile size_t m_nUSBMIDIRxOutPtr;
+	// MIDI receive buffer
+	CRingBuffer<u8, MIDIRxBufferSize> m_MIDIRxBuffer;
 
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
+	static void MIDIReceiveHandler(const u8* pData, size_t nSize);
 
 	static CMT32Pi* s_pThis;
 };
