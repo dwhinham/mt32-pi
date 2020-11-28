@@ -48,6 +48,7 @@
     + [clumsyMIDI](#clumsymidi)
     + [mt32-pi-midi-hat](#mt32-pi-midi-hat)
     + [PI-MIDI](#pi-midi)
+	+ [Pisound](#pisound)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
 - [⚖️ Disclaimer](#%EF%B8%8F-disclaimer)
@@ -160,6 +161,7 @@ The following models of DAC have been confirmed as working by our testers. Pleas
 | Manufacturer | Device             | DAC chip | Additional config file options                         | Comments                                                                                                               |
 |--------------|--------------------|----------|--------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | Arananet     | [PI-MIDI]          | UDA1334  | None required                                          | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.                             |
+| Blokas       | [Pisound]          | PCM5102A | Ensure `sample_rate` is set to 48000, 96000, or 192000 | Stereo 6.35mm output, volume knob, and integrated SPI MIDI interface. Tested by @dwhinham and @sigkill.                |
 | chris-jh     | [mt32-pi-midi-hat] | PCM5102A | None required                                          | Stereo 3.5mm output. Custom free/open source design by @chris-jh also with GPIO MIDI in. Tested by @gmcn42.            |
 | Generic      | [GY-PCM5102]       | PCM5102A | None required                                          | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham.                            |
 | Generic      | [Pi-Fi DAC+ v2.0]  | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d`       | Stereo RCA and 3.5mm output. Tested by @rc55.                                                                          |
@@ -355,6 +357,14 @@ The [PI-MIDI] by @arananet is a pre-assembled device which provides an OLED disp
 
 <br clear="right"/>
 
+### Pisound
+
+[<img width="180rem" align="right" src="docs/blokas_pisound.jpg">][Pisound]
+
+The [Pisound] by Blokas is a commercial Raspberry Pi sound card with DAC, ADC (recording device) and MIDI interface, and is the closest product available to a "professional" audio device. Currently, only the MIDI input and audio output is supported by `mt32-pi`.
+
+<br clear="right"/>
+
 ## 💬 Custom System Exclusive messages
 
 `mt32-pi` responds to MT-32 SysEx messages as you would expect, but it can also respond to its own commands. `mt32-pi` listens for manufacturer ID `0x7D`, or the "non-commercial/educational use" special ID. Therefore, a complete `mt32-pi` SysEx message looks like:
@@ -426,6 +436,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
 [PI-MIDI]: https://www.arananet.net/pedidos/product/pi-midi-a-baremetal-mt32-emulator-using-raspberry-pi3
+[Pisound]: https://blokas.io/pisound/
 [Raspberry Pi power supply page]: https://www.raspberrypi.org/documentation/hardware/raspberrypi/power/README.md
 [REC002004B]: https://www.raystar-optronics.com/oled-character-display-module/REC002004B.html
 [Releases]: https://github.com/dwhinham/mt32-pi/releases/latest

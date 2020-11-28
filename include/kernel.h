@@ -23,8 +23,10 @@
 
 #include <circle_stdlib_app.h>
 #include <circle/cputhrottle.h>
+#include <circle/gpiomanager.h>
 #include <circle/i2cmaster.h>
 #include <circle/sched/scheduler.h>
+#include <circle/spimaster.h>
 #include <circle/timer.h>
 
 #include "config.h"
@@ -51,6 +53,8 @@ protected:
 	CEMMCDevice m_EMMC;
 	FATFS m_FileSystem;
 	CI2CMaster m_I2CMaster;
+	CSPIMaster m_SPIMaster;
+	CGPIOManager m_GPIOManager;
 
 private:
 	CConfig m_Config;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for the SSD1309 using the `ssd1306_i2c` driver - many thanks to @flynnsbit for testing!
+- Support for the [Blokas Pisound](https://blokas.io/pisound/) - many thanks to @sigkill for providing the device for development!
 
 ## [0.7.1] - 2020-11-26
 

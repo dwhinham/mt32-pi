@@ -39,8 +39,9 @@ CKernel::CKernel(void)
 	  m_FileSystem{},
 
 	  m_I2CMaster(1, true),
+	  m_GPIOManager(&mInterrupt),
 
-	  m_MT32Pi(&m_I2CMaster, &mInterrupt, &m_Serial, &m_USBHCI)
+	  m_MT32Pi(&m_I2CMaster, &m_SPIMaster, &mInterrupt, &m_GPIOManager, &m_Serial, &m_USBHCI)
 {
 }
 
@@ -94,6 +95,14 @@ bool CKernel::Initialize(void)
 
 	// Init I2C; don't bother with Initialize() as it only sets the clock to 100/400KHz
 	m_I2CMaster.SetClock(m_Config.SystemI2CBaudRate);
+
+	// Init SPI
+	if (!m_SPIMaster.Initialize())
+		return false;
+
+	// Init GPIO manager
+	if (!m_GPIOManager.Initialize())
+		return false;
 
 	if (!m_MT32Pi.Initialize(bSerialMIDIEnabled))
 		return false;

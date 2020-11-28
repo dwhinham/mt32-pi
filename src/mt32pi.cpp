@@ -40,7 +40,7 @@ constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
-CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
+CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
 	: CMultiCoreSupport(CMemorySystem::Get()),
 	  CMIDIParser(),
 
@@ -48,7 +48,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDe
 	  m_pActLED(CActLED::Get()),
 
 	  m_pI2CMaster(pI2CMaster),
+	  m_pSPIMaster(pSPIMaster),
 	  m_pInterrupt(pInterrupt),
+	  m_pGPIOManager(pGPIOManager),
 	  m_pSerial(pSerialDevice),
 	  m_pUSBHCI(pUSBHCI),
 
@@ -112,10 +114,27 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		return false;
 #endif
 
+	// Check for Blokas Pisound
+	m_pPisound = new CPisound(m_pSPIMaster, m_pGPIOManager, config.AudioSampleRate);
+	if (m_pPisound->Initialize())
+	{
+		logger.Write(MT32PiName, LogWarning, "Blokas Pisound detected");
+		m_pPisound->RegisterMIDIReceiveHandler(MIDIReceiveHandler);
+		m_bSerialMIDIEnabled = false;
+	}
+	else
+	{
+		delete m_pPisound;
+		m_pPisound = nullptr;
+	}
+
 	if (config.AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
 	{
 		LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
-		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize);
+
+		// Pisound provides clock
+		const bool bSlave = m_pPisound != nullptr;
+		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, config.AudioSampleRate, config.AudioChunkSize, bSlave);
 		m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
 
 		if (config.AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
@@ -183,6 +202,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		logger.Write(MT32PiName, LogNotice, "Using USB MIDI interface");
 		m_bSerialMIDIEnabled = false;
 	}
+	else if (m_pPisound)
+		logger.Write(MT32PiName, LogNotice, "Using Pisound MIDI interface");
 	else if (m_bSerialMIDIEnabled)
 		logger.Write(MT32PiName, LogNotice, "Using serial MIDI interface");
 	else

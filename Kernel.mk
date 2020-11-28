@@ -14,6 +14,7 @@ OBJS		:=	src/config.o \
 				src/main.o \
 				src/midiparser.o \
 				src/mt32pi.o \
+				src/pisound.o \
 				src/power.o \
 				src/rommanager.o \
 				src/soundfontmanager.o \

@@ -24,12 +24,14 @@
 #include <circle/actled.h>
 #include <circle/cputhrottle.h>
 #include <circle/devicenameservice.h>
+#include <circle/gpiomanager.h>
 #include <circle/i2cmaster.h>
 #include <circle/interrupt.h>
 #include <circle/logger.h>
 #include <circle/multicore.h>
 #include <circle/sched/scheduler.h>
 #include <circle/soundbasedevice.h>
+#include <circle/spimaster.h>
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
@@ -37,6 +39,7 @@
 #include "config.h"
 #include "lcd/synthlcd.h"
 #include "midiparser.h"
+#include "pisound.h"
 #include "power.h"
 #include "ringbuffer.h"
 #include "synth/mt32synth.h"
@@ -45,7 +48,7 @@
 class CMT32Pi : public CMultiCoreSupport, CPower, CMIDIParser
 {
 public:
-	CMT32Pi(CI2CMaster* pI2CMaster, CInterruptSystem* pInterrupt, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
+	CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
 	virtual ~CMT32Pi() override;
 
 	bool Initialize(bool bSerialMIDIEnabled = true);
@@ -93,7 +96,9 @@ private:
 	CActLED* m_pActLED;
 
 	CI2CMaster* m_pI2CMaster;
+	CSPIMaster* m_pSPIMaster;
 	CInterruptSystem* m_pInterrupt;
+	CGPIOManager* m_pGPIOManager;
 	CSerialDevice* m_pSerial;
 	CUSBHCIDevice* m_pUSBHCI;
 
@@ -113,6 +118,9 @@ private:
 
 	// Audio output
 	CSoundBaseDevice* m_pSound;
+
+	// Extra devices
+	CPisound* m_pPisound;
 
 	// Synthesizers
 	CSynthBase* m_pCurrentSynth;
