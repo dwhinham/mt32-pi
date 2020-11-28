@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <circle/bcmpropertytags.h>
 #include <circle/cputhrottle.h>
 #include <circle/logger.h>
 #include <circle/timer.h>
@@ -25,9 +26,6 @@
 #include "power.h"
 
 const char PowerName[] = "power";
-
-// TODO: Upstream with Circle
-#define PROPTAG_GET_THROTTLED 0x00030046
 
 // Bits in the throttled status response
 constexpr u32 UnderVoltageOccurredBit = 1 << 16;
