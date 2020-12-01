@@ -246,16 +246,21 @@ The SSD1306 controller is found in mini 128x32 and 128x64 OLED displays, which a
 
 Currently, only 128x32 and 128x64 variants are supported. These displays usually have an I²C address of `0x3c`.
 
+Some displays can be used with both I²C and SPI interfaces and may need to be reconfigured by setting some resistors on the back of the assembly. `mt32-pi` currently only supports I²C displays, so read your display's documentation to learn how to put it into I²C mode.
+
+This driver should also work with SSD1309 displays such as the [Diymore 2.42" OLED][2.42" OLED], but the display may need some small modifications to ensure it is in I²C mode, that the address is correct, and to deal with any reset signals.
+
 ### Compatibility
 
 The following displays and configurations have been confirmed as working by our testers. Please note the necessary configuration file options.
 
-| Manufacturer   | Device          | Config file options                                                        | Comments                                                                                                     |
-|----------------|-----------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| BuyDisplay.com | [2002-1 Series] | `type = hd44780_i2c`, `width = 20`, `height = 2`, `i2c_lcd_address = 27`   | Very bright and inexpensive 20x2 LCD. Tested by @dwhinham.                                                   |
-| Generic        | [128x32 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 32`, `i2c_lcd_address = 3c` | Extremely cheap yet nice and bright mini OLED. Widely available on AliExpress and eBay. Tested by @dwhinham. |
-| Generic        | [128x64 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Similar to the 32 pixel high OLED, just with more rows. Tested by @dwhinham.                                 |
-| Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                        |
+| Manufacturer   | Device          | Config file options                                                        | Comments                                                                                                                                                                 |
+|----------------|-----------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| BuyDisplay.com | [2002-1 Series] | `type = hd44780_i2c`, `width = 20`, `height = 2`, `i2c_lcd_address = 27`   | Very bright and inexpensive 20x2 LCD. Tested by @dwhinham.                                                                                                               |
+| Diymore        | [2.42" OLED]    | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Large 128x64 OLED. Requires modifications: R4 removed, R3 shorted, R5 shorted, DC tied to GND, RES tied to GND via a 10K pull-down resistor [[4]]. Tested by @flynnsbit. |
+| Generic        | [128x32 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 32`, `i2c_lcd_address = 3c` | Extremely cheap yet nice and bright mini OLED. Widely available on AliExpress and eBay. Tested by @dwhinham.                                                             |
+| Generic        | [128x64 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Similar to the 32 pixel high OLED, just with more rows. Tested by @dwhinham.                                                                                             |
+| Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                                                                                    |
 
 ## 🧠 MT-32 ROM support
 
@@ -396,9 +401,11 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [1]: http://www.arvydas.co.uk/2013/07/cheap-usb-midi-cable-some-self-assembly-may-be-required/
 [128x32 OLED]: https://www.aliexpress.com/item/32661842518.html
 [128x64 OLED]: https://www.aliexpress.com/item/32233334632.html
+[2.42" OLED]: https://www.diymore.cc/products/2-42-inch-12864-oled-display-module-iic-i2c-spi-serial-for-arduino-c51-stm32-green-white-blue-yellow
 [2]: https://karusisemus.wordpress.com/2017/01/02/cheap-usb-midi-cable-how-to-modify-it/
 [2002-1 Series]: https://www.buydisplay.com/character-lcd-display-module/20x2-character
 [3]: http://www.fm-alive.com/Pages/DXMidi.aspx
+[4]: https://forum.arduino.cc/index.php?topic=442255.30
 [Changelog]: https://github.com/dwhinham/mt32-pi/blob/master/CHANGELOG.md
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
