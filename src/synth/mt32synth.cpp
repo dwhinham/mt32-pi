@@ -58,11 +58,11 @@ bool CMT32Synth::Initialize()
 		return false;
 
 	// Try to load user's preferred initial ROM set, otherwise fall back on first available
-	CROMManager::TROMSet initialROMSet = CConfig::Get()->MT32EmuROMSet;
-	if (!m_ROMManager.HaveROMSet(initialROMSet))
-		initialROMSet = CROMManager::TROMSet::Any;
+	TMT32ROMSet InitialROMSet = CConfig::Get()->MT32EmuROMSet;
+	if (!m_ROMManager.HaveROMSet(InitialROMSet))
+		InitialROMSet = TMT32ROMSet::Any;
 
-	if (!m_ROMManager.GetROMSet(initialROMSet, m_pControlROMImage, m_pPCMROMImage))
+	if (!m_ROMManager.GetROMSet(InitialROMSet, m_pControlROMImage, m_pPCMROMImage))
 		return false;
 
 	m_pSynth = new MT32Emu::Synth(this);
@@ -177,7 +177,7 @@ void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
 		m_pSynth->writeSysex(0x10, AlternateMIDIChannelsSysEx, sizeof(AlternateMIDIChannelsSysEx));
 }
 
-bool CMT32Synth::SwitchROMSet(CROMManager::TROMSet ROMSet)
+bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 {
 	const MT32Emu::ROMImage* controlROMImage;
 	const MT32Emu::ROMImage* pcmROMImage;

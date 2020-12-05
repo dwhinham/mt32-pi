@@ -1,5 +1,5 @@
 //
-// rommanager.h
+// mt32romset.h
 //
 // mt32-pi - A bare-metal Roland MT-32 emulator for Raspberry Pi
 // Copyright (C) 2020  Dale Whinham <daleyo@gmail.com>
@@ -18,35 +18,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _rommanager_h
-#define _rommanager_h
+#ifndef _mt32romset_h
+#define _mt32romset_h
 
-#include <mt32emu/mt32emu.h>
+#include "utility.h"
 
-#include "synth/mt32romset.h"
+#define ENUM_MT32ROMSET(ENUM) \
+	ENUM(MT32Old, old)        \
+	ENUM(MT32New, new)        \
+	ENUM(CM32L, cm32l)        \
+	ENUM(Any, any)
 
-class CROMManager
-{
-public:
-	CROMManager();
-	~CROMManager();
-
-	bool ScanROMs();
-	bool HaveROMSet(TMT32ROMSet ROMSet) const;
-	bool GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const;
-
-private:
-	bool CheckROM(const char* pPath);
-	bool StoreROM(const MT32Emu::ROMImage& ROMImage);
-
-	// Control ROMs
-	const MT32Emu::ROMImage* m_pMT32OldControl;
-	const MT32Emu::ROMImage* m_pMT32NewControl;
-	const MT32Emu::ROMImage* m_pCM32LControl;
-
-	// PCM ROMs
-	const MT32Emu::ROMImage* m_pMT32PCM;
-	const MT32Emu::ROMImage* m_pCM32LPCM;
-};
+CONFIG_ENUM(TMT32ROMSet, ENUM_MT32ROMSET);
 
 #endif

@@ -26,6 +26,7 @@
 #include <mt32emu/mt32emu.h>
 
 #include "rommanager.h"
+#include "synth/mt32romset.h"
 #include "synth/synthbase.h"
 #include "utility.h"
 
@@ -60,7 +61,7 @@ public:
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
 
 	void SetMIDIChannels(TMIDIChannels Channels);
-	bool SwitchROMSet(CROMManager::TROMSet ROMSet);
+	bool SwitchROMSet(TMT32ROMSet ROMSet);
 	const char* GetControlROMName() const;
 
 	u8 GetMasterVolume() const;
@@ -81,6 +82,7 @@ private:
 	MT32Emu::SampleRateConverter* m_pSampleRateConverter;
 
 	CROMManager m_ROMManager;
+	TMT32ROMSet m_CurrentROMSet;
 	const MT32Emu::ROMImage* m_pControlROMImage;
 	const MT32Emu::ROMImage* m_pPCMROMImage;
 };

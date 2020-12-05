@@ -476,7 +476,7 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 			return false;
 
 		CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to ROM set %d", romSet);
-		return m_pMT32Synth->SwitchROMSet(static_cast<CROMManager::TROMSet>(romSet));
+		return m_pMT32Synth->SwitchROMSet(static_cast<TMT32ROMSet>(romSet));
 	}
 
 	// Switch SoundFont (F0 7D 02 xx F7)

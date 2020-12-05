@@ -22,7 +22,7 @@
 #define _config_h
 
 #include "lcd/ssd1306.h"
-#include "rommanager.h"
+#include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
 
@@ -43,7 +43,7 @@ public:
 
 	using TMT32EmuResamplerQuality = CMT32Synth::TResamplerQuality;
 	using TMT32EmuMIDIChannels     = CMT32Synth::TMIDIChannels;
-	using TMT32EmuROMSet           = CROMManager::TROMSet;
+	using TMT32EmuROMSet           = TMT32ROMSet;
 
 	using TLCDRotation             = CSSD1306::TLCDRotation;
 

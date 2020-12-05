@@ -123,40 +123,40 @@ bool CROMManager::ScanROMs()
 	}
 
 	// Fall back on old ROM loading behavior if we haven't found at least one valid ROM set
-	if (!HaveROMSet(TROMSet::Any))
+	if (!HaveROMSet(TMT32ROMSet::Any))
 		return CheckROM(MT32ControlROMName) && CheckROM(MT32PCMROMName);
 
 	return true;
 }
 
-bool CROMManager::HaveROMSet(TROMSet ROMSet) const
+bool CROMManager::HaveROMSet(TMT32ROMSet ROMSet) const
 {
 	switch (ROMSet)
 	{
-		case TROMSet::Any:
+		case TMT32ROMSet::Any:
 			return (m_pMT32OldControl || m_pMT32NewControl || m_pCM32LControl) && (m_pMT32PCM || m_pCM32LPCM);
 
-		case TROMSet::MT32Old:
+		case TMT32ROMSet::MT32Old:
 			return m_pMT32OldControl && m_pMT32PCM;
 
-		case TROMSet::MT32New:
+		case TMT32ROMSet::MT32New:
 			return m_pMT32NewControl && m_pMT32PCM;
 
-		case TROMSet::CM32L:
+		case TMT32ROMSet::CM32L:
 			return m_pCM32LControl && m_pCM32LPCM;
 	}
 
 	return false;
 }
 
-bool CROMManager::GetROMSet(TROMSet ROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const
+bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const
 {
 	if (!HaveROMSet(ROMSet))
 		return false;
 
 	switch (ROMSet)
 	{
-		case TROMSet::Any:
+		case TMT32ROMSet::Any:
 			if (m_pMT32OldControl)
 				pOutControl = m_pMT32OldControl;
 			else if (m_pMT32NewControl)
@@ -164,24 +164,24 @@ bool CROMManager::GetROMSet(TROMSet ROMSet, const MT32Emu::ROMImage*& pOutContro
 			else
 				pOutControl = m_pCM32LControl;
 
-			if (pOutControl == m_pCM32LControl && m_pCM32LPCM)
+			if (pOutControl == m_pCM32LControl)
 				pOutPCM = m_pCM32LPCM;
 			else
 				pOutPCM = m_pMT32PCM;
 
 			break;
 
-		case TROMSet::MT32Old:
+		case TMT32ROMSet::MT32Old:
 			pOutControl = m_pMT32OldControl;
 			pOutPCM     = m_pMT32PCM;
 			break;
 
-		case TROMSet::MT32New:
+		case TMT32ROMSet::MT32New:
 			pOutControl = m_pMT32NewControl;
 			pOutPCM     = m_pMT32PCM;
 			break;
 
-		case TROMSet::CM32L:
+		case TMT32ROMSet::CM32L:
 			pOutControl = m_pCM32LControl;
 			pOutPCM     = m_pCM32LPCM;
 			break;
