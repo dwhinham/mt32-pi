@@ -134,10 +134,12 @@ size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
 
 size_t CMT32Synth::Render(float* pOutBuffer, size_t nFrames)
 {
+	m_Lock.Acquire();
 	if (m_pSampleRateConverter)
 		m_pSampleRateConverter->getOutputSamples(pOutBuffer, nFrames);
 	else
 		m_pSynth->render(pOutBuffer, nFrames);
+	m_Lock.Release();
 
 	return nFrames;
 }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for the SSD1309 using the `ssd1306_i2c` driver - many thanks to @flynnsbit for testing!
 - Support for the [Blokas Pisound](https://blokas.io/pisound/) - many thanks to @sigkill for providing the device for development!
 
+### Fixed
+
+- Switching MT-32 ROM sets whilst MIDI was playing could cause a crash.
+
 ## [0.7.1] - 2020-11-26
 
 ### Added
