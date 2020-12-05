@@ -38,6 +38,17 @@ public:
 	{
 	}
 
+	bool Enqueue(const T& Item)
+	{
+		bool bSuccess;
+		m_Lock.Acquire();
+
+		bSuccess = EnqueueOne(Item);
+
+		m_Lock.Release();
+		return bSuccess;
+	}
+
 	size_t Enqueue(const T* pItems, size_t nCount)
 	{
 		size_t nEnqueued = 0;
@@ -45,16 +56,28 @@ public:
 
 		for (size_t i = 0; i < nCount; ++i)
 		{
-			if (((m_nInPtr + 1) & BufferMask) != m_nOutPtr)
-			{
-				m_Data[m_nInPtr++] = pItems[i];
-				m_nInPtr &= BufferMask;
+			if (EnqueueOne(pItems[i]))
 				++nEnqueued;
-			}
 		}
 
 		m_Lock.Release();
 		return nEnqueued;
+	}
+
+	bool Dequeue(T& OutItem)
+	{
+		bool bSuccess = false;
+		m_Lock.Acquire();
+
+		if (m_nInPtr != m_nOutPtr)
+		{
+			OutItem = m_Data[m_nOutPtr++];
+			m_nOutPtr &= BufferMask;
+			bSuccess = true;
+		}
+
+		m_Lock.Release();
+		return bSuccess;
 	}
 
 	size_t Dequeue(T* pOutBuffer, size_t nMaxCount)
@@ -74,6 +97,18 @@ public:
 
 private:
 	static_assert(Utility::IsPowerOfTwo(N), "Ring buffer size must be a power of 2");
+
+	inline bool EnqueueOne(const T& Item)
+	{
+		if (((m_nInPtr + 1) & BufferMask) != m_nOutPtr)
+		{
+			m_Data[m_nInPtr++] = Item;
+			m_nInPtr &= BufferMask;
+			return true;
+		}
+
+		return false;
+	}
 
 	static constexpr size_t BufferMask = N - 1;
 
