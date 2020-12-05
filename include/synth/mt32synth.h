@@ -59,6 +59,7 @@ public:
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
+	virtual void ReportStatus() const override;
 
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(TMT32ROMSet ROMSet);

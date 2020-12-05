@@ -277,13 +277,7 @@ void CMT32Pi::UITask()
 	logger.Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
 
 	// Display current MT-32 ROM version/SoundFont
-	if (m_pLCD)
-	{
-		if (m_pCurrentSynth == m_pMT32Synth)
-			m_pLCD->OnSystemMessage(m_pMT32Synth->GetControlROMName());
-		else if (m_pCurrentSynth == m_pSoundFontSynth)
-			m_pLCD->OnSystemMessage(m_pSoundFontSynth->GetSoundFontName());
-	}
+	m_pCurrentSynth->ReportStatus();
 
 	while (m_bRunning)
 	{

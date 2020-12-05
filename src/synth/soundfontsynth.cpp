@@ -318,6 +318,12 @@ u8 CSoundFontSynth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels
 	return nMaxChannels;
 }
 
+void CSoundFontSynth::ReportStatus() const
+{
+	if (m_pLCD)
+		m_pLCD->OnSystemMessage(GetSoundFontName());
+}
+
 bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 {
 	// Is this SoundFont already active?
@@ -360,13 +366,11 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 		return false;
 	}
 
-	const char* pName = m_SoundFontManager.GetSoundFontName(nIndex);
-	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", pName);
-	if (m_pLCD)
-		m_pLCD->OnSystemMessage(pName);
-
 	m_nCurrentSoundFontIndex = nIndex;
 	m_nSoundFontID = result;
+
+	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
+	ReportStatus();
 
 	return true;
 }

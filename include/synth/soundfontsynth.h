@@ -43,6 +43,7 @@ public:
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
+	virtual void ReportStatus() const override;
 
 	bool SwitchSoundFont(size_t nIndex);
 	const char* GetSoundFontName() const;

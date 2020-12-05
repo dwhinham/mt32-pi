@@ -169,6 +169,12 @@ u8 CMT32Synth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels)
 	return nMaxChannels;
 }
 
+void CMT32Synth::ReportStatus() const
+{
+	if (m_pLCD)
+		m_pLCD->OnSystemMessage(GetControlROMName());
+}
+
 void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
 {
 	if (Channels == TMIDIChannels::Standard)
@@ -207,8 +213,7 @@ bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 	m_pControlROMImage = controlROMImage;
 	m_pPCMROMImage     = pcmROMImage;
 
-	if (m_pLCD)
-		m_pLCD->OnSystemMessage(GetControlROMName());
+	ReportStatus();
 
 	return true;
 }
