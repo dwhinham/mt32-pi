@@ -46,6 +46,7 @@
   * [Switching SoundFonts](#switching-soundfonts)
 - [🔩 Custom hardware](#-custom-hardware)
     + [clumsyMIDI](#clumsymidi)
+    + [mt32-pi-midi-hat](#mt32-pi-midi-hat)
     + [PI-MIDI](#pi-midi)
 - [💬 Custom System Exclusive messages](#-custom-system-exclusive-messages)
 - [❓ FAQ](#-faq)
@@ -156,14 +157,15 @@ Feel free to open an issue if you'd like to help us support your DAC, or even ju
 
 The following models of DAC have been confirmed as working by our testers. Please note the necessary configuration file options.
 
-| Manufacturer | Device            | DAC chip | Additional config file options                   | Comments                                                                                                               |
-|--------------|-------------------|----------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| Arananet     | [PI-MIDI]         | UDA1334  | None required                                    | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.                             |
-| Generic      | [GY-PCM5102]      | PCM5102A | None required                                    | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham.                            |
-| Generic      | [Pi-Fi DAC+ v2.0] | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @rc55.                                                                          |
-| gmcn42       | [clumsyMIDI]      | PCM5102A | None required                                    | Stereo 3.5mm output. Custom free/open source design by @gmcn42 also with GPIO MIDI in and out/thru. Tested by @gmcn42. |
-| innomaker    | [HiFi DAC HAT]    | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d` | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                                                  |
-| IQaudIO      | [Pi-DAC Pro]      | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c` | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                                                      |
+| Manufacturer | Device             | DAC chip | Additional config file options                         | Comments                                                                                                               |
+|--------------|--------------------|----------|--------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Arananet     | [PI-MIDI]          | UDA1334  | None required                                          | Stereo RCA output. Custom design by @arananet also with GPIO MIDI in. Tested by @dwhinham.                             |
+| chris-jh     | [mt32-pi-midi-hat] | PCM5102A | None required                                          | Stereo 3.5mm output. Custom free/open source design by @chris-jh also with GPIO MIDI in. Tested by @gmcn42.            |
+| Generic      | [GY-PCM5102]       | PCM5102A | None required                                          | Stereo 3.5mm output. Found very cheaply on AliExpress and other sites. Tested by @dwhinham.                            |
+| Generic      | [Pi-Fi DAC+ v2.0]  | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d`       | Stereo RCA and 3.5mm output. Tested by @rc55.                                                                          |
+| gmcn42       | [clumsyMIDI]       | PCM5102A | None required                                          | Stereo 3.5mm output. Custom free/open source design by @gmcn42 also with GPIO MIDI in and out/thru. Tested by @gmcn42. |
+| innomaker    | [HiFi DAC HAT]     | PCM5122  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4d`       | Stereo RCA and 3.5mm output. Tested by @calvinmorrow.                                                                  |
+| IQaudIO      | [Pi-DAC Pro]       | PCM5242  | `i2c_dac_init = pcm51xx`, `i2c_dac_address = 4c`       | Stereo RCA and 3.5mm output. Tested by @dwhinham.                                                                      |
 
 ### Finding the I²C address of your DAC
 
@@ -332,6 +334,14 @@ The community has been designing some excellent custom hardware for use with `mt
 
 <br clear="right"/>
 
+### mt32-pi-midi-hat
+
+[<img width="180rem" align="right" src="docs/chris_jh_mt32_pi_midi_hat.jpg">][mt32-pi-midi-hat]
+
+The [mt32-pi-midi-hat] is a free and open source PCB by @chris-jh aimed at DIYers, which features a MIDI input, space for a 128x32 or 128x64 OLED display, and space for one of two different inexpensive DAC modules with stereo 3.5mm output. This board is also designed to be easy to assemble, using only through-hole components.
+
+<br clear="right"/>
+
 ### PI-MIDI
 
 [<img width="180rem" align="right" src="https://www.arananet.net/pedidos/wp-content/uploads/2020/08/3.jpg">][PI-MIDI]
@@ -404,6 +414,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [inih]: https://github.com/benhoyt/inih
 [MiSTer]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
 [MT-32 game compatibility list]: https://en.wikipedia.org/wiki/List_of_MT-32-compatible_computer_games#IBM_PC_compatibles
+[mt32-pi-midi-hat]: https://github.com/chris-jh/mt32-pi-midi-hat
 [Munt]: https://github.com/munt/munt
 [Pi-DAC Pro]: https://web.archive.org/web/20191126140807/http://iqaudio.co.uk/hats/47-pi-dac-pro.html
 [Pi-Fi DAC+ v2.0]: https://www.aliexpress.com/item/32872005777.html
