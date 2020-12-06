@@ -17,8 +17,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _synth_h
-#define _synth_h
+#ifndef _synthbase_h
+#define _synthbase_h
 
 #include <circle/synchronize.h>
 #include <circle/types.h>
