@@ -26,6 +26,11 @@
 
 const char MT32SynthName[] = "mt32synth";
 
+constexpr size_t ROMOffsetVersionStringOld  = 0x4015;
+constexpr size_t ROMOffsetVersionString1_07 = 0x4011;
+constexpr size_t ROMOffsetVersionStringNew  = 0x2206;
+constexpr u32 MemoryAddressMasterVolume     = 0x40016;
+
 // SysEx commands for setting MIDI channel assignment (no SysEx framing, just 3-byte address and 9 channel values)
 const u8 CMT32Synth::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 const u8 CMT32Synth::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
@@ -115,9 +120,9 @@ void CMT32Synth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 
 void CMT32Synth::AllSoundOff()
 {
-	// Stop all sound immediately; MUNT treats CC 0x7C like "All Sound Off", ignoring pedal
+	// Stop all sound immediately; mt32emu treats CC 0x7C like "All Sound Off", ignoring pedal
 	for (uint8_t i = 0; i < 8; ++i)
-		m_pSynth->playMsgOnPart(i, 0xB, 0x7C, 0);
+		m_pSynth->playMsgOnPart(i, 0x0B, 0x7C, 0);
 }
 
 size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
@@ -221,26 +226,26 @@ bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 const char* CMT32Synth::GetControlROMName() const
 {
 	// +5 to skip 'ctrl_'
-	const char* shortName = m_pControlROMImage->getROMInfo()->shortName + 5;
-	const MT32Emu::Bit8u* romData = m_pControlROMImage->getFile()->getData();
-	size_t offset;
+	const char* pShortName = m_pControlROMImage->getROMInfo()->shortName + 5;
+	const MT32Emu::Bit8u* pROMData = m_pControlROMImage->getFile()->getData();
+	size_t nOffset;
 
 	// Find version strings from ROMs
-	if (strstr(shortName, "cm32l") || strstr(shortName, "2_04"))
-		offset = 0x2206;
-	else if (strstr(shortName, "1_07") || strstr(shortName, "bluer"))
-		offset = 0x4011;
+	if (strstr(pShortName, "cm32l") || strstr(pShortName, "2_04"))
+		nOffset = ROMOffsetVersionStringNew;
+	else if (strstr(pShortName, "1_07") || strstr(pShortName, "bluer"))
+		nOffset = ROMOffsetVersionString1_07;
 	else
-		offset = 0x4015;
+		nOffset = ROMOffsetVersionStringOld;
 
-	return reinterpret_cast<const char*>(romData + offset);
+	return reinterpret_cast<const char*>(pROMData + nOffset);
 }
 
 u8 CMT32Synth::GetMasterVolume() const
 {
-	u8 volume;
-	m_pSynth->readMemory(0x40016, 1, &volume);
-	return volume;
+	u8 nVolume;
+	m_pSynth->readMemory(MemoryAddressMasterVolume, 1, &nVolume);
+	return nVolume;
 }
 
 bool CMT32Synth::onMIDIQueueOverflow()
@@ -257,7 +262,7 @@ void CMT32Synth::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGro
 
 void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 {
-	//CLogger::Get()->WriteV("debug", LogNotice, fmt, list);
+	//CLogger::Get()->WriteV(MT32SynthName, LogDebug, pFmt, pList);
 }
 
 void CMT32Synth::showLCDMessage(const char* pMessage)
