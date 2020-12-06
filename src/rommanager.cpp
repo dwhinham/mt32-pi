@@ -134,7 +134,7 @@ bool CROMManager::HaveROMSet(TMT32ROMSet ROMSet) const
 	switch (ROMSet)
 	{
 		case TMT32ROMSet::Any:
-			return (m_pMT32OldControl || m_pMT32NewControl || m_pCM32LControl) && (m_pMT32PCM || m_pCM32LPCM);
+			return ((m_pMT32OldControl || m_pMT32NewControl) && m_pMT32PCM) || (m_pCM32LControl && m_pCM32LPCM);
 
 		case TMT32ROMSet::MT32Old:
 			return m_pMT32OldControl && m_pMT32PCM;
