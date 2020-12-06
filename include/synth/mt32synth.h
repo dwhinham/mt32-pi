@@ -63,6 +63,7 @@ public:
 
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(TMT32ROMSet ROMSet);
+	TMT32ROMSet GetROMSet() const;
 	const char* GetControlROMName() const;
 
 	u8 GetMasterVolume() const;

@@ -33,7 +33,7 @@ public:
 
 	bool ScanROMs();
 	bool HaveROMSet(TMT32ROMSet ROMSet) const;
-	bool GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const;
+	bool GetROMSet(TMT32ROMSet ROMSet, TMT32ROMSet& pOutROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const;
 
 private:
 	bool CheckROM(const char* pPath);

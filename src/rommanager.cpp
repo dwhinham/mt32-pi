@@ -149,7 +149,7 @@ bool CROMManager::HaveROMSet(TMT32ROMSet ROMSet) const
 	return false;
 }
 
-bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const
+bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, TMT32ROMSet& pOutROMSet, const MT32Emu::ROMImage*& pOutControl, const MT32Emu::ROMImage*& pOutPCM) const
 {
 	if (!HaveROMSet(ROMSet))
 		return false;
@@ -158,11 +158,20 @@ bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutCo
 	{
 		case TMT32ROMSet::Any:
 			if (m_pMT32OldControl)
+			{
 				pOutControl = m_pMT32OldControl;
+				pOutROMSet  = TMT32ROMSet::MT32Old;
+			}
 			else if (m_pMT32NewControl)
+			{
 				pOutControl = m_pMT32NewControl;
+				pOutROMSet  = TMT32ROMSet::MT32New;
+			}
 			else
+			{
 				pOutControl = m_pCM32LControl;
+				pOutROMSet  = TMT32ROMSet::CM32L;
+			}
 
 			if (pOutControl == m_pCM32LControl)
 				pOutPCM = m_pCM32LPCM;
@@ -174,16 +183,19 @@ bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutCo
 		case TMT32ROMSet::MT32Old:
 			pOutControl = m_pMT32OldControl;
 			pOutPCM     = m_pMT32PCM;
+			pOutROMSet  = TMT32ROMSet::MT32Old;
 			break;
 
 		case TMT32ROMSet::MT32New:
 			pOutControl = m_pMT32NewControl;
 			pOutPCM     = m_pMT32PCM;
+			pOutROMSet  = TMT32ROMSet::MT32New;
 			break;
 
 		case TMT32ROMSet::CM32L:
 			pOutControl = m_pCM32LControl;
 			pOutPCM     = m_pCM32LPCM;
+			pOutROMSet  = TMT32ROMSet::CM32L;
 			break;
 	}
 

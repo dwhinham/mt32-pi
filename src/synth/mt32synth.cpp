@@ -43,6 +43,7 @@ CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
 	  m_ResamplerQuality(ResamplerQuality),
 	  m_pSampleRateConverter(nullptr),
 
+	  m_CurrentROMSet(TMT32ROMSet::Any),
 	  m_pControlROMImage(nullptr),
 	  m_pPCMROMImage(nullptr)
 {
@@ -67,7 +68,7 @@ bool CMT32Synth::Initialize()
 	if (!m_ROMManager.HaveROMSet(InitialROMSet))
 		InitialROMSet = TMT32ROMSet::Any;
 
-	if (!m_ROMManager.GetROMSet(InitialROMSet, m_pControlROMImage, m_pPCMROMImage))
+	if (!m_ROMManager.GetROMSet(InitialROMSet, m_CurrentROMSet, m_pControlROMImage, m_pPCMROMImage))
 		return false;
 
 	m_pSynth = new MT32Emu::Synth(this);
@@ -190,37 +191,42 @@ void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
 
 bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 {
-	const MT32Emu::ROMImage* controlROMImage;
-	const MT32Emu::ROMImage* pcmROMImage;
-
-	// Get ROM set if available
-	if (!m_ROMManager.GetROMSet(ROMSet, controlROMImage, pcmROMImage))
-	{
-		if (m_pLCD)
-			m_pLCD->OnSystemMessage("ROM set not avail!");
-		return false;
-	}
+	const MT32Emu::ROMImage* pControlROMImage;
+	const MT32Emu::ROMImage* pPCMROMImage;
 
 	// Is this ROM set already active?
-	if (controlROMImage == m_pControlROMImage)
+	if (ROMSet == m_CurrentROMSet)
 	{
 		if (m_pLCD)
 			m_pLCD->OnSystemMessage("Already selected!");
 		return false;
 	}
 
+	// Get ROM set if available
+	if (!m_ROMManager.GetROMSet(ROMSet, m_CurrentROMSet, pControlROMImage, pPCMROMImage))
+	{
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("ROM set not avail!");
+		return false;
+	}
+
 	// Reopen synth with new ROMs
 	m_Lock.Acquire();
 	m_pSynth->close();
-	assert(m_pSynth->open(*controlROMImage, *pcmROMImage));
+	assert(m_pSynth->open(*pControlROMImage, *pPCMROMImage));
 	m_Lock.Release();
 
-	m_pControlROMImage = controlROMImage;
-	m_pPCMROMImage     = pcmROMImage;
+	m_pControlROMImage = pControlROMImage;
+	m_pPCMROMImage     = pPCMROMImage;
 
 	ReportStatus();
 
 	return true;
+}
+
+TMT32ROMSet CMT32Synth::GetROMSet() const
+{
+	return m_CurrentROMSet;
 }
 
 const char* CMT32Synth::GetControlROMName() const

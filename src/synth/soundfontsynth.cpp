@@ -379,3 +379,8 @@ const char* CSoundFontSynth::GetSoundFontName() const
 {
 	return m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex);
 }
+
+size_t CSoundFontSynth::GetSoundFontIndex() const
+{
+	return m_nCurrentSoundFontIndex;
+}

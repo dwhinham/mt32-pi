@@ -46,6 +46,7 @@ public:
 	virtual void ReportStatus() const override;
 
 	bool SwitchSoundFont(size_t nIndex);
+	size_t GetSoundFontIndex() const;
 	const char* GetSoundFontName() const;
 
 private:
