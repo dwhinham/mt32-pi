@@ -34,12 +34,12 @@ extern "C"
 	// Replacements for fluid_sys.c functions
 	FILE* fluid_file_open(const char* path, const char** errMsg)
 	{
-		FILE* handle = fopen(path, "rb");
+		FILE* pFile = fopen(path, "rb");
 
-		if (!handle && errMsg)
+		if (!pFile && errMsg)
 			*errMsg = "Failed to open file";
 
-		return handle;
+		return pFile;
 	}
 
 	void fluid_msleep(unsigned int msecs) { CTimer::SimpleMsDelay(msecs); }
@@ -357,8 +357,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	// Invalidate SoundFont ID
 	m_nSoundFontID = -1;
 
-	int result = fluid_synth_sfload(m_pSynth, soundFontPath, true);
-	if (result == FLUID_FAILED)
+	int nResult = fluid_synth_sfload(m_pSynth, soundFontPath, true);
+	if (nResult == FLUID_FAILED)
 	{
 		if (m_pLCD)
 			m_pLCD->OnSystemMessage("SF load failed!");
@@ -367,7 +367,7 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	}
 
 	m_nCurrentSoundFontIndex = nIndex;
-	m_nSoundFontID = result;
+	m_nSoundFontID = nResult;
 
 	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
 	ReportStatus();
