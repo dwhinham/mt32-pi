@@ -84,42 +84,42 @@ CROMManager::CROMManager()
 
 CROMManager::~CROMManager()
 {
-	const MT32Emu::ROMImage** const roms[] = { &m_pMT32OldControl, &m_pMT32NewControl, &m_pCM32LControl, &m_pMT32PCM, &m_pCM32LPCM };
-	for (const MT32Emu::ROMImage** rom : roms)
+	const MT32Emu::ROMImage** const ROMs[] = { &m_pMT32OldControl, &m_pMT32NewControl, &m_pCM32LControl, &m_pMT32PCM, &m_pCM32LPCM };
+	for (const MT32Emu::ROMImage** pROMImagePtr : ROMs)
 	{
-		if (*rom)
+		if (*pROMImagePtr)
 		{
-			if (MT32Emu::File* File = (*rom)->getFile())
+			if (MT32Emu::File* File = (*pROMImagePtr)->getFile())
 				delete File;
-			MT32Emu::ROMImage::freeROMImage(*rom);
+			MT32Emu::ROMImage::freeROMImage(*pROMImagePtr);
 		}
 	}
 }
 
 bool CROMManager::ScanROMs()
 {
-	DIR dir;
-	FILINFO fileInfo;
-	FRESULT result = f_findfirst(&dir, &fileInfo, ROMPath, "*");
+	DIR Dir;
+	FILINFO FileInfo;
+	FRESULT Result = f_findfirst(&Dir, &FileInfo, ROMPath, "*");
 
-	char path[sizeof(ROMPath) + FF_LFN_BUF];
-	strcpy(path, ROMPath);
-	path[sizeof(ROMPath) - 1] = '/';
+	char Path[sizeof(ROMPath) + FF_LFN_BUF];
+	strcpy(Path, ROMPath);
+	Path[sizeof(ROMPath) - 1] = '/';
 
 	// Loop over each file in the directory
-	while (result == FR_OK && *fileInfo.fname)
+	while (Result == FR_OK && *FileInfo.fname)
 	{
 		// Ensure not directory, hidden, or system file
-		if (!(fileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+		if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
 		{
 			// Assemble path
-			strcpy(path + sizeof(ROMPath), fileInfo.fname);
+			strcpy(Path + sizeof(ROMPath), FileInfo.fname);
 
 			// Try to open file
-			CheckROM(path);
+			CheckROM(Path);
 		}
 
-		result = f_findnext(&dir, &fileInfo);
+		Result = f_findnext(&Dir, &FileInfo);
 	}
 
 	// Fall back on old ROM loading behavior if we haven't found at least one valid ROM set
@@ -192,20 +192,20 @@ bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, const MT32Emu::ROMImage*& pOutCo
 
 bool CROMManager::CheckROM(const char* pPath)
 {
-	CROMFile* file = new CROMFile();
-	if (!file->open(pPath))
+	CROMFile* pFile = new CROMFile();
+	if (!pFile->open(pPath))
 	{
 		CLogger::Get()->Write(ROMManagerName, LogError, "Couldn't open '%s' for reading", pPath);
-		delete file;
+		delete pFile;
 		return false;
 	}
 
 	// Check ROM and store if valid
-	const MT32Emu::ROMImage* rom = MT32Emu::ROMImage::makeROMImage(file);
+	const MT32Emu::ROMImage* rom = MT32Emu::ROMImage::makeROMImage(pFile);
 	if (!StoreROM(*rom))
 	{
 		MT32Emu::ROMImage::freeROMImage(rom);
-		delete file;
+		delete pFile;
 		return false;
 	}
 
@@ -214,42 +214,42 @@ bool CROMManager::CheckROM(const char* pPath)
 
 bool CROMManager::StoreROM(const MT32Emu::ROMImage& ROMImage)
 {
-	const MT32Emu::ROMInfo* romInfo = ROMImage.getROMInfo();
-	const MT32Emu::ROMImage** romPtr = nullptr;
+	const MT32Emu::ROMInfo* pROMInfo = ROMImage.getROMInfo();
+	const MT32Emu::ROMImage** pROMImagePtr = nullptr;
 
 	// Not a valid ROM file
-	if (!romInfo)
+	if (!pROMInfo)
 		return false;
 
-	if (romInfo->type == MT32Emu::ROMInfo::Type::Control)
+	if (pROMInfo->type == MT32Emu::ROMInfo::Type::Control)
 	{
 		// Is an 'old' MT-32 control ROM
-		if (romInfo->shortName[10] == '1' || romInfo->shortName[10] == 'b')
-			romPtr = &m_pMT32OldControl;
+		if (pROMInfo->shortName[10] == '1' || pROMInfo->shortName[10] == 'b')
+			pROMImagePtr = &m_pMT32OldControl;
 
 		// Is a 'new' MT-32 control ROM
-		else if (romInfo->shortName[10] == '2')
-			romPtr = &m_pMT32NewControl;
+		else if (pROMInfo->shortName[10] == '2')
+			pROMImagePtr = &m_pMT32NewControl;
 
 		// Is a CM-32L control ROM
 		else
-			romPtr = &m_pCM32LControl;
+			pROMImagePtr = &m_pCM32LControl;
 	}
-	else if (romInfo->type == MT32Emu::ROMInfo::Type::PCM)
+	else if (pROMInfo->type == MT32Emu::ROMInfo::Type::PCM)
 	{
 		// Is an MT-32 PCM ROM
-		if (romInfo->shortName[4] == 'm')
-			romPtr = &m_pMT32PCM;
+		if (pROMInfo->shortName[4] == 'm')
+			pROMImagePtr = &m_pMT32PCM;
 
 		// Is a CM-32L PCM ROM
 		else
-			romPtr = &m_pCM32LPCM;
+			pROMImagePtr = &m_pCM32LPCM;
 	}
 
 	// Ensure we don't already have this ROM
-	if (!romPtr || *romPtr)
+	if (!pROMImagePtr || *pROMImagePtr)
 		return false;
 
-	*romPtr = &ROMImage;
+	*pROMImagePtr = &ROMImage;
 	return true;
 }
