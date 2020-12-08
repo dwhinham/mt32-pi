@@ -5,6 +5,7 @@
 include Config.mk
 
 OBJS		:=	src/config.o \
+				src/control/mister.o \
 				src/kernel.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \
@@ -22,6 +23,7 @@ OBJS		:=	src/config.o \
 				src/synth/soundfontsynth.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
+				src/control/*.d src/control/*.o \
 				src/lcd/*.d src/lcd/*.o \
 				src/synth/*.d src/synth/*.o
 

@@ -37,6 +37,8 @@
 #include <circle/usb/usbhcidevice.h>
 
 #include "config.h"
+#include "control/mister.h"
+#include "event.h"
 #include "lcd/synthlcd.h"
 #include "midiparser.h"
 #include "pisound.h"
@@ -89,6 +91,8 @@ private:
 	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 
+	void ProcessEventQueue();
+
 	// Actions that can be triggered via events
 	void SwitchSynth(TSynth Synth);
 	void SwitchMT32ROMSet(TMT32ROMSet ROMSet);
@@ -111,6 +115,10 @@ private:
 
 	CSynthLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
+
+	// MiSTer control interface
+	CMisterControl m_MisterControl;
+	unsigned m_nMisterUpdateTime;
 
 	// Serial GPIO MIDI
 	bool m_bSerialMIDIEnabled;
@@ -137,6 +145,10 @@ private:
 	// MIDI receive buffer
 	CRingBuffer<u8, MIDIRxBufferSize> m_MIDIRxBuffer;
 
+	// Event handling
+	TEventQueue m_EventQueue;
+
+	static void EventHandler(const TEvent& Event);
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 	static void MIDIReceiveHandler(const u8* pData, size_t nSize);
 

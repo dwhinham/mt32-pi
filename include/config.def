@@ -33,6 +33,10 @@ CFG(i2c_dac_address,		int,						AudioI2CDACAddress,			0x4c,							true	)
 CFG(i2c_dac_init,			TAudioI2CDACInit,			AudioI2CDACInit,			TAudioI2CDACInit::None					)
 END_SECTION
 
+BEGIN_SECTION(control)
+CFG(mister,					bool,						ControlMister,				false									)
+END_SECTION
+
 BEGIN_SECTION(mt32emu)
 CFG(resampler_quality,		TMT32EmuResamplerQuality,	MT32EmuResamplerQuality,	TMT32EmuResamplerQuality::Good			)
 CFG(midi_channels,			TMT32EmuMIDIChannels,		MT32EmuMIDIChannels,		TMT32EmuMIDIChannels::Standard			)

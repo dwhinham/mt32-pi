@@ -30,9 +30,10 @@
 
 const char MT32PiName[] = "mt32-pi";
 
-constexpr u32 LCDUpdatePeriodMillis   = 16;
-constexpr u32 LEDTimeoutMillis        = 50;
-constexpr u32 ActiveSenseTimoutMillis = 330;
+constexpr u32 LCDUpdatePeriodMillis    = 16;
+constexpr u32 MisterUpdatePeriodMillis = 50;
+constexpr u32 LEDTimeoutMillis         = 50;
+constexpr u32 ActiveSenseTimoutMillis  = 330;
 
 constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
@@ -63,6 +64,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
+
+	  m_MisterControl(pI2CMaster, m_EventQueue),
+	  m_nMisterUpdateTime(0),
 
 	  m_bSerialMIDIEnabled(false),
 
@@ -255,6 +259,9 @@ void CMT32Pi::MainTask()
 		// Process MIDI data
 		UpdateMIDI();
 
+		// Process events
+		ProcessEventQueue();
+
 		unsigned ticks = m_pTimer->GetTicks();
 
 		// Update activity LED
@@ -295,6 +302,8 @@ void CMT32Pi::UITask()
 	// Display current MT-32 ROM version/SoundFont
 	m_pCurrentSynth->ReportStatus();
 
+	const bool bMisterEnabled = CConfig::Get()->ControlMister;
+
 	while (m_bRunning)
 	{
 		unsigned ticks = m_pTimer->GetTicks();
@@ -307,6 +316,26 @@ void CMT32Pi::UITask()
 			else
 				m_pLCD->Update(*m_pSoundFontSynth);
 			m_nLCDUpdateTime = ticks;
+		}
+
+		// Poll MiSTer interface
+		if (bMisterEnabled && (ticks - m_nMisterUpdateTime) >= MSEC2HZ(MisterUpdatePeriodMillis))
+		{
+			TMisterStatus Status{TMisterSynth::Unknown, 0xFF, 0xFF};
+
+			if (m_pCurrentSynth == m_pMT32Synth)
+				Status.Synth = TMisterSynth::MT32;
+			else if (m_pCurrentSynth == m_pSoundFontSynth)
+				Status.Synth = TMisterSynth::SoundFont;
+
+			if (m_pMT32Synth)
+				Status.MT32ROMSet = static_cast<u8>(m_pMT32Synth->GetROMSet());
+
+			if (m_pSoundFontSynth)
+				Status.SoundFontIndex = m_pSoundFontSynth->GetSoundFontIndex();
+
+			m_MisterControl.Update(Status);
+			m_nMisterUpdateTime = ticks;
 		}
 	}
 
@@ -577,6 +606,43 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 	return static_cast<size_t>(nResult);
 }
 
+void CMT32Pi::ProcessEventQueue()
+{
+	TEvent Buffer[EventQueueSize];
+	const size_t nEvents = m_EventQueue.Dequeue(Buffer, sizeof(Buffer));
+
+	// We got some events, wake up
+	if (nEvents > 0)
+		Awaken();
+
+	for (size_t i = 0; i < nEvents; ++i)
+	{
+		const TEvent& Event = Buffer[i];
+
+		switch (Event.Type)
+		{
+			case TEventType::SwitchSynth:
+				SwitchSynth(Event.SwitchSynth.Synth);
+				break;
+
+			case TEventType::SwitchMT32ROMSet:
+				SwitchMT32ROMSet(Event.SwitchMT32ROMSet.ROMSet);
+				break;
+
+			case TEventType::SwitchSoundFont:
+				SwitchSoundFont(Event.SwitchSoundFont.Index);
+				break;
+
+			case TEventType::AllSoundOff:
+				if (m_pMT32Synth)
+					m_pMT32Synth->AllSoundOff();
+				if (m_pSoundFontSynth)
+					m_pSoundFontSynth->AllSoundOff();
+				break;
+		}
+	}
+}
+
 void CMT32Pi::SwitchSynth(TSynth NewSynth)
 {
 	CSynthBase* pNewSynth = nullptr;
@@ -672,6 +738,14 @@ bool CMT32Pi::InitPCM51xx(u8 nAddress)
 	}
 
 	return true;
+}
+
+void CMT32Pi::EventHandler(const TEvent& Event)
+{
+	assert(s_pThis != nullptr);
+
+	// Enqueue event
+	s_pThis->m_EventQueue.Enqueue(Event);
 }
 
 // The following handlers are called from interrupt context, enqueue into ring buffer for main thread
