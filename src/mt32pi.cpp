@@ -37,6 +37,14 @@ constexpr u32 ActiveSenseTimoutMillis = 330;
 constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
+enum class TCustomSysExCommand : u8
+{
+	Reboot           = 0x00,
+	SwitchMT32ROMSet = 0x01,
+	SwitchSoundFont  = 0x02,
+	SwitchSynth      = 0x03,
+};
+
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
 CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
@@ -455,61 +463,46 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 	if (pData[1] != 0x7D)
 		return false;
 
+	const auto Command = static_cast<TCustomSysExCommand>(pData[2]);
+
 	// Reboot (F0 7D 00 F7)
-	if (pData[2] == 0x00 && nSize == 4)
+	if (nSize == 4 && Command == TCustomSysExCommand::Reboot)
 	{
 		CLogger::Get()->Write(MT32PiName, LogNotice, "Reboot command received");
 		m_bRunning = false;
 		return true;
 	}
 
-	// Switch MT-32 ROM set (F0 7D 01 xx F7)
-	else if (pData[2] == 0x01 && nSize == 5)
+	if (nSize != 5)
+		return false;
+
+	const u8 nParameter = pData[3];
+	switch (Command)
 	{
-		u8 romSet = pData[3];
-		if (romSet > 2)
-			return false;
-
-		CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to ROM set %d", romSet);
-		return m_pMT32Synth->SwitchROMSet(static_cast<TMT32ROMSet>(romSet));
-	}
-
-	// Switch SoundFont (F0 7D 02 xx F7)
-	else if (pData[2] == 0x02 && nSize == 5)
-	{
-		u8 index = pData[3];
-
-		CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", index);
-		return m_pSoundFontSynth->SwitchSoundFont(index);
-	}
-
-	// Switch synthesizer (F0 7D 03 xx F7)
-	else if (pData[2] == 0x03 && nSize == 5)
-	{
-		u8 synth = pData[3];
-		if (synth > 1)
-			return false;
-
-		CSynthBase* newSynth = synth == 0 ? static_cast<CSynthBase*>(m_pMT32Synth) : static_cast<CSynthBase*>(m_pSoundFontSynth);
-		if (!newSynth)
+		// Switch MT-32 ROM set (F0 7D 01 xx F7)
+		case TCustomSysExCommand::SwitchMT32ROMSet:
 		{
-			LCDLog(TLCDLogType::Warning, "Synth unavailable!");
-			return false;
+			const TMT32ROMSet NewROMSet = static_cast<TMT32ROMSet>(nParameter);
+			if (NewROMSet < TMT32ROMSet::Any)
+				SwitchMT32ROMSet(NewROMSet);
+			return true;
 		}
 
-		if (newSynth == m_pCurrentSynth)
+		// Switch SoundFont (F0 7D 02 xx F7)
+		case TCustomSysExCommand::SwitchSoundFont:
+			SwitchSoundFont(nParameter);
+			return true;
+
+		// Switch synthesizer (F0 7D 03 xx F7)
+		case TCustomSysExCommand::SwitchSynth:
 		{
-			LCDLog(TLCDLogType::Warning, "Already active!");
-			return false;
+			SwitchSynth(static_cast<TSynth>(nParameter));
+			return true;
 		}
 
-		m_pCurrentSynth->AllSoundOff();
-		m_pCurrentSynth = newSynth;
-		LCDLog(TLCDLogType::Notice, newSynth == m_pMT32Synth ? "MT-32 mode" : "SoundFont mode");
-		return true;
+		default:
+			return false;
 	}
-
-	return false;
 }
 
 void CMT32Pi::UpdateMIDI()
@@ -582,6 +575,52 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 	}
 
 	return static_cast<size_t>(nResult);
+}
+
+void CMT32Pi::SwitchSynth(TSynth NewSynth)
+{
+	CSynthBase* pNewSynth = nullptr;
+
+	if (NewSynth == TSynth::MT32)
+		pNewSynth = m_pMT32Synth;
+	else if (NewSynth == TSynth::SoundFont)
+		pNewSynth = m_pSoundFontSynth;
+
+	if (pNewSynth == nullptr)
+	{
+		LCDLog(TLCDLogType::Warning, "Synth unavailable!");
+		return;
+	}
+
+	if (pNewSynth == m_pCurrentSynth)
+	{
+		LCDLog(TLCDLogType::Warning, "Already active!");
+		return;
+	}
+
+	m_pCurrentSynth->AllSoundOff();
+	m_pCurrentSynth = pNewSynth;
+	const char* pMode = NewSynth == TSynth::MT32 ? "MT-32 mode" : "SoundFont mode";
+	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to %s", pMode);
+	LCDLog(TLCDLogType::Notice, pMode);
+}
+
+void CMT32Pi::SwitchMT32ROMSet(TMT32ROMSet ROMSet)
+{
+	if (m_pMT32Synth == nullptr)
+		return;
+
+	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to ROM set %d", static_cast<u8>(ROMSet));
+	m_pMT32Synth->SwitchROMSet(ROMSet);
+}
+
+void CMT32Pi::SwitchSoundFont(u8 nIndex)
+{
+	if (m_pSoundFontSynth == nullptr)
+		return;
+
+	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", nIndex);
+	m_pSoundFontSynth->SwitchSoundFont(nIndex);
 }
 
 void CMT32Pi::LEDOn()

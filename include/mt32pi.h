@@ -42,8 +42,10 @@
 #include "pisound.h"
 #include "power.h"
 #include "ringbuffer.h"
+#include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
 #include "synth/soundfontsynth.h"
+#include "synth/synth.h"
 
 class CMT32Pi : public CMultiCoreSupport, CPower, CMIDIParser
 {
@@ -86,6 +88,11 @@ private:
 	void UpdateMIDI();
 	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
+
+	// Actions that can be triggered via events
+	void SwitchSynth(TSynth Synth);
+	void SwitchMT32ROMSet(TMT32ROMSet ROMSet);
+	void SwitchSoundFont(u8 nIndex);
 
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pMessage);
