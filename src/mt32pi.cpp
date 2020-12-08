@@ -257,6 +257,13 @@ void CMT32Pi::MainTask()
 
 		unsigned ticks = m_pTimer->GetTicks();
 
+		// Update activity LED
+		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
+		{
+			m_pActLED->Off();
+			m_bLEDOn = false;
+		}
+
 		// Check for active sensing timeout
 		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimoutMillis))
 		{
@@ -291,13 +298,6 @@ void CMT32Pi::UITask()
 	while (m_bRunning)
 	{
 		unsigned ticks = m_pTimer->GetTicks();
-
-		// Update activity LED
-		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
-		{
-			m_pActLED->Off();
-			m_bLEDOn = false;
-		}
 
 		// Update LCD
 		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCDUpdatePeriodMillis))
