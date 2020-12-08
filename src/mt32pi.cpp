@@ -30,10 +30,9 @@
 
 const char MT32PiName[] = "mt32-pi";
 
-#define LCD_UPDATE_PERIOD_MILLIS 16
-#define LCD_LOG_TIME_MILLIS 2000
-#define LED_TIMEOUT_MILLIS 50
-#define ACTIVE_SENSE_TIMEOUT_MILLIS 330
+constexpr u32 LCDUpdatePeriodMillis   = 16;
+constexpr u32 LEDTimeoutMillis        = 50;
+constexpr u32 ActiveSenseTimoutMillis = 330;
 
 constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
@@ -68,6 +67,8 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_nLEDOnTime(0),
 
 	  m_pSound(nullptr),
+	  m_pPisound(nullptr),
+
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
 	  m_pSoundFontSynth(nullptr)
@@ -249,7 +250,7 @@ void CMT32Pi::MainTask()
 		unsigned ticks = m_pTimer->GetTicks();
 
 		// Check for active sensing timeout
-		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ACTIVE_SENSE_TIMEOUT_MILLIS))
+		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimoutMillis))
 		{
 			m_pCurrentSynth->AllSoundOff();
 			m_bActiveSenseFlag = false;
@@ -284,14 +285,14 @@ void CMT32Pi::UITask()
 		unsigned ticks = m_pTimer->GetTicks();
 
 		// Update activity LED
-		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LED_TIMEOUT_MILLIS))
+		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
 		{
 			m_pActLED->Off();
 			m_bLEDOn = false;
 		}
 
 		// Update LCD
-		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCD_UPDATE_PERIOD_MILLIS))
+		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCDUpdatePeriodMillis))
 		{
 			if (m_pCurrentSynth == m_pMT32Synth)
 				m_pLCD->Update(*m_pMT32Synth);
@@ -425,7 +426,7 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 	// Flash LED
 	LEDOn();
 
-	// If we don't consume the SysEx message, forward it to mt32emu
+	// If we don't consume the SysEx message, forward it to the synthesizer
 	if (!ParseCustomSysEx(pData, nSize))
 		m_pCurrentSynth->HandleMIDISysExMessage(pData, nSize);
 
