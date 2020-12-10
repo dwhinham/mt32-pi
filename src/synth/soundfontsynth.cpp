@@ -370,7 +370,6 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	m_nSoundFontID = nResult;
 
 	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
-	ReportStatus();
 
 	return true;
 }

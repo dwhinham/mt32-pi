@@ -677,7 +677,8 @@ void CMT32Pi::SwitchMT32ROMSet(TMT32ROMSet ROMSet)
 		return;
 
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to ROM set %d", static_cast<u8>(ROMSet));
-	m_pMT32Synth->SwitchROMSet(ROMSet);
+	if (m_pMT32Synth->SwitchROMSet(ROMSet) && m_pCurrentSynth == m_pMT32Synth)
+		m_pMT32Synth->ReportStatus();
 }
 
 void CMT32Pi::SwitchSoundFont(u8 nIndex)
@@ -686,7 +687,8 @@ void CMT32Pi::SwitchSoundFont(u8 nIndex)
 		return;
 
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", nIndex);
-	m_pSoundFontSynth->SwitchSoundFont(nIndex);
+	if (m_pSoundFontSynth->SwitchSoundFont(nIndex) && m_pCurrentSynth == m_pSoundFontSynth)
+		m_pSoundFontSynth->ReportStatus();
 }
 
 void CMT32Pi::LEDOn()

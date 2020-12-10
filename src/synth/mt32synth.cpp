@@ -219,8 +219,6 @@ bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 	m_pControlROMImage = pControlROMImage;
 	m_pPCMROMImage     = pPCMROMImage;
 
-	ReportStatus();
-
 	return true;
 }
 

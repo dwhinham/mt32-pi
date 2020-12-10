@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for the [Blokas Pisound](https://blokas.io/pisound/) - many thanks to @sigkill for providing the device for development!
 - Support for configuration using [MiSTer FPGA](https://github.com/MiSTer-devel/Main_MiSTer/wiki)'s OSD via an I²C control interface in certain cores - many thanks to @sorgelig for collaborating and implementing the MiSTer side!
 
+### Changed
+
+- MT-32 ROM/SoundFont switch messages are now only shown when the appropriate synth is active.
+
 ### Fixed
 
 - Switching MT-32 ROM sets whilst MIDI was playing could cause a crash.
