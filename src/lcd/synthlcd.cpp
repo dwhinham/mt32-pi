@@ -25,9 +25,12 @@
 #include "synth/soundfontsynth.h"
 #include "utility.h"
 
+constexpr u8 SpinnerChars[] = {'_', '_', '_', '-', '\'', '\'', '^', '^', '`', '`', '-', '_', '_', '_'};
+
 CSynthLCD::CSynthLCD()
 	: m_SystemState(TSystemState::None),
 	  m_nSystemStateTime(0),
+	  m_nCurrentSpinnerChar(0),
 	  m_SystemMessageTextBuffer{'\0'},
 
 	  m_MT32State(TMT32State::DisplayingPartStates),
@@ -41,29 +44,45 @@ CSynthLCD::CSynthLCD()
 {
 }
 
-void CSynthLCD::OnSystemMessage(const char* pMessage)
+void CSynthLCD::OnSystemMessage(const char* pMessage, bool bSpinner)
 {
-	unsigned ticks = CTimer::Get()->GetTicks();
+	const unsigned nTicks = CTimer::Get()->GetTicks();
 
-	snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), pMessage);
+	if (bSpinner)
+	{
+		constexpr int nMaxMessageLen = TextBufferLength - 3;
+		snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), "%-*.*s %c", nMaxMessageLen, nMaxMessageLen, pMessage, SpinnerChars[0]);
+		m_SystemState = TSystemState::DisplayingSpinnerMessage;
+		m_nCurrentSpinnerChar = 0;
+	}
+	else
+	{
+		snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), pMessage);
+		m_SystemState = TSystemState::DisplayingMessage;
+	}
 
-	m_SystemState = TSystemState::DisplayingMessage;
-	m_nSystemStateTime = ticks;
+	m_nSystemStateTime = nTicks;
+}
+
+void CSynthLCD::ClearSpinnerMessage()
+{
+	m_SystemState = TSystemState::None;
+	m_nCurrentSpinnerChar = 0;
 }
 
 void CSynthLCD::OnMT32Message(const char* pMessage)
 {
-	unsigned ticks = CTimer::Get()->GetTicks();
+	const unsigned nTicks = CTimer::Get()->GetTicks();
 
 	snprintf(m_MT32TextBuffer, sizeof(m_MT32TextBuffer), pMessage);
 
 	m_MT32State = TMT32State::DisplayingMessage;
-	m_nMT32StateTime = ticks;
+	m_nMT32StateTime = nTicks;
 }
 
 void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
-	unsigned ticks = CTimer::Get()->GetTicks();
+	const unsigned ticks = CTimer::Get()->GetTicks();
 
 	// Bail out if displaying an MT-32 message and it hasn't been on-screen long enough
 	if (m_MT32State == TMT32State::DisplayingMessage && (ticks - m_nMT32StateTime) <= MSEC2HZ(MT32MessageDisplayTimeMillis))
@@ -77,27 +96,27 @@ void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const
 
 void CSynthLCD::Update(CMT32Synth& Synth)
 {
-	unsigned ticks = CTimer::Get()->GetTicks();
-	UpdateSystem(ticks);
+	const unsigned nTicks = CTimer::Get()->GetTicks();
+	UpdateSystem(nTicks);
 
-	u8 masterVolume = Synth.GetMasterVolume();
+	const u8 nMasterVolume = Synth.GetMasterVolume();
 
 	// Hide message if master volume changed and message has been displayed long enough
-	if (m_nPreviousMasterVolume != masterVolume)
+	if (m_nPreviousMasterVolume != nMasterVolume)
 	{
-		if (m_MT32State != TMT32State::DisplayingMessage || (ticks - m_nMT32StateTime) > MSEC2HZ(MT32MessageDisplayTimeMillis))
+		if (m_MT32State != TMT32State::DisplayingMessage || (nTicks - m_nMT32StateTime) > MSEC2HZ(MT32MessageDisplayTimeMillis))
 		{
-			m_nPreviousMasterVolume = masterVolume;
+			m_nPreviousMasterVolume = nMasterVolume;
 			m_MT32State = TMT32State::DisplayingPartStates;
-			m_nMT32StateTime = ticks;
+			m_nMT32StateTime = nTicks;
 		}
 	}
 
 	// Timbre change timeout
-	if (m_MT32State == TMT32State::DisplayingTimbreName && (ticks - m_nMT32StateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
+	if (m_MT32State == TMT32State::DisplayingTimbreName && (nTicks - m_nMT32StateTime) > MSEC2HZ(TimbreDisplayTimeMillis))
 	{
 		m_MT32State = TMT32State::DisplayingPartStates;
-		m_nMT32StateTime = ticks;
+		m_nMT32StateTime = nTicks;
 	}
 
 	if (m_MT32State == TMT32State::DisplayingPartStates)
@@ -106,8 +125,8 @@ void CSynthLCD::Update(CMT32Synth& Synth)
 
 void CSynthLCD::Update(CSoundFontSynth& Synth)
 {
-	unsigned ticks = CTimer::Get()->GetTicks();
-	UpdateSystem(ticks);
+	const unsigned nTicks = CTimer::Get()->GetTicks();
+	UpdateSystem(nTicks);
 }
 
 void CSynthLCD::UpdateSystem(unsigned int nTicks)
@@ -116,6 +135,14 @@ void CSynthLCD::UpdateSystem(unsigned int nTicks)
 	if (m_SystemState == TSystemState::DisplayingMessage && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
 	{
 		m_SystemState = TSystemState::None;
+		m_nSystemStateTime = nTicks;
+	}
+
+	// Spinner update
+	else if (m_SystemState == TSystemState::DisplayingSpinnerMessage && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageSpinnerTimeMillis))
+	{
+		m_nCurrentSpinnerChar = (m_nCurrentSpinnerChar + 1) % sizeof(SpinnerChars);
+		m_SystemMessageTextBuffer[TextBufferLength - 2] = SpinnerChars[m_nCurrentSpinnerChar];
 		m_nSystemStateTime = nTicks;
 	}
 }

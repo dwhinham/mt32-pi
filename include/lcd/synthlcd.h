@@ -35,6 +35,7 @@ public:
 	{
 		None,
 		DisplayingMessage,
+		DisplayingSpinnerMessage,
 	};
 
 	enum class TMT32State
@@ -46,7 +47,8 @@ public:
 
 	CSynthLCD();
 
-	void OnSystemMessage(const char* pMessage);
+	void OnSystemMessage(const char* pMessage, bool bSpinner = false);
+	void ClearSpinnerMessage();
 
 	void OnMT32Message(const char* pMessage);
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);
@@ -67,6 +69,7 @@ protected:
 	static constexpr size_t TextBufferLength = 20 + 1;
 
 	static constexpr unsigned SystemMessageDisplayTimeMillis = 3000;
+	static constexpr unsigned SystemMessageSpinnerTimeMillis = 32;
 	static constexpr unsigned MT32MessageDisplayTimeMillis = 200;
 	static constexpr unsigned TimbreDisplayTimeMillis = 1200;
 
@@ -76,6 +79,7 @@ protected:
 	// System state
 	TSystemState m_SystemState;
 	unsigned m_nSystemStateTime;
+	size_t m_nCurrentSpinnerChar;
 	char m_SystemMessageTextBuffer[TextBufferLength];
 
 	// MT-32 state

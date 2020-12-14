@@ -344,7 +344,7 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	}
 
 	if (m_pLCD)
-			m_pLCD->OnSystemMessage("Loading SoundFont...");
+		m_pLCD->OnSystemMessage("Loading SoundFont", true);
 
 	if (m_nSoundFontID >= 0 && fluid_synth_sfunload(m_pSynth, m_nSoundFontID, true) == FLUID_FAILED)
 	{
@@ -370,6 +370,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	m_nSoundFontID = nResult;
 
 	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
+	if (m_pLCD)
+		m_pLCD->ClearSpinnerMessage();
 
 	return true;
 }

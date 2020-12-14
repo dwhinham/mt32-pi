@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for the SSD1309 using the `ssd1306_i2c` driver - many thanks to @flynnsbit for testing!
 - Support for the [Blokas Pisound](https://blokas.io/pisound/) - many thanks to @sigkill for providing the device for development!
 - Support for configuration using [MiSTer FPGA](https://github.com/MiSTer-devel/Main_MiSTer/wiki)'s OSD via an I²C control interface in certain cores - many thanks to @sorgelig for collaborating and implementing the MiSTer side!
+- Animated loading "spinner" for when large SoundFonts are being loaded.
+  * This will probably be replaced with a progress bar in the future.
 
 ### Changed
 

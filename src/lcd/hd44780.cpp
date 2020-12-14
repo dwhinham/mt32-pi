@@ -199,7 +199,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 
 	if (m_nRows == 2)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage)
+		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 		else
 			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount);
@@ -208,7 +208,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage)
+		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 		{
 			// Clear top line
 			Print("", 0, 0, true);
@@ -231,7 +231,7 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 
 	if (m_nRows == 2)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage)
+		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 		{
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 			Print("", 0, 1, true);
@@ -241,7 +241,7 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage)
+		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 		{
 			// Clear top line
 			Print("", 0, 0, true);

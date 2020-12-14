@@ -335,10 +335,10 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	UpdateChannelLevels(Synth);
 	UpdateChannelPeakLevels();
 
-	if (m_SystemState == TSystemState::DisplayingMessage)
+	if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 	{
-		u8 messageRow = m_nHeight == 32 ? 0 : 1;
-		Print(m_SystemMessageTextBuffer, 0, messageRow, true);
+		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
+		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
 	}
 	else
 	{
@@ -348,8 +348,8 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	}
 
 	// MT-32 status row
-	u8 statusRow = m_nHeight == 32 ? 1 : 3;
-	Print(m_MT32TextBuffer, 0, statusRow, true);
+	const u8 nStatusRow = m_nHeight == 32 ? 1 : 3;
+	Print(m_MT32TextBuffer, 0, nStatusRow, true);
 	WriteFramebuffer();
 }
 
@@ -365,10 +365,10 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	UpdateChannelLevels(Synth);
 	UpdateChannelPeakLevels();
 
-	if (m_SystemState == TSystemState::DisplayingMessage)
+	if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
 	{
-		const u8 messageRow = m_nHeight == 32 ? 0 : 1;
-		Print(m_SystemMessageTextBuffer, 0, messageRow, true);
+		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
+		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
 	}
 	else
 	{
