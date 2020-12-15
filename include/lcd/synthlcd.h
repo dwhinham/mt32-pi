@@ -36,6 +36,8 @@ public:
 		None,
 		DisplayingMessage,
 		DisplayingSpinnerMessage,
+		EnteringPowerSavingMode,
+		InPowerSavingMode
 	};
 
 	enum class TMT32State
@@ -49,6 +51,8 @@ public:
 
 	void OnSystemMessage(const char* pMessage, bool bSpinner = false);
 	void ClearSpinnerMessage();
+	void EnterPowerSavingMode();
+	void ExitPowerSavingMode();
 
 	void OnMT32Message(const char* pMessage);
 	void OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const char* pPatchName);

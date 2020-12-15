@@ -70,6 +70,19 @@ void CSynthLCD::ClearSpinnerMessage()
 	m_nCurrentSpinnerChar = 0;
 }
 
+void CSynthLCD::EnterPowerSavingMode()
+{
+	snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), "Power saving mode");
+	m_SystemState = TSystemState::EnteringPowerSavingMode;
+	m_nSystemStateTime = CTimer::Get()->GetTicks();
+}
+
+void CSynthLCD::ExitPowerSavingMode()
+{
+	SetBacklightEnabled(true);
+	m_SystemState = TSystemState::None;
+}
+
 void CSynthLCD::OnMT32Message(const char* pMessage)
 {
 	const unsigned nTicks = CTimer::Get()->GetTicks();
@@ -143,6 +156,14 @@ void CSynthLCD::UpdateSystem(unsigned int nTicks)
 	{
 		m_nCurrentSpinnerChar = (m_nCurrentSpinnerChar + 1) % sizeof(SpinnerChars);
 		m_SystemMessageTextBuffer[TextBufferLength - 2] = SpinnerChars[m_nCurrentSpinnerChar];
+		m_nSystemStateTime = nTicks;
+	}
+
+	// Power saving
+	else if (m_SystemState == TSystemState::EnteringPowerSavingMode && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
+	{
+		SetBacklightEnabled(false);
+		m_SystemState = TSystemState::InPowerSavingMode;
 		m_nSystemStateTime = nTicks;
 	}
 }

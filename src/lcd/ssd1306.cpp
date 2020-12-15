@@ -316,7 +316,7 @@ void CSSD1306::Clear(bool bImmediate)
 
 void CSSD1306::SetBacklightEnabled(bool bEnabled)
 {
-	m_bBacklightEnabled = bEnabled;
+	CSynthLCD::SetBacklightEnabled(bEnabled);
 
 	// Power on/off display
 	WriteCommand(bEnabled ? SetDisplayOn : SetDisplayOff);
@@ -324,11 +324,11 @@ void CSSD1306::SetBacklightEnabled(bool bEnabled)
 
 void CSSD1306::Update(CMT32Synth& Synth)
 {
+	CSynthLCD::Update(Synth);
+
 	// Bail out if display is off
 	if (!m_bBacklightEnabled)
 		return;
-
-	CSynthLCD::Update(Synth);
 
 	Clear(false);
 	UpdateChannelLevels(Synth);
@@ -347,18 +347,22 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	}
 
 	// MT-32 status row
-	const u8 nStatusRow = m_nHeight == 32 ? 1 : 3;
-	Print(m_MT32TextBuffer, 0, nStatusRow, true);
-	WriteFramebuffer();
+	if (m_SystemState != TSystemState::EnteringPowerSavingMode)
+	{
+		const u8 nStatusRow = m_nHeight == 32 ? 1 : 3;
+		Print(m_MT32TextBuffer, 0, nStatusRow, true);
+	}
+
+	WriteFrameBuffer();
 }
 
 void CSSD1306::Update(CSoundFontSynth& Synth)
 {
+	CSynthLCD::Update(Synth);
+
 	// Bail out if display is off
 	if (!m_bBacklightEnabled)
 		return;
-
-	CSynthLCD::Update(Synth);
 
 	Clear(false);
 	UpdateChannelLevels(Synth);

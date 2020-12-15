@@ -416,7 +416,7 @@ void CMT32Pi::OnEnterPowerSavingMode()
 	m_pSound->Cancel();
 
 	if (m_pLCD)
-		m_pLCD->SetBacklightEnabled(false);
+		m_pLCD->EnterPowerSavingMode();
 }
 
 void CMT32Pi::OnExitPowerSavingMode()
@@ -425,7 +425,7 @@ void CMT32Pi::OnExitPowerSavingMode()
 	m_pSound->Start();
 
 	if (m_pLCD)
-		m_pLCD->SetBacklightEnabled(true);
+		m_pLCD->ExitPowerSavingMode();
 }
 
 void CMT32Pi::OnThrottleDetected()

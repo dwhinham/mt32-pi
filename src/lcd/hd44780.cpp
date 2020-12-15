@@ -194,21 +194,26 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 {
 	CSynthLCD::Update(Synth);
 
+	// Bail out if display is off
+	if (!m_bBacklightEnabled)
+		return;
+
 	SetBarChars(TBarCharSet::Wide);
 	UpdateChannelLevels(Synth);
 
 	if (m_nRows == 2)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+		if (m_SystemState != TSystemState::None)
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 		else
 			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount);
 
-		Print(m_MT32TextBuffer, 0, 1, true);
+		if (m_SystemState != TSystemState::EnteringPowerSavingMode)
+			Print(m_MT32TextBuffer, 0, 1, true);
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+		if (m_SystemState != TSystemState::None)
 		{
 			// Clear top line
 			Print("", 0, 0, true);
@@ -218,7 +223,8 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 		else
 			DrawChannelLevels(0, 3, 0, 1, MT32ChannelCount);
 
-		Print(m_MT32TextBuffer, 0, 3, true);
+		if (m_SystemState != TSystemState::EnteringPowerSavingMode)
+			Print(m_MT32TextBuffer, 0, 3, true);
 	}
 }
 
@@ -226,12 +232,16 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 {
 	CSynthLCD::Update(Synth);
 
+	// Bail out if display is off
+	if (!m_bBacklightEnabled)
+		return;
+
 	SetBarChars(TBarCharSet::Narrow);
 	UpdateChannelLevels(Synth);
 
 	if (m_nRows == 2)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+		if (m_SystemState != TSystemState::None)
 		{
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 			Print("", 0, 1, true);
@@ -241,7 +251,7 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+		if (m_SystemState != TSystemState::None)
 		{
 			// Clear top line
 			Print("", 0, 0, true);
