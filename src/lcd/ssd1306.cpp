@@ -155,14 +155,16 @@ bool CSSD1306::Initialize()
 		SetPageAddress,				0x00,	nPageAddrRange,
 	};
 
-	u8 Buffer[] = { 0x80, 0 };
-	for (auto nByte : InitSequence)
-	{
-		Buffer[1] = nByte;
-		m_pI2CMaster->Write(m_nAddress, Buffer, sizeof(Buffer));
-	}
+	for (u8 nCommand : InitSequence)
+		WriteCommand(nCommand);
 
 	return true;
+}
+
+void CSSD1306::WriteCommand(u8 nCommand) const
+{
+	const u8 Buffer[] = { 0x80, nCommand };
+	m_pI2CMaster->Write(m_nAddress, Buffer, sizeof(Buffer));
 }
 
 void CSSD1306::WriteFramebuffer() const
@@ -317,10 +319,7 @@ void CSSD1306::SetBacklightEnabled(bool bEnabled)
 	m_bBacklightEnabled = bEnabled;
 
 	// Power on/off display
-	u8 buffer[] = {0x80, 0};
-	buffer[1] = bEnabled ? 0xAF : 0xAE;
-
-	m_pI2CMaster->Write(m_nAddress, buffer, sizeof(buffer));
+	WriteCommand(bEnabled ? SetDisplayOn : SetDisplayOff);
 }
 
 void CSSD1306::Update(CMT32Synth& Synth)

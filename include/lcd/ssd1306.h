@@ -50,6 +50,7 @@ public:
 	virtual void Update(CSoundFontSynth& Synth) override;
 
 private:
+	void WriteCommand(u8 nCommand) const;
 	void WriteFramebuffer() const;
 	void SetPixel(u8 nX, u8 nY);
 	void ClearPixel(u8 nX, u8 nY);
