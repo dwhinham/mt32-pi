@@ -114,7 +114,7 @@ CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, T
 	  m_nHeight(nHeight),
 	  m_Rotation(Rotation),
 
-	  m_Framebuffer{0x40}
+	  m_FrameBufferUpdatePacket{0x40, {0}}
 {
 }
 
@@ -167,13 +167,13 @@ void CSSD1306::WriteCommand(u8 nCommand) const
 	m_pI2CMaster->Write(m_nAddress, Buffer, sizeof(Buffer));
 }
 
-void CSSD1306::WriteFramebuffer() const
+void CSSD1306::WriteFrameBuffer() const
 {
 	// Reset start line
 	WriteCommand(SetStartLine | 0x00);
 
 	// Copy entire framebuffer
-	m_pI2CMaster->Write(m_nAddress, m_Framebuffer, m_nHeight * 16 + 1);
+	m_pI2CMaster->Write(m_nAddress, &m_FrameBufferUpdatePacket, 128 * m_nHeight / 8 + 1);
 }
 
 void CSSD1306::SetPixel(u8 nX, u8 nY)
@@ -182,9 +182,7 @@ void CSSD1306::SetPixel(u8 nX, u8 nY)
 	nX &= 0x7F;
 	nY &= 0x3F;
 
-	// The framebuffer starts with the 0x40 byte so that we can write out the entire
-	// buffer to the I2C device in one shot, so offset by 1
-	m_Framebuffer[((nY & 0xF8) << 4) + nX + 1] |= 1 << (nY & 7);
+	m_FrameBufferUpdatePacket.Framebuffer[((nY & 0xF8) << 4) + nX] |= 1 << (nY & 7);
 }
 
 void CSSD1306::ClearPixel(u8 nX, u8 nY)
@@ -193,13 +191,14 @@ void CSSD1306::ClearPixel(u8 nX, u8 nY)
 	nX &= 0x7F;
 	nY &= 0x3F;
 
-	m_Framebuffer[((nY & 0xF8) << 4) + nX + 1] &= ~(1 << (nY & 7));
+	m_FrameBufferUpdatePacket.Framebuffer[((nY & 0xF8) << 4) + nX] &= ~(1 << (nY & 7));
 }
 
 void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
-	size_t rowOffset = nCursorY * m_nWidth * 2;
-	size_t columnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 5;
+	const size_t nRowOffset    = nCursorY * m_nWidth * 2;
+	const size_t nColumnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 4;
+	u8* pFrameBuffer    = m_FrameBufferUpdatePacket.Framebuffer;
 
 	// FIXME: Won't be needed when the full font is implemented in font6x8.h
 	if (chChar == '\xFF')
@@ -207,86 +206,85 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 
 	for (u8 i = 0; i < 6; ++i)
 	{
-		u16 fontColumn = FontDouble[static_cast<u8>(chChar - ' ')][i];
+		u16 nFontColumn = FontDouble[static_cast<u8>(chChar - ' ')][i];
 
 		// Don't invert the leftmost column or last two rows
 		if (i > 0 && bInverted)
-			fontColumn ^= 0x3FFF;
+			nFontColumn ^= 0x3FFF;
 
 		// Shift down by 2 pixels
-		fontColumn <<= 2;
+		nFontColumn <<= 2;
 
 		// Upper half of font
-		size_t offset = rowOffset + columnOffset + (bDoubleWidth ? i * 2 : i);
+		const size_t nOffset = nRowOffset + nColumnOffset + (bDoubleWidth ? i * 2 : i);
 
-		m_Framebuffer[offset] = fontColumn & 0xFF;
-		m_Framebuffer[offset + m_nWidth] = (fontColumn >> 8) & 0xFF;
+		pFrameBuffer[nOffset] = nFontColumn & 0xFF;
+		pFrameBuffer[nOffset + m_nWidth] = (nFontColumn >> 8) & 0xFF;
 		if (bDoubleWidth)
 		{
-			m_Framebuffer[offset + 1] = m_Framebuffer[offset];
-			m_Framebuffer[offset + m_nWidth + 1] = m_Framebuffer[offset + m_nWidth];
+			pFrameBuffer[nOffset + 1] = pFrameBuffer[nOffset];
+			pFrameBuffer[nOffset + m_nWidth + 1] = pFrameBuffer[nOffset + m_nWidth];
 		}
 	}
 }
 
 void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
 {
-	const size_t firstPageOffset = nFirstRow * m_nWidth;
-	const u8 totalPages          = nRows;
-	const u8 barHeight           = nRows * 8;
+	const size_t nFirstPageOffset = nFirstRow * m_nWidth;
+	const u8 nTotalPages          = nRows;
+	const u8 nBarHeight           = nRows * 8;
 
 	// For each channel
 	for (u8 i = 0; i < nChannels; ++i)
 	{
-		u8 pageValues[totalPages];
-		u8 partLevelPixels = m_ChannelLevels[i] * barHeight;
-		if (bDrawBarBases && partLevelPixels == 0)
-			partLevelPixels = 1;
+		u8 PageValues[nTotalPages];
+		u8 nPartLevelPixels = m_ChannelLevels[i] * nBarHeight;
+		if (bDrawBarBases && nPartLevelPixels == 0)
+			nPartLevelPixels = 1;
 
-		const u8 peakLevelPixels = m_ChannelPeakLevels[i] * barHeight;
-		const u8 fullPages       = partLevelPixels / 8;
-		const u8 remainder       = partLevelPixels % 8;
+		const u8 nPeakLevelPixels = m_ChannelPeakLevels[i] * nBarHeight;
+		const u8 nFullPages       = nPartLevelPixels / 8;
+		const u8 nRemainder       = nPartLevelPixels % 8;
 
-		for (u8 j = 0; j < fullPages; ++j)
-			pageValues[j] = 0xFF;
+		for (u8 j = 0; j < nFullPages; ++j)
+			PageValues[j] = 0xFF;
 
-		for (u8 j = fullPages; j < totalPages; ++j)
-			pageValues[j] = 0;
+		for (u8 j = nFullPages; j < nTotalPages; ++j)
+			PageValues[j] = 0;
 
-		if (remainder)
-			pageValues[fullPages] = 0xFF << (8 - remainder);
+		if (nRemainder)
+			PageValues[nFullPages] = 0xFF << (8 - nRemainder);
 
 		// Peak meters
-		if (bDrawPeaks && peakLevelPixels)
+		if (bDrawPeaks && nPeakLevelPixels)
 		{
-			const u8 peakPage  = peakLevelPixels / 8;
-			const u8 remainder = peakLevelPixels % 8;
+			const u8 nPeakPage      = nPeakLevelPixels / 8;
+			const u8 nPeakRemainder = nPeakLevelPixels % 8;
 
-			if (remainder)
-				pageValues[peakPage] |= 1 << 8 - remainder;
+			if (nPeakRemainder)
+				PageValues[nPeakPage] |= 1 << (8 - nPeakRemainder);
 			else
-				pageValues[peakPage - 1] |= 1;
+				PageValues[nPeakPage - 1] |= 1;
 		}
 
 		// For each bar column
 		for (u8 j = 0; j < nBarWidth; ++j)
 		{
 			// For each bar row
-			for (u8 k = 0; k < totalPages; ++k)
+			for (u8 k = 0; k < nTotalPages; ++k)
 			{
-				size_t offset = firstPageOffset;
+				size_t nOffset = nFirstPageOffset;
 
 				// Start BarXOffset pixels from the left
-				offset += nBarXOffset;
+				nOffset += nBarXOffset;
 
 				// Start from bottom-most page
-				offset += (totalPages - 1) * m_nWidth - k * m_nWidth;
+				nOffset += (nTotalPages - 1) * m_nWidth - k * m_nWidth;
 
 				// i'th bar + j'th bar column
-				offset += i * (nBarWidth + nBarSpacing) + j;
+				nOffset += i * (nBarWidth + nBarSpacing) + j;
 
-				// +1 to skip 0x40 byte
-				m_Framebuffer[offset + 1] = pageValues[k];
+				m_FrameBufferUpdatePacket.Framebuffer[nOffset] = PageValues[k];
 			}
 		}
 	}
@@ -307,14 +305,14 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 	}
 
 	if (bImmediate)
-		WriteFramebuffer();
+		WriteFrameBuffer();
 }
 
 void CSSD1306::Clear(bool bImmediate)
 {
-	memset(m_Framebuffer + 1, 0, m_nWidth * m_nHeight / 8);
+	memset(m_FrameBufferUpdatePacket.Framebuffer, 0, m_nWidth * m_nHeight / 8);
 	if (bImmediate)
-		WriteFramebuffer();
+		WriteFrameBuffer();
 }
 
 void CSSD1306::SetBacklightEnabled(bool bEnabled)
@@ -337,7 +335,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	UpdateChannelLevels(Synth);
 	UpdateChannelPeakLevels();
 
-	if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+	if (m_SystemState != TSystemState::None)
 	{
 		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
 		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
@@ -371,7 +369,7 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	UpdateChannelLevels(Synth);
 	UpdateChannelPeakLevels();
 
-	if (m_SystemState == TSystemState::DisplayingMessage || m_SystemState == TSystemState::DisplayingSpinnerMessage)
+	if (m_SystemState != TSystemState::None)
 	{
 		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
 		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
@@ -383,5 +381,5 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 		DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
 	}
 
-	WriteFramebuffer();
+	WriteFrameBuffer();
 }

@@ -50,8 +50,15 @@ public:
 	virtual void Update(CSoundFontSynth& Synth) override;
 
 private:
+	struct TFrameBufferUpdatePacket
+	{
+		u8 DataControlByte;
+		u8 FrameBuffer[128 * 64 / 8];
+	}
+	PACKED;
+
 	void WriteCommand(u8 nCommand) const;
-	void WriteFramebuffer() const;
+	void WriteFrameBuffer() const;
 	void SetPixel(u8 nX, u8 nY);
 	void ClearPixel(u8 nX, u8 nY);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
@@ -64,8 +71,7 @@ private:
 	u8 m_nHeight;
 	TLCDRotation m_Rotation;
 
-	// +1 to store the 0x40 command at the beginning
-	u8 m_Framebuffer[128 * 64 / 8 + 1];
+	TFrameBufferUpdatePacket m_FrameBufferUpdatePacket;
 };
 
 #endif
