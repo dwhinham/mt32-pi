@@ -114,7 +114,8 @@ CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, T
 	  m_nHeight(nHeight),
 	  m_Rotation(Rotation),
 
-	  m_FrameBufferUpdatePacket{0x40, {0}}
+	  m_FrameBuffers{{0x40, {0}}, {0x40, {0}}},
+	  m_nCurrentFrameBuffer(0)
 {
 }
 
@@ -172,8 +173,19 @@ void CSSD1306::WriteFrameBuffer() const
 	// Reset start line
 	WriteCommand(SetStartLine | 0x00);
 
+	// Compare two framebuffers
+	const size_t nFrameBufferSize = m_nWidth * m_nHeight / 8 + sizeof(TFrameBufferUpdatePacket::DataControlByte);
+	const bool bNeedsUpdate = memcmp(m_FrameBuffers[0].FrameBuffer, m_FrameBuffers[1].FrameBuffer, nFrameBufferSize) != 0;
+
 	// Copy entire framebuffer
-	m_pI2CMaster->Write(m_nAddress, &m_FrameBufferUpdatePacket, 128 * m_nHeight / 8 + 1);
+	if (bNeedsUpdate)
+		m_pI2CMaster->Write(m_nAddress, &m_FrameBuffers[m_nCurrentFrameBuffer], nFrameBufferSize);
+}
+
+void CSSD1306::SwapFrameBuffers()
+{
+	// Make other framebuffer current
+	m_nCurrentFrameBuffer = (m_nCurrentFrameBuffer + 1) % 2;
 }
 
 void CSSD1306::SetPixel(u8 nX, u8 nY)
@@ -182,7 +194,8 @@ void CSSD1306::SetPixel(u8 nX, u8 nY)
 	nX &= 0x7F;
 	nY &= 0x3F;
 
-	m_FrameBufferUpdatePacket.Framebuffer[((nY & 0xF8) << 4) + nX] |= 1 << (nY & 7);
+	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	pFrameBuffer[((nY & 0xF8) << 4) + nX] |= 1 << (nY & 7);
 }
 
 void CSSD1306::ClearPixel(u8 nX, u8 nY)
@@ -191,14 +204,15 @@ void CSSD1306::ClearPixel(u8 nX, u8 nY)
 	nX &= 0x7F;
 	nY &= 0x3F;
 
-	m_FrameBufferUpdatePacket.Framebuffer[((nY & 0xF8) << 4) + nX] &= ~(1 << (nY & 7));
+	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	pFrameBuffer[((nY & 0xF8) << 4) + nX] &= ~(1 << (nY & 7));
 }
 
 void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
 	const size_t nRowOffset    = nCursorY * m_nWidth * 2;
 	const size_t nColumnOffset = nCursorX * (bDoubleWidth ? 12 : 6) + 4;
-	u8* pFrameBuffer    = m_FrameBufferUpdatePacket.Framebuffer;
+	u8* pFrameBuffer           = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
 
 	// FIXME: Won't be needed when the full font is implemented in font6x8.h
 	if (chChar == '\xFF')
@@ -233,6 +247,7 @@ void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBar
 	const size_t nFirstPageOffset = nFirstRow * m_nWidth;
 	const u8 nTotalPages          = nRows;
 	const u8 nBarHeight           = nRows * 8;
+	u8* pFrameBuffer              = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
 
 	// For each channel
 	for (u8 i = 0; i < nChannels; ++i)
@@ -284,7 +299,7 @@ void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBar
 				// i'th bar + j'th bar column
 				nOffset += i * (nBarWidth + nBarSpacing) + j;
 
-				m_FrameBufferUpdatePacket.Framebuffer[nOffset] = PageValues[k];
+				pFrameBuffer[nOffset] = PageValues[k];
 			}
 		}
 	}
@@ -310,7 +325,8 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 
 void CSSD1306::Clear(bool bImmediate)
 {
-	memset(m_FrameBufferUpdatePacket.Framebuffer, 0, m_nWidth * m_nHeight / 8);
+	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	memset(pFrameBuffer, 0, m_nWidth * m_nHeight / 8);
 	if (bImmediate)
 		WriteFrameBuffer();
 }
@@ -355,6 +371,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	}
 
 	WriteFrameBuffer();
+	SwapFrameBuffers();
 }
 
 void CSSD1306::Update(CSoundFontSynth& Synth)
@@ -382,4 +399,5 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	}
 
 	WriteFrameBuffer();
+	SwapFrameBuffers();
 }

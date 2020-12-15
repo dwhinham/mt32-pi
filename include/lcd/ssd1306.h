@@ -59,6 +59,7 @@ private:
 
 	void WriteCommand(u8 nCommand) const;
 	void WriteFrameBuffer() const;
+	void SwapFrameBuffers();
 	void SetPixel(u8 nX, u8 nY);
 	void ClearPixel(u8 nX, u8 nY);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
@@ -71,7 +72,9 @@ private:
 	u8 m_nHeight;
 	TLCDRotation m_Rotation;
 
-	TFrameBufferUpdatePacket m_FrameBufferUpdatePacket;
+	// Double framebuffers
+	TFrameBufferUpdatePacket m_FrameBuffers[2];
+	u8 m_nCurrentFrameBuffer;
 };
 
 #endif
