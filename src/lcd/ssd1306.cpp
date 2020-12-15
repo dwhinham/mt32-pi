@@ -169,6 +169,9 @@ void CSSD1306::WriteCommand(u8 nCommand) const
 
 void CSSD1306::WriteFramebuffer() const
 {
+	// Reset start line
+	WriteCommand(SetStartLine | 0x00);
+
 	// Copy entire framebuffer
 	m_pI2CMaster->Write(m_nAddress, m_Framebuffer, m_nHeight * 16 + 1);
 }
