@@ -24,6 +24,8 @@
 #include <circle/serial.h>
 #include <circle/usb/usbmidi.h>
 
+#include <cstdarg>
+
 #include "lcd/hd44780.h"
 #include "lcd/ssd1306.h"
 #include "mt32pi.h"
@@ -698,21 +700,29 @@ void CMT32Pi::LEDOn()
 	m_bLEDOn = true;
 }
 
-void CMT32Pi::LCDLog(TLCDLogType Type, const char* pMessage)
+void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 {
 	if (!m_pLCD)
 		return;
 
+	// Up to 20 characters plus null terminator
+	char Buffer[21];
+
+	va_list Args;
+	va_start(Args, pFormat);
+	vsnprintf(Buffer, sizeof(Buffer), pFormat, Args);
+	va_end(Args);
+
 	// LCD task hasn't started yet; print directly
 	if (Type == TLCDLogType::Startup)
 	{
-		m_pLCD->Print("~", 0, 1);
-		m_pLCD->Print(pMessage, 2, 1, true, true);
+		m_pLCD->Print("~", 0, 1, false, false);
+		m_pLCD->Print(Buffer, 2, 1, true, true);
 	}
 
 	// Let LCD task pick up the message in its next update
 	else
-		m_pLCD->OnSystemMessage(pMessage);
+		m_pLCD->OnSystemMessage(Buffer);
 }
 
 // TODO: Generic configurable DAC init class

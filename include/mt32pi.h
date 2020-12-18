@@ -99,7 +99,7 @@ private:
 	void SwitchSoundFont(u8 nIndex);
 
 	void LEDOn();
-	void LCDLog(TLCDLogType Type, const char* pMessage);
+	void LCDLog(TLCDLogType Type, const char* pFormat...);
 
 	bool InitPCM51xx(u8 nAddress);
 
