@@ -32,10 +32,11 @@
 
 const char MT32PiName[] = "mt32-pi";
 
-constexpr u32 LCDUpdatePeriodMillis    = 16;
-constexpr u32 MisterUpdatePeriodMillis = 50;
-constexpr u32 LEDTimeoutMillis         = 50;
-constexpr u32 ActiveSenseTimoutMillis  = 330;
+constexpr u32 LCDUpdatePeriodMillis                = 16;
+constexpr u32 MisterUpdatePeriodMillis             = 50;
+constexpr u32 LEDTimeoutMillis                     = 50;
+constexpr u32 ActiveSenseTimeoutMillis             = 330;
+constexpr u32 DeferredSoundFontSwitchTimeoutMillis = 1000;
 
 constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
@@ -69,6 +70,10 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 
 	  m_MisterControl(pI2CMaster, m_EventQueue),
 	  m_nMisterUpdateTime(0),
+
+	  m_bDeferredSoundFontSwitchFlag(false),
+	  m_nDeferredSoundFontSwitchIndex(0),
+	  m_nDeferredSoundFontSwitchTime(0),
 
 	  m_bSerialMIDIEnabled(false),
 
@@ -274,7 +279,7 @@ void CMT32Pi::MainTask()
 		}
 
 		// Check for active sensing timeout
-		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimoutMillis))
+		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimeoutMillis))
 		{
 			m_pCurrentSynth->AllSoundOff();
 			m_bActiveSenseFlag = false;
@@ -286,7 +291,16 @@ void CMT32Pi::MainTask()
 			Awaken();
 
 		CPower::Update();
-	}
+
+		// Check for deferred SoundFont switch
+		if (m_bDeferredSoundFontSwitchFlag && (ticks - m_nDeferredSoundFontSwitchTime) >= MSEC2HZ(DeferredSoundFontSwitchTimeoutMillis))
+		{
+			SwitchSoundFont(m_nDeferredSoundFontSwitchIndex);
+			m_bDeferredSoundFontSwitchFlag = false;
+
+			// Trigger an awaken so we don't immediately go to sleep
+			Awaken();
+		}
 
 	// Stop audio
 	m_pSound->Cancel();
@@ -632,7 +646,7 @@ void CMT32Pi::ProcessEventQueue()
 				break;
 
 			case TEventType::SwitchSoundFont:
-				SwitchSoundFont(Event.SwitchSoundFont.Index);
+				DeferSwitchSoundFont(Event.SwitchSoundFont.Index);
 				break;
 
 			case TEventType::AllSoundOff:
@@ -683,7 +697,7 @@ void CMT32Pi::SwitchMT32ROMSet(TMT32ROMSet ROMSet)
 		m_pMT32Synth->ReportStatus();
 }
 
-void CMT32Pi::SwitchSoundFont(u8 nIndex)
+void CMT32Pi::SwitchSoundFont(size_t nIndex)
 {
 	if (m_pSoundFontSynth == nullptr)
 		return;
@@ -691,6 +705,14 @@ void CMT32Pi::SwitchSoundFont(u8 nIndex)
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", nIndex);
 	if (m_pSoundFontSynth->SwitchSoundFont(nIndex) && m_pCurrentSynth == m_pSoundFontSynth)
 		m_pSoundFontSynth->ReportStatus();
+}
+
+void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
+{
+	LCDLog(TLCDLogType::Notice, "SoundFont: %ld", nIndex);
+	m_nDeferredSoundFontSwitchIndex = nIndex;
+	m_nDeferredSoundFontSwitchTime  = CTimer::Get()->GetTicks();
+	m_bDeferredSoundFontSwitchFlag  = true;
 }
 
 void CMT32Pi::LEDOn()

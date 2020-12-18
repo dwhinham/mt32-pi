@@ -96,7 +96,8 @@ private:
 	// Actions that can be triggered via events
 	void SwitchSynth(TSynth Synth);
 	void SwitchMT32ROMSet(TMT32ROMSet ROMSet);
-	void SwitchSoundFont(u8 nIndex);
+	void SwitchSoundFont(size_t nIndex);
+	void DeferSwitchSoundFont(size_t nIndex);
 
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pFormat...);
@@ -119,6 +120,11 @@ private:
 	// MiSTer control interface
 	CMisterControl m_MisterControl;
 	unsigned m_nMisterUpdateTime;
+
+	// Deferred SoundFont switch
+	bool m_bDeferredSoundFontSwitchFlag;
+	size_t m_nDeferredSoundFontSwitchIndex;
+	unsigned m_nDeferredSoundFontSwitchTime;
 
 	// Serial GPIO MIDI
 	bool m_bSerialMIDIEnabled;
