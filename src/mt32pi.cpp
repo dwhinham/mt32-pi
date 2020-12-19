@@ -199,7 +199,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		m_pMT32Synth->SetMIDIChannels(config.MT32EmuMIDIChannels);
 
 	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
-	m_pSoundFontSynth = new CSoundFontSynth(config.AudioSampleRate, 0.2f, config.FluidSynthPolyphony);
+	m_pSoundFontSynth = new CSoundFontSynth(config.AudioSampleRate, config.FluidSynthGain, config.FluidSynthPolyphony);
 	if (!m_pSoundFontSynth->Initialize())
 	{
 		logger.Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");

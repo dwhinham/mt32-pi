@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * This will probably be replaced with a progress bar in the future.
 - Support for Roland SC-55 "graphics" messages when using a graphical display.
   * A good example of this is the Roland "Star Games" demo MIDI (`STARGAME.MID`).
+- Ability to set master volume gain for FluidSynth (new configuration file option).
 
 ### Changed
 

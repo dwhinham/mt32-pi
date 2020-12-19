@@ -138,6 +138,12 @@ bool CConfig::ParseOption(const char* pString, int* pOutInt, bool bHex)
 	return true;
 }
 
+bool CConfig::ParseOption(const char* pString, float* pOutFloat)
+{
+	*pOutFloat = strtof(pString, nullptr);
+	return true;
+}
+
 // Define template function wrappers for parsing enums
 CONFIG_ENUM_PARSER(TSystemDefaultSynth);
 CONFIG_ENUM_PARSER(TAudioOutputDevice);

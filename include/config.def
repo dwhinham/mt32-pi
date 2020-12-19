@@ -47,6 +47,7 @@ END_SECTION
 
 BEGIN_SECTION(fluidsynth)
 CFG(soundfont,				int,						FluidSynthSoundFont,		0										)
+CFG(gain,					float,						FluidSynthGain,				0.2f									)
 CFG(polyphony,				int,						FluidSynthPolyphony,		256										)
 END_SECTION
 
