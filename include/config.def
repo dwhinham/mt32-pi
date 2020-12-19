@@ -34,6 +34,8 @@ CFG(i2c_dac_init,			TAudioI2CDACInit,			AudioI2CDACInit,			TAudioI2CDACInit::Non
 END_SECTION
 
 BEGIN_SECTION(control)
+CFG(scheme,					TControlScheme,				ControlScheme,				TControlScheme::None					)
+CFG(encoder_type,			TEncoderType,				ControlEncoderType,			TEncoderType::Full						)
 CFG(mister,					bool,						ControlMister,				false									)
 END_SECTION
 

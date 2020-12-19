@@ -21,9 +21,21 @@
 #ifndef _event_h
 #define _event_h
 
+#include "control/button.h"
 #include "ringbuffer.h"
 #include "synth/mt32romset.h"
 #include "synth/synth.h"
+
+struct TButtonEvent
+{
+	TButton Button;
+	bool bPressed;
+};
+
+struct TEncoderEvent
+{
+	s8 nDelta;
+};
 
 struct TSwitchSynthEvent
 {
@@ -45,7 +57,10 @@ struct TAllSoundOffEvent
 	// No payload
 };
 
-enum class TEventType {
+enum class TEventType
+{
+	Button,
+	Encoder,
 	SwitchSynth,
 	SwitchMT32ROMSet,
 	SwitchSoundFont,
@@ -58,6 +73,8 @@ struct TEvent
 
 	union
 	{
+		TButtonEvent Button;
+		TEncoderEvent Encoder;
 		TSwitchSynthEvent SwitchSynth;
 		TSwitchMT32ROMSetEvent SwitchMT32ROMSet;
 		TSwitchSoundFontEvent SwitchSoundFont;

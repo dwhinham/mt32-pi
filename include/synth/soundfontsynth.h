@@ -31,7 +31,7 @@
 class CSoundFontSynth : public CSynthBase
 {
 public:
-	CSoundFontSynth(unsigned nSampleRate, u32 nPolyphony = 128);
+	CSoundFontSynth(unsigned nSampleRate, float nGain = 0.2f, u32 nPolyphony = 256);
 	virtual ~CSoundFontSynth() override;
 
 	// CSynthBase
@@ -40,11 +40,13 @@ public:
 	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
 	virtual bool IsActive() override;
 	virtual void AllSoundOff() override;
+	virtual void SetMasterVolume(u8 nVolume) override;
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
 	virtual void ReportStatus() const override;
 
+	size_t GetSoundFontCount() const { return m_SoundFontManager.GetSoundFontCount(); }
 	bool SwitchSoundFont(size_t nIndex);
 	size_t GetSoundFontIndex() const;
 	const char* GetSoundFontName() const;
@@ -52,6 +54,8 @@ public:
 private:
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
+
+	float m_nGain;
 
 	u32 m_nPolyphony;
 	int m_nSoundFontID;

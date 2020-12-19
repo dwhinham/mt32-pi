@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for the SSD1309 using the `ssd1306_i2c` driver - many thanks to @flynnsbit for testing!
 - Support for the [Blokas Pisound](https://blokas.io/pisound/) - many thanks to @sigkill for providing the device for development!
 - Support for configuration using [MiSTer FPGA](https://github.com/MiSTer-devel/Main_MiSTer/wiki)'s OSD via an I²C control interface in certain cores - many thanks to @sorgelig for collaborating and implementing the MiSTer side!
+- Support for physical buttons and rotary encoders with two "simple" control schemes (new configuration file option).
+  * `simple_buttons` allows connecting 4 buttons for switching synth, switching MT-32 ROM/SoundFont, decreasing and increasing volume.
+  * `simple_encoder` allows connecting 2 buttons and a rotary encoder (with button). Volume is adjusted by turning the encoder, encoder button will be enabled in a future release.
+  * Menu system/additional button features will come in future releases; this is just to get basic functionality implemented.
+  * Details on how to wire these controls will be made available in the wiki.
 - Animated loading "spinner" for when large SoundFonts are being loaded.
   * This will probably be replaced with a progress bar in the future.
 

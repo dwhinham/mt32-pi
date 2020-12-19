@@ -56,6 +56,7 @@ public:
 	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) override;
 	virtual bool IsActive() override { return m_pSynth->isActive(); }
 	virtual void AllSoundOff() override;
+	virtual void SetMasterVolume(u8 nVolume) override;
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;

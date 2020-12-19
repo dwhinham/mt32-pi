@@ -107,11 +107,13 @@ extern "C"
 	}
 }
 
-CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, u32 nPolyphony)
+CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, float nGain, u32 nPolyphony)
 	: CSynthBase(nSampleRate),
 
 	  m_pSettings(nullptr),
 	  m_pSynth(nullptr),
+
+	  m_nGain(nGain),
 
 	  m_nPolyphony(nPolyphony),
 	  m_nSoundFontID(0),
@@ -181,6 +183,7 @@ bool CSoundFontSynth::Initialize()
 		return false;
 	}
 
+	fluid_synth_set_gain(m_pSynth, m_nGain);
 	fluid_synth_set_polyphony(m_pSynth, m_nPolyphony);
 
 	return true;
@@ -267,6 +270,13 @@ void CSoundFontSynth::AllSoundOff()
 {
 	m_Lock.Acquire();
 	fluid_synth_all_sounds_off(m_pSynth, -1);
+	m_Lock.Release();
+}
+
+void CSoundFontSynth::SetMasterVolume(u8 nVolume)
+{
+	m_Lock.Acquire();
+	fluid_synth_set_gain(m_pSynth, nVolume / 100.0f * m_nGain);
 	m_Lock.Release();
 }
 

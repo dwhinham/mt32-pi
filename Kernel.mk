@@ -5,7 +5,11 @@
 include Config.mk
 
 OBJS		:=	src/config.o \
+				src/control/control.o \
 				src/control/mister.o \
+				src/control/rotaryencoder.o \
+				src/control/simplebuttons.o \
+				src/control/simpleencoder.o \
 				src/kernel.o \
 				src/lcd/hd44780.o \
 				src/lcd/hd44780fourbit.o \

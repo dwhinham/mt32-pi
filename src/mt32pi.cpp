@@ -68,6 +68,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
 
+	  m_pControl(nullptr),
 	  m_MisterControl(pI2CMaster, m_EventQueue),
 	  m_nMisterUpdateTime(0),
 
@@ -88,6 +89,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pSound(nullptr),
 	  m_pPisound(nullptr),
 
+	  m_nMasterVolume(100),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
 	  m_pSoundFontSynth(nullptr)
@@ -170,6 +172,19 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 	if (!m_pSound->AllocateQueueFrames(config.AudioChunkSize))
 		logger.Write(MT32PiName, LogPanic, "Failed to allocate sound queue");
 
+	LCDLog(TLCDLogType::Startup, "Init controls");
+	if (config.ControlScheme == CConfig::TControlScheme::SimpleButtons)
+		m_pControl = new CControlSimpleButtons(m_EventQueue);
+	else if (config.ControlScheme == CConfig::TControlScheme::SimpleEncoder)
+		m_pControl = new CControlSimpleEncoder(m_EventQueue, config.ControlEncoderType);
+
+	if (m_pControl && !m_pControl->Initialize())
+	{
+		logger.Write(MT32PiName, LogWarning, "Control init failed");
+		delete m_pControl;
+		m_pControl = nullptr;
+	}
+
 	LCDLog(TLCDLogType::Startup, "Init mt32emu");
 	m_pMT32Synth = new CMT32Synth(config.AudioSampleRate, config.MT32EmuResamplerQuality);
 	if (!m_pMT32Synth->Initialize())
@@ -184,7 +199,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		m_pMT32Synth->SetMIDIChannels(config.MT32EmuMIDIChannels);
 
 	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
-	m_pSoundFontSynth = new CSoundFontSynth(config.AudioSampleRate, config.FluidSynthPolyphony);
+	m_pSoundFontSynth = new CSoundFontSynth(config.AudioSampleRate, 0.2f, config.FluidSynthPolyphony);
 	if (!m_pSoundFontSynth->Initialize())
 	{
 		logger.Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");
@@ -266,6 +281,10 @@ void CMT32Pi::MainTask()
 		// Process MIDI data
 		UpdateMIDI();
 
+		// Update controls
+		if (m_pControl)
+			m_pControl->Update();
+
 		// Process events
 		ProcessEventQueue();
 
@@ -301,6 +320,7 @@ void CMT32Pi::MainTask()
 			// Trigger an awaken so we don't immediately go to sleep
 			Awaken();
 		}
+	}
 
 	// Stop audio
 	m_pSound->Cancel();
@@ -637,6 +657,10 @@ void CMT32Pi::ProcessEventQueue()
 
 		switch (Event.Type)
 		{
+			case TEventType::Button:
+				ProcessButtonEvent(Event.Button);
+				break;
+
 			case TEventType::SwitchSynth:
 				SwitchSynth(Event.SwitchSynth.Synth);
 				break;
@@ -655,7 +679,60 @@ void CMT32Pi::ProcessEventQueue()
 				if (m_pSoundFontSynth)
 					m_pSoundFontSynth->AllSoundOff();
 				break;
+
+			case TEventType::Encoder:
+				SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+				break;
 		}
+	}
+}
+
+void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
+{
+	if (Event.Button == TButton::EncoderButton)
+	{
+		LCDLog(TLCDLogType::Notice, "Enc. button %s", Event.bPressed ? "PRESSED" : "RELEASED");
+		return;
+	}
+
+	if (!Event.bPressed)
+		return;
+
+	if (Event.Button == TButton::Button1)
+	{
+		// Swap synths
+		if (m_pCurrentSynth == m_pMT32Synth)
+			SwitchSynth(TSynth::SoundFont);
+		else
+			SwitchSynth(TSynth::MT32);
+	}
+	else if (Event.Button == TButton::Button2 && Event.bPressed)
+	{
+		if (m_pCurrentSynth == m_pMT32Synth)
+		{
+			// Next MT-32 ROM set
+			const u8 nROMSet = (static_cast<u8>(m_pMT32Synth->GetROMSet()) + 1) % 3;
+			SwitchMT32ROMSet(static_cast<TMT32ROMSet>(nROMSet));
+		}
+		else
+		{
+			// Next SoundFont
+			const size_t nSoundFonts = m_pSoundFontSynth->GetSoundFontCount();
+			size_t nNextSoundFont;
+			if (m_bDeferredSoundFontSwitchFlag)
+				nNextSoundFont = (m_nDeferredSoundFontSwitchIndex + 1) % nSoundFonts;
+			else
+				nNextSoundFont = (m_pSoundFontSynth->GetSoundFontIndex() + 1) % nSoundFonts;
+			DeferSwitchSoundFont(nNextSoundFont);
+		}
+	}
+	else if (Event.Button == TButton::Button3)
+	{
+		SetMasterVolume(m_nMasterVolume - 1);
+	}
+	else if (Event.Button == TButton::Button4)
+	{
+		SetMasterVolume(m_nMasterVolume + 1);
 	}
 }
 
@@ -713,6 +790,19 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 	m_nDeferredSoundFontSwitchIndex = nIndex;
 	m_nDeferredSoundFontSwitchTime  = CTimer::Get()->GetTicks();
 	m_bDeferredSoundFontSwitchFlag  = true;
+}
+
+void CMT32Pi::SetMasterVolume(s32 nVolume)
+{
+	m_nMasterVolume = Utility::Clamp(nVolume, 0, 100);
+
+	if (m_pMT32Synth)
+		m_pMT32Synth->SetMasterVolume(m_nMasterVolume);
+	if (m_pSoundFontSynth)
+		m_pSoundFontSynth->SetMasterVolume(m_nMasterVolume);
+
+	if (m_pCurrentSynth == m_pSoundFontSynth)
+		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
 }
 
 void CMT32Pi::LEDOn()

@@ -21,6 +21,7 @@
 #ifndef _config_h
 #define _config_h
 
+#include "control/rotaryencoder.h"
 #include "lcd/ssd1306.h"
 #include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
@@ -41,6 +42,13 @@ public:
 		ENUM(None, none)               \
 		ENUM(PCM51xx, pcm51xx)
 
+	#define ENUM_CONTROLSCHEME(ENUM)        \
+		ENUM(None, none)                    \
+		ENUM(SimpleButtons, simple_buttons) \
+		ENUM(SimpleEncoder, simple_encoder)
+
+	using TEncoderType             = CRotaryEncoder::TEncoderType;
+
 	using TMT32EmuResamplerQuality = CMT32Synth::TResamplerQuality;
 	using TMT32EmuMIDIChannels     = CMT32Synth::TMIDIChannels;
 	using TMT32EmuROMSet           = TMT32ROMSet;
@@ -56,6 +64,7 @@ public:
 	CONFIG_ENUM(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);
 	CONFIG_ENUM(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
 	CONFIG_ENUM(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
+	CONFIG_ENUM(TControlScheme, ENUM_CONTROLSCHEME);
 	CONFIG_ENUM(TLCDType, ENUM_LCDTYPE);
 
 	CConfig();
@@ -80,6 +89,8 @@ private:
 	static bool ParseOption(const char* pString, TMT32EmuMIDIChannels* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuROMSet* pOut);
 	static bool ParseOption(const char* pString, TLCDType* pOut);
+	static bool ParseOption(const char* pString, TControlScheme* pOut);
+	static bool ParseOption(const char* pString, TEncoderType* pOut);
 	static bool ParseOption(const char* pString, TLCDRotation* pOut);
 
 	static CConfig* s_pThis;

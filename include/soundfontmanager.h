@@ -30,6 +30,7 @@ public:
 	~CSoundFontManager() = default;
 
 	bool ScanSoundFonts();
+	size_t GetSoundFontCount() const { return m_nSoundFonts; }
 	const char* GetSoundFontPath(size_t nIndex) const;
 	const char* GetSoundFontName(size_t nIndex) const;
 	const char* GetFirstValidSoundFontPath() const;

@@ -37,6 +37,7 @@
 #include <circle/usb/usbhcidevice.h>
 
 #include "config.h"
+#include "control/control.h"
 #include "control/mister.h"
 #include "event.h"
 #include "lcd/synthlcd.h"
@@ -92,12 +93,14 @@ private:
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 
 	void ProcessEventQueue();
+	void ProcessButtonEvent(const TButtonEvent& Event);
 
 	// Actions that can be triggered via events
 	void SwitchSynth(TSynth Synth);
 	void SwitchMT32ROMSet(TMT32ROMSet ROMSet);
 	void SwitchSoundFont(size_t nIndex);
 	void DeferSwitchSoundFont(size_t nIndex);
+	void SetMasterVolume(s32 nVolume);
 
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pFormat...);
@@ -116,6 +119,8 @@ private:
 
 	CSynthLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
+
+	CControl* m_pControl;
 
 	// MiSTer control interface
 	CMisterControl m_MisterControl;
@@ -144,6 +149,7 @@ private:
 	CPisound* m_pPisound;
 
 	// Synthesizers
+	u8 m_nMasterVolume;
 	CSynthBase* m_pCurrentSynth;
 	CMT32Synth* m_pMT32Synth;
 	CSoundFontSynth* m_pSoundFontSynth;

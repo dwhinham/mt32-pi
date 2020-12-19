@@ -126,6 +126,12 @@ void CMT32Synth::AllSoundOff()
 		m_pSynth->playMsgOnPart(i, 0x0B, 0x7C, 0);
 }
 
+void CMT32Synth::SetMasterVolume(u8 nVolume)
+{
+	const u8 SetVolumeSysEx[] = { 0x10, 0x00, 0x16, nVolume };
+	m_pSynth->writeSysex(0x10, SetVolumeSysEx, sizeof(SetVolumeSysEx));
+}
+
 size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
 {
 	m_Lock.Acquire();
