@@ -70,6 +70,16 @@ namespace Utility
 		return value && ((value & (value-1)) == 0);
 	}
 
+	// Computes the Roland checksum
+	constexpr u8 RolandChecksum(const u8* pData, size_t nSize)
+	{
+		u8 nSum = 0;
+		for (size_t i = 0; i < nSize; ++i)
+			nSum = (nSum + pData[i]) & 0x7F;
+
+		return 128 - nSum;
+	}
+
 	// Comparators for sorting
 	namespace Comparator
 	{

@@ -305,6 +305,43 @@ void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBar
 	}
 }
 
+void CSSD1306::DrawSC55Dots(u8 nFirstRow, u8 nRows)
+{
+	// Pixel data is 16x16, scale to 128x64 or 64x32 and center
+	const u8 nScaleX      = m_nHeight == 64 ? 8 : 4;
+	const u8 nScaleY      = m_nHeight == 64 ? 4 : 2;
+	const size_t nOffsetX = (m_nWidth - 16 * nScaleX) / 2;
+	const size_t nOffsetY = (m_nHeight - 16 * nScaleY) / 2;
+
+	for (u8 nByte = 0; nByte < sizeof(m_SC55PixelBuffer); ++nByte)
+	{
+		// First 48 bytes have 5 columns of pixels, last 16 bytes have only 1
+		const u8 nPixels = nByte < 48 ? 5 : 1;
+
+		for (u8 nPixel = 0; nPixel < nPixels; ++nPixel)
+		{
+			const bool bPixelValue = (m_SC55PixelBuffer[nByte] >> (5 - 1 - nPixel)) & 1;
+
+			if (!bPixelValue)
+				continue;
+
+			const u8 nPosX = nByte / 16 * 5 + nPixel;
+			const u8 nPosY = nByte % 16;
+
+			const u8 nScaledX = nOffsetX + nPosX * nScaleX;
+			const u8 nScaledY = nOffsetY + nPosY * nScaleY;
+
+			for (u8 nX = 0; nX < nScaleX; ++nX)
+			{
+				for (u8 nY = 0; nY < nScaleY; ++nY)
+				{
+					SetPixel(nScaledX + nX, nScaledY + nY);
+				}
+			}
+		}
+	}
+}
+
 void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
 	while (*pText && nCursorX < 20)
@@ -394,8 +431,13 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	else
 	{
 		const u8 nRows = m_nHeight / 8;
-		const u8 nBarWidth = (m_nWidth - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
-		DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
+		if (m_bSC55DisplayingDots)
+			DrawSC55Dots(0, nRows);
+		else
+		{
+			const u8 nBarWidth = (m_nWidth - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
+			DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
+		}
 	}
 
 	WriteFrameBuffer();

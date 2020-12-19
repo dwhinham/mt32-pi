@@ -23,6 +23,7 @@
 #include <circle/timer.h>
 
 #include "config.h"
+#include "synth/sc55sysex.h"
 #include "synth/soundfontsynth.h"
 #include "utility.h"
 
@@ -251,6 +252,29 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 
 void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
+	// Is it an SC-55 display message?
+	if (nSize == sizeof(TSC55DisplayTextSysExMessage))
+	{
+		const auto& DisplayTextMessage = reinterpret_cast<const TSC55DisplayTextSysExMessage&>(*pData);
+		if (DisplayTextMessage.IsValid())
+		{
+			const char* pMessage = reinterpret_cast<const char*>(DisplayTextMessage.GetData());
+			if (m_pLCD)
+				m_pLCD->OnSC55DisplayText(pMessage);
+			return;
+		}
+	}
+	else if (nSize == sizeof(TSC55DisplayDotsSysExMessage))
+	{
+		const auto& DisplayDotsMessage = reinterpret_cast<const TSC55DisplayDotsSysExMessage&>(*pData);
+		if (DisplayDotsMessage.IsValid())
+		{
+			if (m_pLCD)
+				m_pLCD->OnSC55DisplayDots(DisplayDotsMessage.GetData());
+			return;
+		}
+	}
+
 	m_Lock.Acquire();
 	// Exclude leading 0xF0 and trailing 0xF7
 	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 1, nullptr, nullptr, nullptr, false);

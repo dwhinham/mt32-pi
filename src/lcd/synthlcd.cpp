@@ -37,6 +37,14 @@ CSynthLCD::CSynthLCD()
 	  m_nMT32StateTime(0),
 	  m_MT32TextBuffer{'\0'},
 	  m_nPreviousMasterVolume(0),
+
+	  m_bSC55DisplayingText(false),
+	  m_bSC55DisplayingDots(false),
+	  m_nSC55DisplayTextTime(0),
+	  m_nSC55DisplayDotsTime(0),
+	  m_SC55TextBuffer{'\0'},
+	  m_SC55PixelBuffer{0},
+
 	  m_ChannelVelocities{0},
 	  m_ChannelLevels{0},
 	  m_ChannelPeakLevels{0},
@@ -50,7 +58,7 @@ void CSynthLCD::OnSystemMessage(const char* pMessage, bool bSpinner)
 
 	if (bSpinner)
 	{
-		constexpr int nMaxMessageLen = TextBufferLength - 3;
+		constexpr int nMaxMessageLen = SystemMessageTextBufferSize - 3;
 		snprintf(m_SystemMessageTextBuffer, sizeof(m_SystemMessageTextBuffer), "%-*.*s %c", nMaxMessageLen, nMaxMessageLen, pMessage, SpinnerChars[0]);
 		m_SystemState = TSystemState::DisplayingSpinnerMessage;
 		m_nCurrentSpinnerChar = 0;
@@ -107,6 +115,26 @@ void CSynthLCD::OnProgramChanged(u8 nPartNum, const char* pSoundGroupName, const
 	m_nMT32StateTime = ticks;
 }
 
+void CSynthLCD::OnSC55DisplayText(const char* pMessage)
+{
+	unsigned ticks = CTimer::Get()->GetTicks();
+
+	snprintf(m_SC55TextBuffer, sizeof(m_SC55TextBuffer), pMessage);
+
+	m_bSC55DisplayingText = true;
+	m_nSC55DisplayTextTime = ticks;
+}
+
+void CSynthLCD::OnSC55DisplayDots(const u8* pData)
+{
+	unsigned ticks = CTimer::Get()->GetTicks();
+
+	memcpy(m_SC55PixelBuffer, pData, sizeof(m_SC55PixelBuffer));
+
+	m_bSC55DisplayingDots = true;
+	m_nSC55DisplayDotsTime = ticks;
+}
+
 void CSynthLCD::Update(CMT32Synth& Synth)
 {
 	const unsigned nTicks = CTimer::Get()->GetTicks();
@@ -140,6 +168,14 @@ void CSynthLCD::Update(CSoundFontSynth& Synth)
 {
 	const unsigned nTicks = CTimer::Get()->GetTicks();
 	UpdateSystem(nTicks);
+
+	// Displaying text timeout
+	if (m_bSC55DisplayingText && (nTicks - m_nSC55DisplayTextTime) > MSEC2HZ(SC55DisplayTimeMillis))
+		m_bSC55DisplayingText = false;
+
+	// Displaying text timeout
+	if (m_bSC55DisplayingDots && (nTicks - m_nSC55DisplayDotsTime) > MSEC2HZ(SC55DisplayTimeMillis))
+		m_bSC55DisplayingDots = false;
 }
 
 void CSynthLCD::UpdateSystem(unsigned int nTicks)
@@ -155,7 +191,7 @@ void CSynthLCD::UpdateSystem(unsigned int nTicks)
 	else if (m_SystemState == TSystemState::DisplayingSpinnerMessage && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageSpinnerTimeMillis))
 	{
 		m_nCurrentSpinnerChar = (m_nCurrentSpinnerChar + 1) % sizeof(SpinnerChars);
-		m_SystemMessageTextBuffer[TextBufferLength - 2] = SpinnerChars[m_nCurrentSpinnerChar];
+		m_SystemMessageTextBuffer[SystemMessageTextBufferSize - 2] = SpinnerChars[m_nCurrentSpinnerChar];
 		m_nSystemStateTime = nTicks;
 	}
 

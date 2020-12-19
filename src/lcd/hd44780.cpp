@@ -159,12 +159,12 @@ void CHD44780Base::Clear(bool bImmediate)
 
 void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels)
 {
-	char LineBuf[4][TextBufferLength];
+	char LineBuf[nRows][m_nColumns];
 
 	// Initialize with ASCII spaces, terminate each row with a null
 	memset(LineBuf, ' ', sizeof(LineBuf));
-	for (u8 i = 0; i < 4; ++i)
-		LineBuf[i][20] = '\0';
+	for (u8 i = 0; i < nRows; ++i)
+		LineBuf[i][m_nColumns] = '\0';
 
 	// For each channel
 	for (u8 i = 0; i < nChannels; ++i)
