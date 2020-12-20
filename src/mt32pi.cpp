@@ -680,6 +680,11 @@ void CMT32Pi::ProcessEventQueue()
 					m_pSoundFontSynth->AllSoundOff();
 				break;
 
+			case TEventType::DisplayImage:
+				if (m_pLCD)
+					m_pLCD->OnDisplayImage(Event.DisplayImage.Image);
+				break;
+
 			case TEventType::Encoder:
 				SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
 				break;

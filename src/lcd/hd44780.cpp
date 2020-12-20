@@ -201,9 +201,11 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 	SetBarChars(TBarCharSet::Wide);
 	UpdateChannelLevels(Synth);
 
+	const bool bShowSystemMessage = m_SystemState != TSystemState::None && m_SystemState != TSystemState::DisplayingImage;
+
 	if (m_nRows == 2)
 	{
-		if (m_SystemState != TSystemState::None)
+		if (bShowSystemMessage)
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 		else
 			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount);
@@ -213,7 +215,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState != TSystemState::None)
+		if (bShowSystemMessage)
 		{
 			// Clear top line
 			Print("", 0, 0, true);
@@ -239,9 +241,11 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 	SetBarChars(TBarCharSet::Narrow);
 	UpdateChannelLevels(Synth);
 
+	const bool bShowSystemMessage = m_SystemState != TSystemState::None && m_SystemState != TSystemState::DisplayingImage;
+
 	if (m_nRows == 2)
 	{
-		if (m_SystemState != TSystemState::None)
+		if (bShowSystemMessage)
 		{
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 			Print("", 0, 1, true);
@@ -251,7 +255,7 @@ void CHD44780Base::Update(CSoundFontSynth& Synth)
 	}
 	else if (m_nRows == 4)
 	{
-		if (m_SystemState != TSystemState::None)
+		if (bShowSystemMessage)
 		{
 			// Clear top line
 			Print("", 0, 0, true);

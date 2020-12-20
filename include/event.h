@@ -22,6 +22,7 @@
 #define _event_h
 
 #include "control/button.h"
+#include "lcd/synthlcd.h"
 #include "ringbuffer.h"
 #include "synth/mt32romset.h"
 #include "synth/synth.h"
@@ -57,6 +58,11 @@ struct TAllSoundOffEvent
 	// No payload
 };
 
+struct TDisplayImageEvent
+{
+	CSynthLCD::TImage Image;
+};
+
 enum class TEventType
 {
 	Button,
@@ -64,7 +70,8 @@ enum class TEventType
 	SwitchSynth,
 	SwitchMT32ROMSet,
 	SwitchSoundFont,
-	AllSoundOff
+	AllSoundOff,
+	DisplayImage,
 };
 
 struct TEvent
@@ -79,6 +86,7 @@ struct TEvent
 		TSwitchMT32ROMSetEvent SwitchMT32ROMSet;
 		TSwitchSoundFontEvent SwitchSoundFont;
 		TAllSoundOffEvent AllSoundOff;
+		TDisplayImageEvent DisplayImage;
 	};
 };
 

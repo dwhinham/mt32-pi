@@ -31,6 +31,7 @@ CSynthLCD::CSynthLCD()
 	: m_SystemState(TSystemState::None),
 	  m_nSystemStateTime(0),
 	  m_nCurrentSpinnerChar(0),
+	  m_CurrentImage(TImage::None),
 	  m_SystemMessageTextBuffer{'\0'},
 
 	  m_MT32State(TMT32State::DisplayingPartStates),
@@ -76,6 +77,14 @@ void CSynthLCD::ClearSpinnerMessage()
 {
 	m_SystemState = TSystemState::None;
 	m_nCurrentSpinnerChar = 0;
+}
+
+void CSynthLCD::OnDisplayImage(TImage Image)
+{
+	const unsigned nTicks = CTimer::Get()->GetTicks();
+	m_CurrentImage = Image;
+	m_SystemState = TSystemState::DisplayingImage;
+	m_nSystemStateTime = nTicks;
 }
 
 void CSynthLCD::EnterPowerSavingMode()
@@ -192,6 +201,13 @@ void CSynthLCD::UpdateSystem(unsigned int nTicks)
 	{
 		m_nCurrentSpinnerChar = (m_nCurrentSpinnerChar + 1) % sizeof(SpinnerChars);
 		m_SystemMessageTextBuffer[SystemMessageTextBufferSize - 2] = SpinnerChars[m_nCurrentSpinnerChar];
+		m_nSystemStateTime = nTicks;
+	}
+
+	// Image display update
+	else if (m_SystemState == TSystemState::DisplayingImage && (nTicks - m_nSystemStateTime) > MSEC2HZ(SystemMessageDisplayTimeMillis))
+	{
+		m_SystemState = TSystemState::None;
 		m_nSystemStateTime = nTicks;
 	}
 

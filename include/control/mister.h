@@ -39,6 +39,7 @@ private:
 	bool WriteConfigToMister(const TMisterStatus& NewStatus);
 	void ResetState();
 	void ApplyConfig(const TMisterStatus& NewStatus, const TMisterStatus& SystemStatus);
+	void EnqueueDisplayImageEvent();
 	void EnqueueAllSoundOffEvent();
 
 	CI2CMaster* m_pI2CMaster;

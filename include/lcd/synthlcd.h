@@ -36,6 +36,7 @@ public:
 		None,
 		DisplayingMessage,
 		DisplayingSpinnerMessage,
+		DisplayingImage,
 		EnteringPowerSavingMode,
 		InPowerSavingMode
 	};
@@ -47,10 +48,17 @@ public:
 		DisplayingMessage,
 	};
 
+	enum class TImage
+	{
+		None,
+		MisterLogo,
+	};
+
 	CSynthLCD();
 
 	void OnSystemMessage(const char* pMessage, bool bSpinner = false);
 	void ClearSpinnerMessage();
+	void OnDisplayImage(TImage Image);
 	void EnterPowerSavingMode();
 	void ExitPowerSavingMode();
 
@@ -93,6 +101,7 @@ protected:
 	TSystemState m_SystemState;
 	unsigned m_nSystemStateTime;
 	size_t m_nCurrentSpinnerChar;
+	TImage m_CurrentImage;
 	char m_SystemMessageTextBuffer[SystemMessageTextBufferSize];
 
 	// MT-32 state

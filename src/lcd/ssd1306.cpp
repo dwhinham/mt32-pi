@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include "lcd/font6x8.h"
+#include "lcd/images.h"
 #include "lcd/ssd1306.h"
 #include "utility.h"
 
@@ -42,9 +43,9 @@ constexpr u8 SetPrechargePeriod         = 0xD9;
 constexpr u8 SetCOMPins                 = 0xDA;
 constexpr u8 SetVCOMHDeselectLevel      = 0xDB;
 
-// Compile-time (constexpr) font conversion functions.
-// The SSD1306 stores pixel data in columns, but our source font data is stored as rows.
-// These templated functions generate column-wise versions of our font at compile-time.
+// Compile-time (constexpr) font/graphics conversion functions.
+// The SSD1306 stores pixel data in columns, but our source data is stored as rows.
+// These templated functions generate column-wise versions of our graphics at compile-time.
 namespace
 {
 	using CharData = u8[8];
@@ -97,11 +98,48 @@ namespace
 	private:
 		ColumnData mCharData[N];
 	};
+
+	// Templated array-like structure with precomputed pixel data
+	template<size_t W, size_t H>
+	class CSSD1306Image
+	{
+	private:
+		static constexpr size_t SizeInBytes = W * H / 8;
+		static constexpr size_t BytesPerRow = W / 8;
+
+	public:
+		constexpr CSSD1306Image(const u8(&PixelData)[SizeInBytes])
+			: m_PixelData{0}
+		{
+			for (size_t i = 0; i < SizeInBytes; ++i)
+			{
+				const size_t nByteX = i * 8 % W;
+				const size_t nByteY = i / BytesPerRow;
+
+				for (u8 nBit = 0; nBit < 8; ++nBit)
+				{
+					if ((PixelData[i] >> (7 - nBit) & 1))
+						m_PixelData[((nByteY & 0xF8) << 4) + nByteX + nBit] |= 1 << (nByteY & 7);
+				}
+			}
+		}
+
+		constexpr u8 Width() const { return W; }
+		constexpr u8 Height() const { return H; }
+		constexpr const u8* GetPixelData() const { return m_PixelData; }
+
+		u8 operator[](size_t nIndex) const { return m_PixelData[nIndex]; }
+
+	private:
+		u8 m_PixelData[SizeInBytes];
+	};
 }
 
 // Single and double-height versions of the font
 constexpr auto FontSingle = Font<Utility::ArraySize(Font6x8), decltype(SingleColumn)>(Font6x8, SingleColumn);
 constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleColumn)>(Font6x8, DoubleColumn);
+
+constexpr auto MisterLogo = CSSD1306Image<128, 32>(MisterLogo128x32);
 
 // Drawing constants
 constexpr u8 BarSpacing = 2;
@@ -239,6 +277,57 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 			pFrameBuffer[nOffset + 1] = pFrameBuffer[nOffset];
 			pFrameBuffer[nOffset + m_nWidth + 1] = pFrameBuffer[nOffset + m_nWidth];
 		}
+	}
+}
+
+void CSSD1306::DrawImage()
+{
+	u8* pFrameBuffer     = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	const u8* pPixelData = nullptr;
+	u8 nImageWidth       = 0;
+	u8 nImageHeight      = 0;
+
+	switch (m_CurrentImage)
+	{
+		case TImage::MisterLogo:
+			pPixelData      = MisterLogo.GetPixelData();
+			nImageWidth     = MisterLogo.Width();
+			nImageHeight    = MisterLogo.Height();
+			break;
+
+		default:
+			return;
+	}
+
+	const size_t nBytes = nImageWidth * nImageHeight / 8;
+
+	// Exact framebuffer size match
+	if (nImageWidth == m_nWidth && nImageHeight == m_nHeight)
+	{
+		memcpy(pFrameBuffer, pPixelData, nBytes);
+		return;
+	}
+
+	// Center the image
+	const size_t nOffsetX = (m_nWidth - nImageWidth) / 2;
+	const size_t nOffsetY = (m_nHeight - nImageHeight) / 2 / 8 * m_nWidth;
+
+	for (size_t i = 0; i < nBytes; ++i)
+	{
+		const size_t nImageX = i % nImageWidth;
+		const size_t nImageY = i / nImageWidth * m_nWidth;
+		pFrameBuffer[nOffsetX + nOffsetY + nImageX + nImageY] = pPixelData[i];
+	}
+}
+
+void CSSD1306::DrawSystemState()
+{
+	if (m_SystemState == TSystemState::DisplayingImage)
+		DrawImage();
+	else
+	{
+		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
+		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
 	}
 }
 
@@ -389,10 +478,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	UpdateChannelPeakLevels();
 
 	if (m_SystemState != TSystemState::None)
-	{
-		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
-		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
-	}
+		DrawSystemState();
 	else
 	{
 		const u8 nRows = m_nHeight / 8 - 2;
@@ -401,7 +487,7 @@ void CSSD1306::Update(CMT32Synth& Synth)
 	}
 
 	// MT-32 status row
-	if (m_SystemState != TSystemState::EnteringPowerSavingMode)
+	if (m_SystemState != TSystemState::EnteringPowerSavingMode && m_SystemState != TSystemState::DisplayingImage)
 	{
 		const u8 nStatusRow = m_nHeight == 32 ? 1 : 3;
 		Print(m_MT32TextBuffer, 0, nStatusRow, true);
@@ -424,10 +510,7 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 	UpdateChannelPeakLevels();
 
 	if (m_SystemState != TSystemState::None)
-	{
-		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
-		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
-	}
+		DrawSystemState();
 	else
 	{
 		const u8 nRows = m_nHeight / 8;

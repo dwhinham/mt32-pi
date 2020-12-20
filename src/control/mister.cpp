@@ -97,6 +97,9 @@ void CMisterControl::Update(const TMisterStatus& SystemStatus)
 		if (!WriteConfigToMister(MisterStatus))
 			return;
 
+		// Show MiSTer logo
+		EnqueueDisplayImageEvent();
+
 		m_LastMisterStatus = MisterStatus;
 		bMisterActive = true;
 	}
@@ -152,6 +155,14 @@ void CMisterControl::ResetState()
 		m_LastSystemStatus = {TMisterSynth::Unknown, 0xFF, 0xFF};
 		m_LastMisterStatus = {TMisterSynth::Unknown, 0xFF, 0xFF};
 	}
+}
+
+void CMisterControl::EnqueueDisplayImageEvent()
+{
+	TEvent Event;
+	Event.Type = TEventType::DisplayImage;
+	Event.DisplayImage.Image = CSynthLCD::TImage::MisterLogo;
+	m_pEventQueue->Enqueue(Event);
 }
 
 void CMisterControl::EnqueueAllSoundOffEvent()
