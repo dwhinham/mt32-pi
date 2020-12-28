@@ -17,6 +17,8 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 
 	# Apply patches
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-i2s-slave.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-sd-high-speed.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-sd-sysconfig.patch
 
 	# Enable multi-core
 	echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
@@ -114,6 +116,8 @@ clean:
 #
 veryclean: clean
 	# Reverse patches
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-sd-sysconfig.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-sd-high-speed.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.2-i2s-slave.patch
 	@patch -R -N -p1 -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.1.5-circle.patch
 

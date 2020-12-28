@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- SD card I/O speed increased by up to ~180% for cards that support High Speed mode (almost all cards available for purchase today).
+  * This should dramatically reduce SoundFont loading times.
 - MT-32 ROM/SoundFont switch messages are now only shown when the appropriate synth is active.
 - A message is now displayed on the LCD for a second just before entering power saving mode.
 
