@@ -52,13 +52,15 @@ public:
 	const char* GetSoundFontName() const;
 
 private:
+	bool Reinitialize(const char* pSoundFontPath);
+
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
 
-	float m_nGain;
+	float m_nInitialGain;
+	float m_nCurrentGain;
 
 	u32 m_nPolyphony;
-	int m_nSoundFontID;
 	size_t m_nCurrentSoundFontIndex;
 
 	CSoundFontManager m_SoundFontManager;

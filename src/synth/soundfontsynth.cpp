@@ -114,10 +114,10 @@ CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, float nGain, u32 nPolypho
 	  m_pSettings(nullptr),
 	  m_pSynth(nullptr),
 
-	  m_nGain(nGain),
+	  m_nInitialGain(nGain),
+	  m_nCurrentGain(nGain),
 
 	  m_nPolyphony(nPolyphony),
-	  m_nSoundFontID(0),
 	  m_nCurrentSoundFontIndex(0)
 {
 }
@@ -143,14 +143,14 @@ bool CSoundFontSynth::Initialize()
 
 	// Try to get preferred SoundFont
 	m_nCurrentSoundFontIndex  = CConfig::Get()->FluidSynthSoundFont;
-	const char* soundFontPath = m_SoundFontManager.GetSoundFontPath(m_nCurrentSoundFontIndex);
+	const char* pSoundFontPath = m_SoundFontManager.GetSoundFontPath(m_nCurrentSoundFontIndex);
 
 	// Fall back on first available SoundFont
-	if (!soundFontPath)
-		soundFontPath = m_SoundFontManager.GetFirstValidSoundFontPath();
+	if (!pSoundFontPath)
+		pSoundFontPath = m_SoundFontManager.GetFirstValidSoundFontPath();
 
 	// Give up
-	if (!soundFontPath)
+	if (!pSoundFontPath)
 		return false;
 
 	// Install logging handlers
@@ -170,24 +170,7 @@ bool CSoundFontSynth::Initialize()
 	fluid_settings_setnum(m_pSettings, "synth.sample-rate", static_cast<double>(m_nSampleRate));
 	fluid_settings_setint(m_pSettings, "synth.threadsafe-api", false);
 
-	m_pSynth = new_fluid_synth(m_pSettings);
-	if (!m_pSynth)
-	{
-		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to create synth");
-		return false;
-	}
-
-	m_nSoundFontID = fluid_synth_sfload(m_pSynth, soundFontPath, true);
-	if (m_nSoundFontID == FLUID_FAILED)
-	{
-		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to load SoundFont");
-		return false;
-	}
-
-	fluid_synth_set_gain(m_pSynth, m_nGain);
-	fluid_synth_set_polyphony(m_pSynth, m_nPolyphony);
-
-	return true;
+	return Reinitialize(pSoundFontPath);
 }
 
 void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
@@ -299,8 +282,9 @@ void CSoundFontSynth::AllSoundOff()
 
 void CSoundFontSynth::SetMasterVolume(u8 nVolume)
 {
+	m_nCurrentGain = nVolume / 100.0f * m_nInitialGain;
 	m_Lock.Acquire();
-	fluid_synth_set_gain(m_pSynth, nVolume / 100.0f * m_nGain);
+	fluid_synth_set_gain(m_pSynth, m_nCurrentGain);
 	m_Lock.Release();
 }
 
@@ -369,8 +353,8 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	}
 
 	// Get SoundFont if available
-	const char* soundFontPath = m_SoundFontManager.GetSoundFontPath(nIndex);
-	if (!soundFontPath)
+	const char* pSoundFontPath = m_SoundFontManager.GetSoundFontPath(nIndex);
+	if (!pSoundFontPath)
 	{
 		if (m_pLCD)
 			m_pLCD->OnSystemMessage("SoundFont not avail!");
@@ -380,28 +364,16 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	if (m_pLCD)
 		m_pLCD->OnSystemMessage("Loading SoundFont", true);
 
-	if (m_nSoundFontID >= 0 && fluid_synth_sfunload(m_pSynth, m_nSoundFontID, true) == FLUID_FAILED)
+	// We can't use fluid_synth_sfunload() as we don't support the lazy SoundFont unload timer, so trash the entire synth and create a new one
+	if (!Reinitialize(pSoundFontPath))
 	{
 		if (m_pLCD)
-			m_pLCD->OnSystemMessage("SF unload failed!");
-
-		return false;
-	}
-
-	// Invalidate SoundFont ID
-	m_nSoundFontID = -1;
-
-	int nResult = fluid_synth_sfload(m_pSynth, soundFontPath, true);
-	if (nResult == FLUID_FAILED)
-	{
-		if (m_pLCD)
-			m_pLCD->OnSystemMessage("SF load failed!");
+			m_pLCD->OnSystemMessage("SF switch failed!");
 
 		return false;
 	}
 
 	m_nCurrentSoundFontIndex = nIndex;
-	m_nSoundFontID = nResult;
 
 	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
 	if (m_pLCD)
@@ -418,4 +390,34 @@ const char* CSoundFontSynth::GetSoundFontName() const
 size_t CSoundFontSynth::GetSoundFontIndex() const
 {
 	return m_nCurrentSoundFontIndex;
+}
+
+bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath)
+{
+	m_Lock.Acquire();
+
+	if (m_pSynth)
+		delete_fluid_synth(m_pSynth);
+
+	m_pSynth = new_fluid_synth(m_pSettings);
+
+	if (!m_pSynth)
+	{
+		m_Lock.Release();
+		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to create synth");
+		return false;
+	}
+
+	fluid_synth_set_gain(m_pSynth, m_nCurrentGain);
+	fluid_synth_set_polyphony(m_pSynth, m_nPolyphony);
+
+	m_Lock.Release();
+
+	if (fluid_synth_sfload(m_pSynth, pSoundFontPath, true) == FLUID_FAILED)
+	{
+		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to load SoundFont");
+		return false;
+	}
+
+	return true;
 }
