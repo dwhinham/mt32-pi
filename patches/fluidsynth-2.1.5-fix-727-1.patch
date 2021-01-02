@@ -1,0 +1,133 @@
+From a4ac56502fec5f0c20a60187d965c94ba1dc81c2 Mon Sep 17 00:00:00 2001
+From: jjceresa <jjc_fluid@orange.fr>
+Date: Wed, 30 Dec 2020 07:24:40 +0100
+Subject: [PATCH] SoundFonts cannot be unloaded if polyphony is ever exceeded
+
+If polyphony is exceeded and FluidSynth has to allocate a voice by
+calling fluid_synth_free_voice_by_kill_LOCAL(), two problems occur:
+
+ 1)The value returned by fluid_synth_get_active_voice_count() never
+   returns back to 0.
+ 2)SoundFont samples are not unref'd properly, and therefore if an attempt is
+   made to unload the SoundFont, the deferred unload timer is started, and
+   fluid_synth_sfunload_callback() unsuccessfully tries	to unload the SoundFont forever.
+
+These 2 issues are fixed by this commit.
+---
+ src/synth/fluid_synth.c | 21 ++++++++++++++++++++-
+ src/synth/fluid_voice.c | 27 +++++++++++++++++++--------
+ 2 files changed, 39 insertions(+), 9 deletions(-)
+
+diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
+index 6c10094c7..389aff5ff 100644
+--- a/src/synth/fluid_synth.c
++++ b/src/synth/fluid_synth.c
+@@ -1005,7 +1005,6 @@ delete_fluid_synth(fluid_synth_t *synth)
+     fluid_return_if_fail(synth != NULL);
+ 
+     fluid_profiling_print();
+-
+     /* turn off all voices, needed to unload SoundFont data */
+     if(synth->voice != NULL)
+     {
+@@ -1018,6 +1017,12 @@ delete_fluid_synth(fluid_synth_t *synth)
+                 continue;
+             }
+ 
++            /* WARNING: A this point we must ensure that the reference counter
++               of any soundfont sample owned by any rvoice belonging to the voice
++               are correctly decremented. This is the contrary part to
++               to fluid_voice_init() where the sample's reference counter is
++               incremented.
++            */
+             fluid_voice_unlock_rvoice(voice);
+             fluid_voice_overflow_rvoice_finished(voice);
+ 
+@@ -4228,7 +4233,21 @@ fluid_synth_check_finished_voices(fluid_synth_t *synth)
+             }
+             else if(synth->voice[j]->overflow_rvoice == fv)
+             {
++                /* Unlock the overflow_rvoice of the voice.
++                   Decrement the reference count of the sample owned by this
++                   rvoice.
++                */
+                 fluid_voice_overflow_rvoice_finished(synth->voice[j]);
++
++                /* Decrement synth active voice count. Must not be incorporated
++                   in fluid_voice_overflow_rvoice_finished() because
++                   fluid_voice_overflow_rvoice_finished() is called also
++                   at synth destruction and in this case the variable should be
++                   accessed via voice->channel->synth->active_voice_count.
++                   And for certain voices which are not playing, the field
++                   voice->channel is NULL.
++                */
++                synth->active_voice_count--;
+                 break;
+             }
+         }
+diff --git a/src/synth/fluid_voice.c b/src/synth/fluid_voice.c
+index 90f945582..cc5d3d79d 100644
+--- a/src/synth/fluid_voice.c
++++ b/src/synth/fluid_voice.c
+@@ -321,12 +321,13 @@ fluid_voice_init(fluid_voice_t *voice, fluid_sample_t *sample,
+     voice->has_noteoff = 0;
+     UPDATE_RVOICE0(fluid_rvoice_reset);
+ 
+-    /* Increment the reference count of the sample to prevent the
+-       unloading of the soundfont while this voice is playing,
+-       once for us and once for the rvoice. */
++    /*
++       We increment the reference count of the sample to indicate that this
++       sample is about to be owned by the rvoice. This will prevent the
++       unloading of the soundfont while this rvoice is playing.
++    */
+     fluid_sample_incr_ref(sample);
+     fluid_rvoice_eventhandler_push_ptr(voice->eventhandler, fluid_rvoice_set_sample, voice->rvoice, sample);
+-    fluid_sample_incr_ref(sample);
+     voice->sample = sample;
+ 
+     i = fluid_channel_get_interp_method(channel);
+@@ -1406,11 +1407,19 @@ fluid_voice_kill_excl(fluid_voice_t *voice)
+ }
+ 
+ /*
+- * Called by fluid_synth when the overflow rvoice can be reclaimed.
++ * Unlock the overflow rvoice of the voice.
++ * Decrement the reference count of the sample owned by this rvoice.
++ *
++ * Called by fluid_synth when the overflow rvoice has finished by itself.
++ * Must be called also explicitly at synth destruction to ensure that
++ * the soundfont be unloaded successfully.
+  */
+ void fluid_voice_overflow_rvoice_finished(fluid_voice_t *voice)
+ {
+     voice->can_access_overflow_rvoice = 1;
++
++    /* Decrement the reference count of the sample to indicate
++       that this sample isn't owned by the rvoice anymore */
+     fluid_voice_sample_unref(&voice->overflow_rvoice->dsp.sample);
+ }
+ 
+@@ -1439,17 +1448,19 @@ fluid_voice_stop(fluid_voice_t *voice)
+ 
+     voice->chan = NO_CHANNEL;
+ 
++    /* Decrement the reference count of the sample, to indicate
++       that this sample isn't owned by the rvoice anymore.
++    */
+     if(voice->can_access_rvoice)
+     {
+         fluid_voice_sample_unref(&voice->rvoice->dsp.sample);
+     }
+ 
++    voice->sample = NULL;
++
+     voice->status = FLUID_VOICE_OFF;
+     voice->has_noteoff = 1;
+ 
+-    /* Decrement the reference count of the sample. */
+-    fluid_voice_sample_unref(&voice->sample);
+-
+     /* Decrement voice count */
+     voice->channel->synth->active_voice_count--;
+ }
