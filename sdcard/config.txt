@@ -4,6 +4,10 @@ disable_splash=1
 force_eeprom_read=0
 gpu_mem=16
 
+# Uncomment the following line to disable undervoltage/temperature warnings and throttling
+# WARNING: Possible instability; use at your own risk! Use a heatsink!
+#avoid_warnings=2
+
 # Enable 64-bit mode (AArch64) for Pi 3 and 4
 [pi3]
 arm_64bit=1
