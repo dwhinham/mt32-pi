@@ -160,7 +160,7 @@ index 75248f42..9cd8390f 100644
  
  static int
 diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
-index 3f2687a9..e6886dcb 100644
+index 3f2687a9..36913627 100644
 --- a/src/utils/fluid_sys.c
 +++ b/src/utils/fluid_sys.c
 @@ -50,6 +50,7 @@
@@ -179,7 +179,23 @@ index 3f2687a9..e6886dcb 100644
  
  static fluid_log_function_t fluid_log_function[LAST_LOG_LEVEL] =
  {
-@@ -304,6 +306,7 @@ char *fluid_strtok(char **str, char *delim)
+@@ -194,6 +196,7 @@ fluid_log(int level, const char *fmt, ...)
+     return FLUID_FAILED;
+ }
+ 
++#if 0
+ void* fluid_alloc(size_t len)
+ {
+     void* ptr = malloc(len);
+@@ -227,6 +230,7 @@ void fluid_free(void* ptr)
+ {
+     free(ptr);
+ }
++#endif
+ 
+ /**
+  * An improved strtok, still trashes the input string, but is portable and
+@@ -304,6 +308,7 @@ char *fluid_strtok(char **str, char *delim)
      return token;
  }
  
@@ -187,7 +203,7 @@ index 3f2687a9..e6886dcb 100644
  /**
   * Suspend the execution of the current thread for the specified amount of time.
   * @param milliseconds to wait.
-@@ -312,6 +315,7 @@ void fluid_msleep(unsigned int msecs)
+@@ -312,6 +317,7 @@ void fluid_msleep(unsigned int msecs)
  {
      g_usleep(msecs * 1000);
  }
@@ -195,7 +211,7 @@ index 3f2687a9..e6886dcb 100644
  
  /**
   * Get time in milliseconds to be used in relative timing operations.
-@@ -332,6 +336,7 @@ unsigned int fluid_curtime(void)
+@@ -332,6 +338,7 @@ unsigned int fluid_curtime(void)
      return (unsigned int)((now - initial_time) / 1000.0f);
  }
  
@@ -203,7 +219,7 @@ index 3f2687a9..e6886dcb 100644
  /**
   * Get time in microseconds to be used in relative timing operations.
   * @return time in microseconds.
-@@ -1670,3 +1675,4 @@ FILE* fluid_file_open(const char* path, const char** errMsg)
+@@ -1670,3 +1677,4 @@ FILE* fluid_file_open(const char* path, const char** errMsg)
      
      return handle;
  }
@@ -369,7 +385,7 @@ index c1644035..925fa176 100644
  FILE* fluid_file_open(const char* filename, const char** errMsg);
  
 diff --git a/src/utils/fluidsynth_priv.h b/src/utils/fluidsynth_priv.h
-index 0626bace..0398ed77 100644
+index 0626bace..57402f27 100644
 --- a/src/utils/fluidsynth_priv.h
 +++ b/src/utils/fluidsynth_priv.h
 @@ -29,7 +29,9 @@
@@ -382,7 +398,23 @@ index 0626bace..0398ed77 100644
  
  #include "config.h"
  
-@@ -281,8 +283,12 @@ do { strncpy(_dst,_src,_n); \
+@@ -182,13 +184,14 @@ typedef void (*fluid_rvoice_function_t)(void *obj, const fluid_rvoice_param_t pa
+ 
+ /* Memory allocation */
+ #define FLUID_MALLOC(_n)             fluid_alloc(_n)
+-#define FLUID_REALLOC(_p,_n)         realloc(_p,_n)
++#define FLUID_REALLOC(_p,_n)         fluid_realloc(_p,_n)
+ #define FLUID_FREE(_p)               fluid_free(_p)
+ #define FLUID_NEW(_t)                (_t*)FLUID_MALLOC(sizeof(_t))
+ #define FLUID_ARRAY_ALIGNED(_t,_n,_a) (_t*)FLUID_MALLOC((_n)*sizeof(_t) + ((unsigned int)_a - 1u))
+ #define FLUID_ARRAY(_t,_n)           FLUID_ARRAY_ALIGNED(_t,_n,1u)
+ 
+ void* fluid_alloc(size_t len);
++void* fluid_realloc(void* ptr, size_t len);
+ 
+ /* File access */
+ #define FLUID_FOPEN(_f,_m)           fopen(_f,_m)
+@@ -281,8 +284,12 @@ do { strncpy(_dst,_src,_n); \
  #define FLUID_ASSERT(a)
  #endif
  

@@ -26,6 +26,7 @@
 #include "synth/sc55sysex.h"
 #include "synth/soundfontsynth.h"
 #include "utility.h"
+#include "zoneallocator.h"
 
 const char SoundFontSynthName[] = "soundfontsynth";
 const char SoundFontPath[] = "soundfonts";
@@ -33,6 +34,21 @@ const char SoundFontPath[] = "soundfonts";
 extern "C"
 {
 	// Replacements for fluid_sys.c functions
+	void* fluid_alloc(size_t len)
+	{
+		return CZoneAllocator::Get()->Alloc(len, TZoneTag::FluidSynth);
+	}
+
+	void* fluid_realloc(void* ptr, size_t len)
+	{
+		return CZoneAllocator::Get()->Realloc(ptr, len, TZoneTag::FluidSynth);
+	}
+
+	void fluid_free(void* ptr)
+	{
+		CZoneAllocator::Get()->Free(ptr);
+	}
+
 	FILE* fluid_file_open(const char* path, const char** errMsg)
 	{
 		FILE* pFile = fopen(path, "rb");

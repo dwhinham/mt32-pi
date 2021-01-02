@@ -31,6 +31,7 @@
 
 #include "config.h"
 #include "mt32pi.h"
+#include "zoneallocator.h"
 
 class CKernel : public CStdlibApp
 {
@@ -57,6 +58,7 @@ protected:
 	CGPIOManager m_GPIOManager;
 
 private:
+	CZoneAllocator m_Allocator;
 	CConfig m_Config;
 	CMT32Pi m_MT32Pi;
 };

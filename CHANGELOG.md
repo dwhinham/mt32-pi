@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Switching MT-32 ROM sets whilst MIDI was playing could cause a crash.
+- Switching SoundFonts too often (especially large ones, and especially while MIDI is playing) could result in a crash due to an out-of-memory condition.
+  * This has been solved with some upstream fixes by [the FluidSynth team](https://github.com/FluidSynth/fluidsynth/issues/727) combined with a custom memory allocator that should prevent fragmentation. Many thanks to @derselbst and @jjceresa for their help!
+- Power saving mode would never be entered whilst in SoundFont mode if the user had switched SoundFonts.
 
 ## [0.7.1] - 2020-11-26
 
