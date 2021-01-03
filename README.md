@@ -38,6 +38,7 @@
     + [Hitachi HD44780 compatible I²C driver (`hd44780_i2c`)](#hitachi-hd44780-compatible-ic-driver-hd44780_i2c)
     + [SSD1306 I²C driver (`ssd1306_i2c`)](#ssd1306-ic-driver-ssd1306_i2c)
   * [Compatibility](#compatibility-1)
+- [🎛️ Control surface](#%EF%B8%8F-control-surface)
 - [🧠 MT-32 ROM support](#-mt-32-rom-support)
   * [ROM scanning](#rom-scanning)
   * [Switching ROM sets](#switching-rom-sets)
@@ -69,7 +70,7 @@
 - [USB](#usb-midi-interfaces) or [GPIO](#gpio-midi-interface) MIDI interface.
 - [Config file](#-configuration-file) for selecting hardware options and fine tuning.
 - [LCD status screen support](#-lcd-and-oled-displays) (for MT-32 SysEx messages and status information).
-- Control buttons, rotary encoder etc. is _planned_.
+- Simple [physical control surface](#%EF%B8%8F-control-surface) using buttons and rotary encoder.
 - Network MIDI and auto-update is _planned_.
 
 ## ✨ Quick-start guide
@@ -264,6 +265,12 @@ The following displays and configurations have been confirmed as working by our 
 | Generic        | [128x64 OLED]   | `type = ssd1306_i2c`, `width = 128`, `height = 64`, `i2c_lcd_address = 3c` | Similar to the 32 pixel high OLED, just with more rows. Tested by @dwhinham.                                                                                             |
 | Raystar        | [REC002004B]    | `type = hd44780_4bit`, `width = 20`, `height = 4`                          | High-contrast 20x4 OLED display. Tested by @dwhinham.                                                                                                                    |
 
+## 🎛️ Control surface
+
+You can attach buttons and/or a rotary encoder to control `mt32-pi`. Currently, support is very basic, and just allows control of volume, synthesizer, MT-32 ROM and SoundFont selection. Future versions will add a menu system and more ways to control the synthesizers.
+
+For full details and wiring information, take a look at [our wiki page][control surface].
+
 ## 🧠 MT-32 ROM support
 
 `mt32-pi` can make use of all ROMs that [Munt] supports, and allows switching between ROM sets on-the-fly for greater compatibility with various games. For further information about which games work best with each ROM set, consult the [MT-32 game compatibility list].
@@ -283,7 +290,7 @@ As for PCM ROMs, there are only two known versions - the MT-32 version (common t
 
 To summarize, to get the most out of `mt32-pi`, you'll need **5 ROM files in total** - old/new/CM-32L control ROMs, and MT-32/CM-32L PCM ROMs.
 
-> ⚠️ **Note:** To use the MT-32 synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages).
+> ⚠️ **Note:** To use the MT-32 synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages) or [button press][control surface].
 
 ### ROM scanning
 
@@ -297,7 +304,7 @@ You can use a [custom SysEx message](#-custom-system-exclusive-messages) to make
 
 It may be useful to create scripts (e.g. a DOS batch file) that send `mt32-pi` ROM set swap messages before launching a game.
 
-In the future, `mt32-pi` will allow you to switch ROM sets from a menu or button combination.
+If you add a [control surface] to your Raspberry Pi, ROMs can be switched using Button 2.
 
 ## 🎺 SoundFont support
 
@@ -307,7 +314,7 @@ The flexibility of the SoundFont standard means that several MIDI specifications
 
 `mt32-pi` uses the [FluidSynth] engine to provide SoundFont support, and comes with the [GeneralUser GS] SoundFont so that you have excellent General MIDI and Roland GS compatibility out of the box.
 
-> ⚠️ **Note:** To use the SoundFont synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages).
+> ⚠️ **Note:** To use the SoundFont synthesizer, you must either set it as the default synth in the config file, or switch to it at runtime using a [custom SysEx message](#-custom-system-exclusive-messages) or [button press][control surface].
 
 ### SoundFont scanning
 
@@ -325,7 +332,7 @@ When switching, the current SoundFont is unloaded from memory, and the chosen So
 
 This behavior may be improved in the future - it will be possible to implement a (pre)caching system to keep frequently-used SoundFonts in memory. There are also some caveats with large SoundFonts and Pi models with low RAM - see the [FAQ](#-faq) for notes on this.
 
-In the future, `mt32-pi` will allow you to switch SoundFonts from a menu or button combination.
+If you add a [control surface] to your Raspberry Pi, SoundFonts can be switched using Button 2.
 
 ## 🔩 Custom hardware
 
@@ -418,6 +425,7 @@ This project, just like [Munt], has no affiliation with Roland Corporation. Use 
 [circle-stdlib]: https://github.com/smuehlst/circle-stdlib
 [Circle]: https://github.com/rsta2/circle
 [clumsyMIDI]: https://github.com/gmcn42/clumsyMIDI
+[control surface]: https://github.com/dwhinham/mt32-pi/wiki/Control-surface
 [digital-to-analog converter]: https://en.wikipedia.org/wiki/Digital-to-analog_converter
 [FluidSynth]: http://www.fluidsynth.org/
 [General MIDI]: https://en.wikipedia.org/wiki/General_MIDI
