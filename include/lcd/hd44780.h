@@ -108,6 +108,8 @@ class CHD44780I2C : public CHD44780Base
 public:
 	CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress = 0x27, u8 nColumns = 20, u8 nRows = 2);
 
+	virtual void SetBacklightEnabled(bool bEnabled) override;
+
 protected:
 	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) override;
 

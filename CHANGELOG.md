@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Missing part level bar segments and "glitchy" rendering when using HD44780 LCDs.
 - Missing part level bar "bases" when using HD44780 LCDs.
+- Backlight would not be turned off/on for supported I²C HD44780 LCDs when entering/exiting power saving mode.
 
 ## [0.8.1] - 2021-01-03
 

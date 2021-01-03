@@ -34,6 +34,14 @@ CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress, u8 nColumns, u8 nR
 {
 }
 
+void CHD44780I2C::SetBacklightEnabled(bool bEnabled)
+{
+	CSynthLCD::SetBacklightEnabled(bEnabled);
+
+	// Send a clear command to ensure the backlight bit is updated
+	Clear(true);
+}
+
 void CHD44780I2C::WriteNybble(u8 nNybble, TWriteMode Mode)
 {
 	// Write bits with ENABLE pulsed high momentarily
