@@ -22,10 +22,9 @@
 
 #include "lcd/hd44780.h"
 
-#define LCD_MODE_DATA		0
-#define LCD_MODE_COMMAND	1
-#define LCD_ENABLE			(1 << 2)
-#define LCD_BACKLIGHT		(1 << 3)
+constexpr u8 LCDDataBit      = (1 << 0);
+constexpr u8 LCDEnableBit    = (1 << 2);
+constexpr u8 LCDBacklightBit = (1 << 3);
 
 CHD44780I2C::CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress, u8 nColumns, u8 nRows)
 	: CHD44780Base(nColumns, nRows),
@@ -45,19 +44,19 @@ void CHD44780I2C::SetBacklightEnabled(bool bEnabled)
 void CHD44780I2C::WriteNybble(u8 nNybble, TWriteMode Mode)
 {
 	// Write bits with ENABLE pulsed high momentarily
-	u8 bits = ((nNybble << 4) & 0xF0) | LCD_ENABLE;
+	u8 nByte = ((nNybble << 4) & 0xF0) | LCDEnableBit;
 
 	if (m_bBacklightEnabled)
-		bits |= LCD_BACKLIGHT;
+		nByte |= LCDBacklightBit;
 
 	if (Mode == TWriteMode::Data)
-		bits |= 1;
+		nByte |= LCDDataBit;
 
-	m_pI2CMaster->Write(m_nAddress, &bits, 1);
+	m_pI2CMaster->Write(m_nAddress, &nByte, 1);
 	CTimer::SimpleusDelay(5);
 
 	// Bring ENABLE low again
-	bits &= ~LCD_ENABLE;
-	m_pI2CMaster->Write(m_nAddress, &bits, 1);
+	nByte &= ~LCDEnableBit;
+	m_pI2CMaster->Write(m_nAddress, &nByte, 1);
 	CTimer::SimpleusDelay(100);
 }
