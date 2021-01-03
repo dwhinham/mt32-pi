@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2021-01-03
+
 ### Added
 
 - Support for the SSD1309 using the `ssd1306_i2c` driver - many thanks to @flynnsbit for testing!
@@ -219,7 +221,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.7.1...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/dwhinham/mt32-pi/compare/v0.7.1..v0.8.0
 [0.7.1]: https://github.com/dwhinham/mt32-pi/compare/v0.7.0..v0.7.1
 [0.7.0]: https://github.com/dwhinham/mt32-pi/compare/v0.6.2..v0.7.0
 [0.6.2]: https://github.com/dwhinham/mt32-pi/compare/v0.6.1..v0.6.2
