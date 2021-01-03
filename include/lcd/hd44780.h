@@ -68,10 +68,12 @@ protected:
 
 	void SetCustomChar(u8 nIndex, const u8 nCharData[8]);
 	void SetBarChars(TBarCharSet CharSet);
-	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels);
+	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels, bool bDrawBarBases = true);
 
 	u8 m_nRows;
 	u8 m_nColumns;
+
+	u8 m_RowOffsets[4];
 
 	TBarCharSet m_BarCharSet;
 };

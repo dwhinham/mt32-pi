@@ -28,6 +28,7 @@ CHD44780Base::CHD44780Base(u8 nColumns, u8 nRows)
 	: CSynthLCD(),
 	  m_nRows(nRows),
 	  m_nColumns(nColumns),
+	  m_RowOffsets{ 0, 0x40, m_nColumns, u8(0x40 + m_nColumns) },
 	  m_BarCharSet(TBarCharSet::None)
 {
 }
@@ -134,8 +135,7 @@ bool CHD44780Base::Initialize()
 
 void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
-	static u8 rowOffset[] = { 0, u8(0x40), m_nColumns, u8(0x40 + m_nColumns) };
-	WriteCommand(0x80 | rowOffset[nCursorY] + nCursorX);
+	WriteCommand(0x80 | m_RowOffsets[nCursorY] + nCursorX);
 
 	const char* p = pText;
 	while (*p && (p - pText) < m_nColumns)
@@ -157,14 +157,13 @@ void CHD44780Base::Clear(bool bImmediate)
 	CTimer::SimpleMsDelay(50);
 }
 
-void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels)
+void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels, bool bDrawBarBases)
 {
 	char LineBuf[nRows][m_nColumns];
+	const u8 nBarHeight = nRows * 8;
 
-	// Initialize with ASCII spaces, terminate each row with a null
+	// Initialize with ASCII spaces
 	memset(LineBuf, ' ', sizeof(LineBuf));
-	for (u8 i = 0; i < nRows; ++i)
-		LineBuf[i][m_nColumns] = '\0';
 
 	// For each channel
 	for (u8 i = 0; i < nChannels; ++i)
@@ -172,9 +171,12 @@ void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 
 		const u8 nCharIndex = i + i * nBarSpacing + nBarXOffset;
 		assert(nCharIndex < 20);
 
-		const u8 nLevelPixels = static_cast<u8>(m_ChannelLevels[i] * nRows * 8);
-		const u8 nFullRows    = nLevelPixels / 8;
-		const u8 nRemainder   = nLevelPixels % 8;
+		u8 nLevelPixels = m_ChannelLevels[i] * nBarHeight;
+		if (bDrawBarBases && nLevelPixels == 0)
+			nLevelPixels = 1;
+
+		const u8 nFullRows  = nLevelPixels / 8;
+		const u8 nRemainder = nLevelPixels % 8;
 
 		for (u8 j = 0; j < nFullRows; ++j)
 			LineBuf[nRows - j - 1][nCharIndex] = BarChars[8];
@@ -186,8 +188,12 @@ void CHD44780Base::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 
 			LineBuf[nRows - nFullRows - 1][nCharIndex] = BarChars[nRemainder];
 	}
 
-	for (u8 i = 0; i < nRows; ++i)
-		Print(LineBuf[i], 0, nFirstRow + i, true);
+	for (u8 nRow = 0; nRow < nRows; ++nRow)
+	{
+		WriteCommand(0x80 | m_RowOffsets[nFirstRow + nRow]);
+		for (u8 nColumn = 0; nColumn < m_nColumns; ++nColumn)
+			WriteData(LineBuf[nRow][nColumn]);
+	}
 }
 
 void CHD44780Base::Update(CMT32Synth& Synth)
@@ -208,7 +214,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 		if (bShowSystemMessage)
 			Print(m_SystemMessageTextBuffer, 0, 0, true);
 		else
-			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount);
+			DrawChannelLevels(0, 1, 0, 1, MT32ChannelCount, false);
 
 		if (m_SystemState != TSystemState::EnteringPowerSavingMode)
 			Print(m_MT32TextBuffer, 0, 1, true);
@@ -223,7 +229,7 @@ void CHD44780Base::Update(CMT32Synth& Synth)
 			Print("", 0, 2, true);
 		}
 		else
-			DrawChannelLevels(0, 3, 0, 1, MT32ChannelCount);
+			DrawChannelLevels(0, 3, 0, 1, MT32ChannelCount, false);
 
 		if (m_SystemState != TSystemState::EnteringPowerSavingMode)
 			Print(m_MT32TextBuffer, 0, 3, true);
