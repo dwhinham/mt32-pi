@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2021-01-03
+
+### Fixed
+
+- Boot failure on Raspberry Pi 4 due to inability to allocate heap.
+
 ## [0.8.0] - 2021-01-03
 
 ### Added
@@ -221,7 +227,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.0...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/dwhinham/mt32-pi/compare/v0.8.0..v0.8.1
 [0.8.0]: https://github.com/dwhinham/mt32-pi/compare/v0.7.1..v0.8.0
 [0.7.1]: https://github.com/dwhinham/mt32-pi/compare/v0.7.0..v0.7.1
 [0.7.0]: https://github.com/dwhinham/mt32-pi/compare/v0.6.2..v0.7.0

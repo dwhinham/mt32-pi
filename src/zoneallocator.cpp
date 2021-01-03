@@ -54,7 +54,7 @@ bool CZoneAllocator::Initialize()
 
 #if RASPPI >= 4
 	// Allocate all of the remaining HIGH region
-	m_nHeapSize = CMemorySystem::Get()->GetHeapFreeSpace(HEAP_HIGH);
+	m_nHeapSize = CMemorySystem::Get()->GetHeapFreeSpace(HEAP_HIGH) - sizeof(THeapBlockHeader);
 	m_pHeap     = CMemorySystem::Get()->HeapAllocate(m_nHeapSize, HEAP_HIGH);
 #else
 	// Allocate the majority of the remaining LOW region
