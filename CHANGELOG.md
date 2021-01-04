@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to FluidSynth v2.1.6.
+
 ### Fixed
 
 - Missing part level bar segments and "glitchy" rendering when using HD44780 LCDs.
