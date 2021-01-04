@@ -330,7 +330,7 @@ The configuration file and custom SysEx messages for SoundFont switching use a *
 
 When switching, the current SoundFont is unloaded from memory, and the chosen SoundFont is (re)loaded from SD card. This may take some seconds depending on the size of the file, speed of the SD card, and model of Raspberry Pi.
 
-This behavior may be improved in the future - it will be possible to implement a (pre)caching system to keep frequently-used SoundFonts in memory. There are also some caveats with large SoundFonts and Pi models with low RAM - see the [FAQ](#-faq) for notes on this.
+This behavior may be improved in the future - it will be possible to implement a (pre)caching system to keep frequently-used SoundFonts in memory.
 
 If you add a [control surface] to your Raspberry Pi, SoundFonts can be switched using Button 2.
 
