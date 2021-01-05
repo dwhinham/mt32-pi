@@ -1,7 +1,8 @@
 [![mt32-pi CI](https://github.com/dwhinham/mt32-pi/workflows/mt32-pi%20CI/badge.svg)](https://github.com/dwhinham/mt32-pi/actions?query=workflow:"mt32-pi+CI")
-[<img width="280rem" align="right" src="https://upload.wikimedia.org/wikipedia/commons/0/05/MT_32.jpg">](https://commons.wikimedia.org/wiki/File:MT_32.jpg)
 
-## 🎹🎶 mt32-pi
+<h1 align="center">
+    <img width="90%" title="mt32-pi - Baremetal synthesizer system" src="docs/mt32pi_logo.svg">
+</h1>
 
 - A work-in-progress baremetal MIDI synthesizer for the Raspberry Pi 3 or above, based on [Munt], [FluidSynth] and [Circle].
 - Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module](https://en.wikipedia.org/wiki/Roland_MT-32) used by countless classic MS-DOS, PC-98 and Sharp X68000 games!
@@ -10,6 +11,8 @@
 - No operating system, no complex Linux audio configuration; just super-low latency audio.
 - Easy to configure and ready to play from cold-boot in a matter of seconds.
 - The perfect companion for your vintage PC or [MiSTer] FPGA setup.
+
+---
 
 ## 🔖 Table of contents
 
