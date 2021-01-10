@@ -23,7 +23,7 @@
 #include <circle/timer.h>
 
 #include "config.h"
-#include "synth/sc55sysex.h"
+#include "synth/rolandsysex.h"
 #include "synth/soundfontsynth.h"
 #include "utility.h"
 #include "zoneallocator.h"
