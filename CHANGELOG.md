@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - FluidSynth is now reset when a "GM Mode On" or "GS Reset" SysEx message is received.
+- FluidSynth is now reconfigured when GS "Use For Rhythm Part" SysEx messages are received for songs that use multiple drum kits.
 
 ## [0.8.2] - 2021-01-06
 

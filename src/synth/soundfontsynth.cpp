@@ -278,6 +278,23 @@ void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 			m_Lock.Release();
 			return;
 		}
+
+		// Use For Rhythm Part
+		const auto& UseForRhythmPartMessage = reinterpret_cast<const TRolandUseForRhythmPartSysExMessage&>(*pData);
+		if (UseForRhythmPartMessage.IsValid())
+		{
+			const u8 nChannel = (UseForRhythmPartMessage.GetAddress() >> 8) & 0x0F;
+			const u8 nMode    = *UseForRhythmPartMessage.GetData();
+
+			if (nMode > 0x02)
+				return;
+
+			m_Lock.Acquire();
+			fluid_synth_set_channel_type(m_pSynth, nChannel, nMode == 0 ? CHANNEL_TYPE_MELODIC : CHANNEL_TYPE_DRUM);
+			fluid_synth_program_change(m_pSynth, nChannel, 0);
+			m_Lock.Release();
+			return;
+		}
 	}
 
 	// SC-55 display message?
