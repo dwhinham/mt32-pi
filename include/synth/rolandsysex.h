@@ -37,6 +37,10 @@ enum class TRolandCommandID : u8
 
 enum class TRolandAddress : u32
 {
+	SystemModeSet = 0x00007F,
+
+	GSReset = 0x40007F,
+
 	SC55DisplayText = 0x100000,
 	SC55DisplayDots = 0x100100,
 };
@@ -77,7 +81,12 @@ struct TRolandSysExMessage
 }
 PACKED;
 
+using TRolandGSResetSysExMessage          = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::GSReset, DefaultAddressMask, 1>;
+using TRolandSystemModeSetSysExMessage    = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::SystemModeSet, DefaultAddressMask, 1>;
+
 using TSC55DisplayTextSysExMessage = TRolandSysExMessage<TRolandModelID::SC55, TRolandAddress::SC55DisplayText, DefaultAddressMask, 32>;
 using TSC55DisplayDotsSysExMessage = TRolandSysExMessage<TRolandModelID::SC55, TRolandAddress::SC55DisplayDots, DefaultAddressMask, 64>;
+
+constexpr size_t RolandSingleDataByteMessageSize = sizeof(TRolandGSResetSysExMessage);
 
 #endif

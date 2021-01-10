@@ -23,6 +23,7 @@
 #include <circle/timer.h>
 
 #include "config.h"
+#include "synth/gmsysex.h"
 #include "synth/rolandsysex.h"
 #include "synth/soundfontsynth.h"
 #include "utility.h"
@@ -251,8 +252,36 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 
 void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
-	// Is it an SC-55 display message?
-	if (nSize == sizeof(TSC55DisplayTextSysExMessage))
+	// GM Mode On
+	if (nSize == sizeof(TGMModeOnSysExMessage))
+	{
+		const auto& GMModeOnMessage = reinterpret_cast<const TGMModeOnSysExMessage&>(*pData);
+		if (GMModeOnMessage.IsValid())
+		{
+			m_Lock.Acquire();
+			fluid_synth_system_reset(m_pSynth);
+			m_Lock.Release();
+			return;
+		}
+	}
+
+	// Single data byte Roland message
+	else if (nSize == RolandSingleDataByteMessageSize)
+	{
+		// GS Reset/SC-88 Mode Set
+		const auto& GSResetMessage = reinterpret_cast<const TRolandGSResetSysExMessage&>(*pData);
+		const auto& SystemModeSetMessage = reinterpret_cast<const TRolandSystemModeSetSysExMessage&>(*pData);
+		if (GSResetMessage.IsValid() || SystemModeSetMessage.IsValid())
+		{
+			m_Lock.Acquire();
+			fluid_synth_system_reset(m_pSynth);
+			m_Lock.Release();
+			return;
+		}
+	}
+
+	// SC-55 display message?
+	else if (nSize == sizeof(TSC55DisplayTextSysExMessage))
 	{
 		const auto& DisplayTextMessage = reinterpret_cast<const TSC55DisplayTextSysExMessage&>(*pData);
 		if (DisplayTextMessage.IsValid())
@@ -274,8 +303,8 @@ void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 		}
 	}
 
+	// No special handling; forward to FluidSynth SysEx parser, excluding leading 0xF0 and trailing 0xF7
 	m_Lock.Acquire();
-	// Exclude leading 0xF0 and trailing 0xF7
 	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 1, nullptr, nullptr, nullptr, false);
 	m_Lock.Release();
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- FluidSynth is now reset when a "GM Mode On" or "GS Reset" SysEx message is received.
+
 ## [0.8.2] - 2021-01-06
 
 ### Changed
