@@ -14,9 +14,9 @@
 
 ---
 
-<img title="mt32-pi running on the Raspberry Pi 3 A+ with the Arananet PI-MIDI HAT." width="330rem" align="right" src="images/mt32pi_pimidi.png">
-
 ## ✔️ Project status
+
+<img title="mt32-pi running on the Raspberry Pi 3 A+ with the Arananet PI-MIDI HAT." width="280rem" align="right" src="images/mt32pi_pimidi.png">
 
 - Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model A+, B, and B+.
   * Pi 2 works, but only with concessions on playback quality.
