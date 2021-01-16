@@ -714,11 +714,7 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 	else if (Event.Button == TButton::Button2 && Event.bPressed)
 	{
 		if (m_pCurrentSynth == m_pMT32Synth)
-		{
-			// Next MT-32 ROM set
-			const u8 nROMSet = (static_cast<u8>(m_pMT32Synth->GetROMSet()) + 1) % 3;
-			SwitchMT32ROMSet(static_cast<TMT32ROMSet>(nROMSet));
-		}
+			NextMT32ROMSet();
 		else
 		{
 			// Next SoundFont
@@ -776,6 +772,17 @@ void CMT32Pi::SwitchMT32ROMSet(TMT32ROMSet ROMSet)
 
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to ROM set %d", static_cast<u8>(ROMSet));
 	if (m_pMT32Synth->SwitchROMSet(ROMSet) && m_pCurrentSynth == m_pMT32Synth)
+		m_pMT32Synth->ReportStatus();
+}
+
+void CMT32Pi::NextMT32ROMSet()
+{
+	if (m_pMT32Synth == nullptr)
+		return;
+
+	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to next ROM set");
+
+	if (m_pMT32Synth->NextROMSet() && m_pCurrentSynth == m_pMT32Synth)
 		m_pMT32Synth->ReportStatus();
 }
 

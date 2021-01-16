@@ -98,6 +98,7 @@ private:
 	// Actions that can be triggered via events
 	void SwitchSynth(TSynth Synth);
 	void SwitchMT32ROMSet(TMT32ROMSet ROMSet);
+	void NextMT32ROMSet();
 	void SwitchSoundFont(size_t nIndex);
 	void DeferSwitchSoundFont(size_t nIndex);
 	void SetMasterVolume(s32 nVolume);

@@ -64,6 +64,7 @@ public:
 
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(TMT32ROMSet ROMSet);
+	bool NextROMSet();
 	TMT32ROMSet GetROMSet() const;
 	const char* GetControlROMName() const;
 

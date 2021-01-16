@@ -233,6 +233,25 @@ TMT32ROMSet CMT32Synth::GetROMSet() const
 	return m_CurrentROMSet;
 }
 
+bool CMT32Synth::NextROMSet()
+{
+	const u8 nCurrentROMSetIndex = static_cast<u8>(m_CurrentROMSet);
+	u8 nNextROMSetIndex = (static_cast<u8>(m_CurrentROMSet) + 1) % 3;
+
+	// Find the next available ROM set
+	while (nNextROMSetIndex != nCurrentROMSetIndex && !m_ROMManager.HaveROMSet(static_cast<TMT32ROMSet>(nNextROMSetIndex)))
+		nNextROMSetIndex = (nNextROMSetIndex + 1) % 3;
+
+	if (nNextROMSetIndex == nCurrentROMSetIndex)
+	{
+		if (m_pLCD)
+			m_pLCD->OnSystemMessage("No other ROM sets!");
+		return false;
+	}
+
+	return SwitchROMSet(static_cast<TMT32ROMSet>(nNextROMSetIndex));
+}
+
 const char* CMT32Synth::GetControlROMName() const
 {
 	// +5 to skip 'ctrl_'

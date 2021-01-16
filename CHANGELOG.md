@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FluidSynth is now reset when a "GM Mode On" or "GS Reset" SysEx message is received.
 - FluidSynth is now reconfigured when GS "Use For Rhythm Part" SysEx messages are received for songs that use multiple drum kits.
 
+### Fixed
+
+- Switching MT-32 ROM sets via button press would fail if the next ROM set wasn't present. For example, if an MT-32 "new" set wasn't present, then pressing the button would not switch from "old" to CM-32L as expected.
+
 ## [0.8.2] - 2021-01-06
 
 ### Changed
