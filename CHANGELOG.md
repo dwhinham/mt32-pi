@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- USB plug & play support for MIDI interfaces.
+  * You can now connect/disconnect USB MIDI devices at runtime and they will be used instead of the GPIO MIDI interface when present.
+
+### Fixed
+
+- Some USB MIDI devices were not being detected at startup.
+
 ## [0.8.3] - 2021-01-16
 
 ### Added

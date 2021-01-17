@@ -24,7 +24,6 @@
 #include <circle/memory.h>
 #include <circle/pwmsoundbasedevice.h>
 #include <circle/serial.h>
-#include <circle/usb/usbmidi.h>
 
 #include <cstdarg>
 
@@ -78,7 +77,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_nDeferredSoundFontSwitchIndex(0),
 	  m_nDeferredSoundFontSwitchTime(0),
 
+	  m_bSerialMIDIAvailable(false),
 	  m_bSerialMIDIEnabled(false),
+	  m_pUSBMIDIDevice(nullptr),
 
 	  m_bActiveSenseFlag(false),
 	  m_nActiveSenseTime(0),
@@ -103,12 +104,13 @@ CMT32Pi::~CMT32Pi()
 {
 }
 
-bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
+bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 {
 	CConfig* const pConfig = CConfig::Get();
 	CLogger* const pLogger = CLogger::Get();
 
-	m_bSerialMIDIEnabled = bSerialMIDIEnabled;
+	m_bSerialMIDIAvailable = bSerialMIDIAvailable;
+	m_bSerialMIDIEnabled = bSerialMIDIAvailable;
 
 	if (pConfig->LCDType == CConfig::TLCDType::HD44780FourBit)
 		m_pLCD = new CHD44780FourBit(pConfig->LCDWidth, pConfig->LCDHeight);
@@ -232,22 +234,12 @@ bool CMT32Pi::Initialize(bool bSerialMIDIEnabled)
 		}
 	}
 
-	CUSBMIDIDevice* pMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE));
-	if (pMIDIDevice)
-	{
-		pMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
-		pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
-		m_bSerialMIDIEnabled = false;
-	}
-	else if (m_pPisound)
+	if (m_pPisound)
 		pLogger->Write(MT32PiName, LogNotice, "Using Pisound MIDI interface");
 	else if (m_bSerialMIDIEnabled)
 		pLogger->Write(MT32PiName, LogNotice, "Using serial MIDI interface");
 	else
-	{
-		pLogger->Write(MT32PiName, LogError, "No USB MIDI device detected and serial port in use - please restart.");
-		return false;
-	}
+		pLogger->Write(MT32PiName, LogError, "No USB MIDI device or Pisound detected and serial port in use");
 
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(pConfig->SystemPowerSaveTimeout);
@@ -321,6 +313,18 @@ void CMT32Pi::MainTask()
 
 			// Trigger an awaken so we don't immediately go to sleep
 			Awaken();
+		}
+
+		// Check for USB PnP events
+		if (CConfig::Get()->MIDIUSB && m_pUSBHCI->UpdatePlugAndPlay())
+		{
+			if (!m_pUSBMIDIDevice && (m_pUSBMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE))))
+			{
+				m_pUSBMIDIDevice->RegisterRemovedHandler(USBDeviceRemovedHandler);
+				m_pUSBMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
+				pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
+				m_bSerialMIDIEnabled = false;
+			}
 		}
 	}
 
@@ -883,6 +887,20 @@ void CMT32Pi::EventHandler(const TEvent& Event)
 
 	// Enqueue event
 	s_pThis->m_EventQueue.Enqueue(Event);
+}
+
+void CMT32Pi::USBDeviceRemovedHandler(CDevice* pDevice, void* pContext)
+{
+	assert(s_pThis != nullptr);
+
+	s_pThis->m_pUSBMIDIDevice = nullptr;
+
+	// Re-enable serial MIDI if not in-use by logger and not using Pisound
+	if (s_pThis->m_bSerialMIDIAvailable && !s_pThis->m_pPisound)
+	{
+		CLogger::Get()->Write(MT32PiName, LogNotice, "Using serial MIDI interface");
+		s_pThis->m_bSerialMIDIEnabled = true;
+	}
 }
 
 // The following handlers are called from interrupt context, enqueue into ring buffer for main thread

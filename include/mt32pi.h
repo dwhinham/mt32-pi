@@ -37,6 +37,7 @@
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
+#include <circle/usb/usbmidi.h>
 
 #include "config.h"
 #include "control/control.h"
@@ -58,7 +59,7 @@ public:
 	CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
 	virtual ~CMT32Pi() override;
 
-	bool Initialize(bool bSerialMIDIEnabled = true);
+	bool Initialize(bool bSerialMIDIAvailable = true);
 
 	virtual void Run(unsigned nCore) override;
 
@@ -135,7 +136,11 @@ private:
 	unsigned m_nDeferredSoundFontSwitchTime;
 
 	// Serial GPIO MIDI
+	bool m_bSerialMIDIAvailable;
 	bool m_bSerialMIDIEnabled;
+
+	// USB MIDI
+	CUSBMIDIDevice* volatile m_pUSBMIDIDevice;
 
 	bool m_bActiveSenseFlag;
 	unsigned m_nActiveSenseTime;
@@ -164,6 +169,7 @@ private:
 	TEventQueue m_EventQueue;
 
 	static void EventHandler(const TEvent& Event);
+	static void USBDeviceRemovedHandler(CDevice* pDevice, void* pContext);
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 	static void MIDIReceiveHandler(const u8* pData, size_t nSize);
 
