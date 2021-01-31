@@ -214,12 +214,12 @@ void CSSD1306::WriteFrameBuffer() const
 	WriteCommand(SetStartLine | 0x00);
 
 	// Compare two framebuffers
-	const size_t nFrameBufferSize = m_nWidth * m_nHeight / 8 + sizeof(TFrameBufferUpdatePacket::DataControlByte);
+	const size_t nFrameBufferSize = m_nWidth * m_nHeight / 8;
 	const bool bNeedsUpdate = memcmp(m_FrameBuffers[0].FrameBuffer, m_FrameBuffers[1].FrameBuffer, nFrameBufferSize) != 0;
 
 	// Copy entire framebuffer
 	if (bNeedsUpdate)
-		m_pI2CMaster->Write(m_nAddress, &m_FrameBuffers[m_nCurrentFrameBuffer], nFrameBufferSize);
+		m_pI2CMaster->Write(m_nAddress, &m_FrameBuffers[m_nCurrentFrameBuffer], sizeof(TFrameBufferUpdatePacket));
 }
 
 void CSSD1306::SwapFrameBuffers()

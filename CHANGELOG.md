@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Some USB MIDI devices were not being detected at startup.
+- "LCD-Auto" mode for MiSTer was broken because of a bug in the SSD1306 framebuffer difference-checking code.
 
 ## [0.8.3] - 2021-01-16
 
