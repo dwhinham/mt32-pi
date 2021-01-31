@@ -88,14 +88,6 @@ public:
 protected:
 	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) override;
 
-	static constexpr u8 GPIO_PIN_RS = 10;
-	static constexpr u8 GPIO_PIN_RW = 9;
-	static constexpr u8 GPIO_PIN_EN = 11;
-	static constexpr u8 GPIO_PIN_D4 = 0;
-	static constexpr u8 GPIO_PIN_D5 = 5;
-	static constexpr u8 GPIO_PIN_D6 = 6;
-	static constexpr u8 GPIO_PIN_D7 = 13;
-
 	CGPIOPin m_RS;
 	CGPIOPin m_RW;
 	CGPIOPin m_EN;

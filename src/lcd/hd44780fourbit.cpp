@@ -24,16 +24,24 @@
 
 #include "lcd/hd44780.h"
 
+constexpr u8 GPIOPinRS = 10;
+constexpr u8 GPIOPinRW = 9;
+constexpr u8 GPIOPinEN = 11;
+constexpr u8 GPIOPinD4 = 0;
+constexpr u8 GPIOPinD5 = 5;
+constexpr u8 GPIOPinD6 = 6;
+constexpr u8 GPIOPinD7 = 13;
+
 CHD44780FourBit::CHD44780FourBit(u8 nColumns, u8 nRows)
 	: CHD44780Base(nColumns, nRows),
 
-	  m_RS(GPIO_PIN_RS, GPIOModeOutput),
-	  m_RW(GPIO_PIN_RW, GPIOModeOutput),
-	  m_EN(GPIO_PIN_EN, GPIOModeOutput),
-	  m_D4(GPIO_PIN_D4, GPIOModeOutput),
-	  m_D5(GPIO_PIN_D5, GPIOModeOutput),
-  	  m_D6(GPIO_PIN_D6, GPIOModeOutput),
-	  m_D7(GPIO_PIN_D7, GPIOModeOutput)
+	  m_RS(GPIOPinRS, GPIOModeOutput),
+	  m_RW(GPIOPinRW, GPIOModeOutput),
+	  m_EN(GPIOPinEN, GPIOModeOutput),
+	  m_D4(GPIOPinD4, GPIOModeOutput),
+	  m_D5(GPIOPinD5, GPIOModeOutput),
+  	  m_D6(GPIOPinD6, GPIOModeOutput),
+	  m_D7(GPIOPinD7, GPIOModeOutput)
 {
 	// Bring all pins low
 	m_RS.Write(LOW);
