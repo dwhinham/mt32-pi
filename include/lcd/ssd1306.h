@@ -51,7 +51,7 @@ public:
 	virtual void Update(CMT32Synth& Synth) override;
 	virtual void Update(CSoundFontSynth& Synth) override;
 
-private:
+protected:
 	struct TFrameBufferUpdatePacket
 	{
 		u8 DataControlByte;
@@ -60,7 +60,7 @@ private:
 	PACKED;
 
 	void WriteCommand(u8 nCommand) const;
-	void WriteFrameBuffer() const;
+	virtual void WriteFrameBuffer(bool bForceFullUpdate = false) const;
 	void SwapFrameBuffers();
 	void SetPixel(u8 nX, u8 nY);
 	void ClearPixel(u8 nX, u8 nY);
@@ -81,6 +81,16 @@ private:
 	// Double framebuffers
 	TFrameBufferUpdatePacket m_FrameBuffers[2];
 	u8 m_nCurrentFrameBuffer;
+};
+
+class CSH1106 : public CSSD1306
+{
+public:
+	CSH1106(CI2CMaster* pI2CMaster, u8 nAddress = 0x3C, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
+
+private:
+	void WriteData(const u8* pData, size_t nSize) const;
+	virtual void WriteFrameBuffer(bool bForceFullUpdate = false) const override;
 };
 
 #endif

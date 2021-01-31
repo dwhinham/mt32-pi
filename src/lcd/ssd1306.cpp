@@ -210,14 +210,14 @@ void CSSD1306::WriteCommand(u8 nCommand) const
 	m_pI2CMaster->Write(m_nAddress, Buffer, sizeof(Buffer));
 }
 
-void CSSD1306::WriteFrameBuffer() const
+void CSSD1306::WriteFrameBuffer(bool bForceFullUpdate) const
 {
 	// Reset start line
 	WriteCommand(SetStartLine | 0x00);
 
 	// Compare two framebuffers
 	const size_t nFrameBufferSize = m_nWidth * m_nHeight / 8;
-	const bool bNeedsUpdate = memcmp(m_FrameBuffers[0].FrameBuffer, m_FrameBuffers[1].FrameBuffer, nFrameBufferSize) != 0;
+	const bool bNeedsUpdate = bForceFullUpdate || memcmp(m_FrameBuffers[0].FrameBuffer, m_FrameBuffers[1].FrameBuffer, nFrameBufferSize) != 0;
 
 	// Copy entire framebuffer
 	if (bNeedsUpdate)
@@ -450,7 +450,7 @@ void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLin
 	}
 
 	if (bImmediate)
-		WriteFrameBuffer();
+		WriteFrameBuffer(true);
 }
 
 void CSSD1306::Clear(bool bImmediate)
@@ -459,7 +459,7 @@ void CSSD1306::Clear(bool bImmediate)
 	memset(pFrameBuffer, 0, m_nWidth * m_nHeight / 8);
 
 	if (bImmediate)
-		WriteFrameBuffer();
+		WriteFrameBuffer(true);
 }
 
 void CSSD1306::SetBacklightEnabled(bool bEnabled)

@@ -61,6 +61,7 @@ public:
 		ENUM(None, none)                   \
 		ENUM(HD44780FourBit, hd44780_4bit) \
 		ENUM(HD44780I2C, hd44780_i2c)      \
+		ENUM(SH1106I2C, sh1106_i2c)        \
 		ENUM(SSD1306I2C, ssd1306_i2c)
 
 	CONFIG_ENUM(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);

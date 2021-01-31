@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - USB plug & play support for MIDI interfaces.
   * You can now connect/disconnect USB MIDI devices at runtime and they will be used instead of the GPIO MIDI interface when present.
+- Support for SH1106 OLED displays - many thanks to @arananet for donating a screen!
 
 ### Changed
 

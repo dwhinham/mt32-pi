@@ -116,6 +116,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		m_pLCD = new CHD44780FourBit(pConfig->LCDWidth, pConfig->LCDHeight);
 	else if (pConfig->LCDType == CConfig::TLCDType::HD44780I2C)
 		m_pLCD = new CHD44780I2C(m_pI2CMaster, pConfig->LCDI2CLCDAddress, pConfig->LCDWidth, pConfig->LCDHeight);
+	else if (pConfig->LCDType == CConfig::TLCDType::SH1106I2C)
+		m_pLCD = new CSH1106(m_pI2CMaster, pConfig->LCDI2CLCDAddress, pConfig->LCDWidth, pConfig->LCDHeight, pConfig->LCDRotation);
 	else if (pConfig->LCDType == CConfig::TLCDType::SSD1306I2C)
 		m_pLCD = new CSSD1306(m_pI2CMaster, pConfig->LCDI2CLCDAddress, pConfig->LCDWidth, pConfig->LCDHeight, pConfig->LCDRotation);
 
@@ -244,13 +246,15 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(pConfig->SystemPowerSaveTimeout);
 
-	// Attach LCD to synths
+	// Attach LCD to synths and clear
 	if (m_pLCD)
 	{
 		if (m_pMT32Synth)
 			m_pMT32Synth->SetLCD(m_pLCD);
 		if (m_pSoundFontSynth)
 			m_pSoundFontSynth->SetLCD(m_pLCD);
+
+		m_pLCD->Clear();
 	}
 
 	// Start audio
