@@ -39,7 +39,7 @@ public:
 
 	CONFIG_ENUM(TLCDRotation, ENUM_LCDROTATION);
 
-	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3c, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
+	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3C, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
 
 	// CCharacterLCD
 	virtual bool Initialize() override;

@@ -27,23 +27,25 @@
 #include "lcd/ssd1306.h"
 #include "utility.h"
 
-// SSD1306 commands
-constexpr u8 SetMemoryAddressingMode    = 0x20;
-constexpr u8 SetColumnAddress           = 0x21;
-constexpr u8 SetPageAddress             = 0x22;
-constexpr u8 SetStartLine               = 0x40;
-constexpr u8 SetContrast                = 0x81;
-constexpr u8 SetChargePump              = 0x8D;
-constexpr u8 EntireDisplayOnResume      = 0xA4;
-constexpr u8 SetNormalDisplay           = 0xA6;
-constexpr u8 SetMultiplexRatio          = 0xA8;
-constexpr u8 SetDisplayOff              = 0xAE;
-constexpr u8 SetDisplayOn               = 0xAF;
-constexpr u8 SetDisplayOffset           = 0xD3;
-constexpr u8 SetDisplayClockDivideRatio = 0xD5;
-constexpr u8 SetPrechargePeriod         = 0xD9;
-constexpr u8 SetCOMPins                 = 0xDA;
-constexpr u8 SetVCOMHDeselectLevel      = 0xDB;
+enum TSSD1306Command : u8
+{
+	SetMemoryAddressingMode    = 0x20,
+	SetColumnAddress           = 0x21,
+	SetPageAddress             = 0x22,
+	SetStartLine               = 0x40,
+	SetContrast                = 0x81,
+	SetChargePump              = 0x8D,
+	EntireDisplayOnResume      = 0xA4,
+	SetNormalDisplay           = 0xA6,
+	SetMultiplexRatio          = 0xA8,
+	SetDisplayOff              = 0xAE,
+	SetDisplayOn               = 0xAF,
+	SetDisplayOffset           = 0xD3,
+	SetDisplayClockDivideRatio = 0xD5,
+	SetPrechargePeriod         = 0xD9,
+	SetCOMPins                 = 0xDA,
+	SetVCOMHDeselectLevel      = 0xDB,
+};
 
 // Compile-time (constexpr) font/graphics conversion functions.
 // The SSD1306 stores pixel data in columns, but our source data is stored as rows.
@@ -292,9 +294,9 @@ void CSSD1306::DrawImage()
 	switch (m_CurrentImage)
 	{
 		case TImage::MisterLogo:
-			pPixelData      = MisterLogo.GetPixelData();
-			nImageWidth     = MisterLogo.Width();
-			nImageHeight    = MisterLogo.Height();
+			pPixelData   = MisterLogo.GetPixelData();
+			nImageWidth  = MisterLogo.Width();
+			nImageHeight = MisterLogo.Height();
 			break;
 
 		default:
@@ -455,6 +457,7 @@ void CSSD1306::Clear(bool bImmediate)
 {
 	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
 	memset(pFrameBuffer, 0, m_nWidth * m_nHeight / 8);
+
 	if (bImmediate)
 		WriteFrameBuffer();
 }
