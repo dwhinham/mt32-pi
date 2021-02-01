@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to libmt32emu v2.4.2.
 - Update to FluidSynth v2.1.7.
+- Rotary encoder now has an acceleration curve applied to it when turned quickly.
 
 ### Fixed
 

@@ -51,6 +51,8 @@ private:
 	TEncoderType m_Type;
 	s8 m_nDelta;
 	s8 m_nPreviousState;
+
+	unsigned int m_nLastReadTime;
 };
 
 #endif
