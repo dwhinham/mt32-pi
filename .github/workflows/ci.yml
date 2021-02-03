@@ -150,7 +150,7 @@ jobs:
     - name: Get version (git tag)
       if: startsWith(github.ref, 'refs/tags/')
       id: get_version
-      run: echo ::set-output name=version::${GITHUB_REF#refs/tags/}
+      run: echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
 
     - name: Create release package
       if: startsWith(github.ref, 'refs/tags/')
@@ -169,3 +169,9 @@ jobs:
       with:
         args: |
             mt32-pi-*.zip
+
+    - name: Notify Discord of release
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        sudo pip3 install keepachangelog discord-webhook
+        .github/scripts/discord_notify.py ${{ secrets.DISCORD_WEBHOOK }} ${{ steps.get_version.outputs.version }}
