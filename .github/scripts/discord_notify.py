@@ -13,6 +13,7 @@ RAW_URL = "https://raw.githubusercontent.com/{}/{}/master".format(
 )
 AVATAR_URL = "{}/images/mt32pi_logo_discord_avatar.png".format(RAW_URL)
 THUMBNAIL_URL = "{}/images/mt32pi_logo_dark.png".format(RAW_URL)
+FOOTER_ICON_URL = "https://github.githubassets.com/favicons/favicon-dark.png"
 
 MAX_FIELD_LEN = 1024
 COLOR = 0xEB2188
@@ -45,7 +46,9 @@ title = "🎹🎶 **{} v{} - {}**".format(
     GITHUB_REPO, changes["version"], changes["release_date"]
 )
 
-release_url ="https://github.com/{}/{}/releases/tag/v{}".format(GITHUB_USER, GITHUB_REPO, version)
+release_url = "https://github.com/{}/{}/releases/tag/v{}".format(
+    GITHUB_USER, GITHUB_REPO, version
+)
 
 
 webhook = DiscordWebhook(url=webhook_url, username=GITHUB_REPO, avatar_url=AVATAR_URL)
@@ -60,6 +63,9 @@ embed.set_thumbnail(url=THUMBNAIL_URL)
 add_field(embed, changes, "✨ Added:", "added")
 add_field(embed, changes, "✏ Changed:", "changed")
 add_field(embed, changes, "🐛  Fixed:", "fixed")
+
+embed.set_footer(text="GitHub", icon_url=FOOTER_ICON_URL)
+embed.set_timestamp()
 
 webhook.add_embed(embed)
 response = webhook.execute()
