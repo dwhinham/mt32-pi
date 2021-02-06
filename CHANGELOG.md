@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Some USB MIDI devices were not being detected at startup.
 - "LCD-Auto" mode for MiSTer was broken because of a bug in the SSD1306 framebuffer difference-checking code.
+- Rapidly-changing panning values [could cause pops/clicks](https://github.com/FluidSynth/fluidsynth/issues/768) in FluidSynth - many thanks to @Asbrandt for reporting and @derselbst for the quick fix!
+  * This was particularly noticable in the Descent Level 1 soundtrack's bassline, for example.
+  * A temporary patch has been applied until FluidSynth v2.1.8 is released.
 
 ## [0.8.3] - 2021-01-16
 
