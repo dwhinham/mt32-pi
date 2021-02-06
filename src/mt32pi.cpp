@@ -727,7 +727,7 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 		else
 		{
 			// Next SoundFont
-			const size_t nSoundFonts = m_pSoundFontSynth->GetSoundFontCount();
+			const size_t nSoundFonts = m_pSoundFontSynth->GetSoundFontManager().GetSoundFontCount();
 			size_t nNextSoundFont;
 			if (m_bDeferredSoundFontSwitchFlag)
 				nNextSoundFont = (m_nDeferredSoundFontSwitchIndex + 1) % nSoundFonts;
@@ -807,7 +807,10 @@ void CMT32Pi::SwitchSoundFont(size_t nIndex)
 
 void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 {
-	LCDLog(TLCDLogType::Notice, "SoundFont: %ld", nIndex);
+	if (m_pSoundFontSynth == nullptr)
+		return;
+
+	LCDLog(TLCDLogType::Notice, "SF %ld: %s", nIndex, m_pSoundFontSynth->GetSoundFontManager().GetSoundFontName(nIndex));
 	m_nDeferredSoundFontSwitchIndex = nIndex;
 	m_nDeferredSoundFontSwitchTime  = CTimer::Get()->GetTicks();
 	m_bDeferredSoundFontSwitchFlag  = true;

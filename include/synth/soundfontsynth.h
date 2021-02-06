@@ -48,10 +48,9 @@ public:
 	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
 	virtual void ReportStatus() const override;
 
-	size_t GetSoundFontCount() const { return m_SoundFontManager.GetSoundFontCount(); }
 	bool SwitchSoundFont(size_t nIndex);
-	size_t GetSoundFontIndex() const;
-	const char* GetSoundFontName() const;
+	size_t GetSoundFontIndex() const { return m_nCurrentSoundFontIndex; }
+	CSoundFontManager& GetSoundFontManager() { return m_SoundFontManager; }
 
 private:
 	bool Reinitialize(const char* pSoundFontPath);

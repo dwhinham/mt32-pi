@@ -403,7 +403,7 @@ u8 CSoundFontSynth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels
 void CSoundFontSynth::ReportStatus() const
 {
 	if (m_pLCD)
-		m_pLCD->OnSystemMessage(GetSoundFontName());
+		m_pLCD->OnSystemMessage(m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex));
 }
 
 bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
@@ -439,21 +439,11 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 
 	m_nCurrentSoundFontIndex = nIndex;
 
-	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", GetSoundFontName());
+	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", m_SoundFontManager.GetSoundFontName(nIndex));
 	if (m_pLCD)
 		m_pLCD->ClearSpinnerMessage();
 
 	return true;
-}
-
-const char* CSoundFontSynth::GetSoundFontName() const
-{
-	return m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex);
-}
-
-size_t CSoundFontSynth::GetSoundFontIndex() const
-{
-	return m_nCurrentSoundFontIndex;
 }
 
 bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath)
