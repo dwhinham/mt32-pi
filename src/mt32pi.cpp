@@ -810,7 +810,8 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 	if (m_pSoundFontSynth == nullptr)
 		return;
 
-	LCDLog(TLCDLogType::Notice, "SF %ld: %s", nIndex, m_pSoundFontSynth->GetSoundFontManager().GetSoundFontName(nIndex));
+	const char* pName = m_pSoundFontSynth->GetSoundFontManager().GetSoundFontName(nIndex);
+	LCDLog(TLCDLogType::Notice, "SF %ld: %s", nIndex, pName ? pName : "- N/A -");
 	m_nDeferredSoundFontSwitchIndex = nIndex;
 	m_nDeferredSoundFontSwitchTime  = CTimer::Get()->GetTicks();
 	m_bDeferredSoundFontSwitchFlag  = true;
