@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2021-02-07
+
 ### Added
 
 - USB plug & play support for MIDI interfaces.
@@ -271,7 +273,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.3...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4...HEAD
+[0.8.4]: https://github.com/dwhinham/mt32-pi/compare/v0.8.3..v0.8.4
 [0.8.3]: https://github.com/dwhinham/mt32-pi/compare/v0.8.2..v0.8.3
 [0.8.2]: https://github.com/dwhinham/mt32-pi/compare/v0.8.1..v0.8.2
 [0.8.1]: https://github.com/dwhinham/mt32-pi/compare/v0.8.0..v0.8.1
