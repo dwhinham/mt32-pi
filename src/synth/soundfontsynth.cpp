@@ -194,13 +194,13 @@ bool CSoundFontSynth::Initialize()
 
 void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 {
-	const u8 status  = nMessage & 0xFF;
-	const u8 channel = nMessage & 0xF;
-	const u8 data1   = (nMessage >> 8) & 0xFF;
-	const u8 data2   = (nMessage >> 16) & 0xFF;
+	const u8 nStatus  = nMessage & 0xFF;
+	const u8 nChannel = nMessage & 0x0F;
+	const u8 nData1   = (nMessage >> 8) & 0xFF;
+	const u8 nData2   = (nMessage >> 16) & 0xFF;
 
 	// Handle system real-time messages
-	if (status == 0xFF)
+	if (nStatus == 0xFF)
 	{
 		m_Lock.Acquire();
 		fluid_synth_system_reset(m_pSynth);
@@ -211,41 +211,41 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 	m_Lock.Acquire();
 
 	// Handle channel messages
-	switch (status & 0xF0)
+	switch (nStatus & 0xF0)
 	{
 		// Note off
 		case 0x80:
-			fluid_synth_noteoff(m_pSynth, channel, data1);
+			fluid_synth_noteoff(m_pSynth, nChannel, nData1);
 			break;
 
 		// Note on
 		case 0x90:
-			fluid_synth_noteon(m_pSynth, channel, data1, data2);
+			fluid_synth_noteon(m_pSynth, nChannel, nData1, nData2);
 			break;
 
 		// Polyphonic key pressure/aftertouch
 		case 0xA0:
-			fluid_synth_key_pressure(m_pSynth, channel, data1, data2);
+			fluid_synth_key_pressure(m_pSynth, nChannel, nData1, nData2);
 			break;
 
 		// Control change
 		case 0xB0:
-			fluid_synth_cc(m_pSynth, channel, data1, data2);
+			fluid_synth_cc(m_pSynth, nChannel, nData1, nData2);
 			break;
 
 		// Program change
 		case 0xC0:
-			fluid_synth_program_change(m_pSynth, channel, data1);
+			fluid_synth_program_change(m_pSynth, nChannel, nData1);
 			break;
 
 		// Channel pressure/aftertouch
 		case 0xD0:
-			fluid_synth_channel_pressure(m_pSynth, channel, data1);
+			fluid_synth_channel_pressure(m_pSynth, nChannel, nData1);
 			break;
 
 		// Pitch bend
 		case 0xE0:
-			fluid_synth_pitch_bend(m_pSynth, channel, (data2 << 7) | data1);
+			fluid_synth_pitch_bend(m_pSynth, nChannel, (nData2 << 7) | nData1);
 			break;
 	}
 
