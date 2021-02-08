@@ -23,7 +23,7 @@ jobs:
 
     - name: Cache ARM toolchains
       id: cache-toolchains
-      uses: actions/cache@v2
+      uses: actions/cache@v2.1.4
       with:
         path: |
           ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
@@ -67,7 +67,7 @@ jobs:
 
     - name: Cache boot files
       id: cache-boot-files
-      uses: actions/cache@v2
+      uses: actions/cache@v2.1.4
       with:
         path: |
           sdcard/armstub8-rpi4.bin
@@ -83,7 +83,7 @@ jobs:
 
     - name: Cache ARM toolchains
       if: steps.cache-boot-files.outputs.cache-hit != 'true'
-      uses: actions/cache@v2
+      uses: actions/cache@v2.1.4
       with:
         path: |
           ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
@@ -114,7 +114,7 @@ jobs:
 
     - name: Cache GeneralUser GS SoundFont
       id: cache-generaluser-gs
-      uses: actions/cache@v2
+      uses: actions/cache@v2.1.4
       with:
         path: GeneralUser GS v1.511
         key: cache-generaluser-gs-1.511
