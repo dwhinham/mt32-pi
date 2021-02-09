@@ -221,7 +221,7 @@ void CSSD1306::WriteFrameBuffer(bool bForceFullUpdate) const
 
 	// Copy entire framebuffer
 	if (bNeedsUpdate)
-		m_pI2CMaster->Write(m_nAddress, &m_FrameBuffers[m_nCurrentFrameBuffer], sizeof(TFrameBufferUpdatePacket));
+		m_pI2CMaster->Write(m_nAddress, &m_FrameBuffers[m_nCurrentFrameBuffer], sizeof(TFrameBufferUpdatePacket::DataControlByte) + nFrameBufferSize);
 }
 
 void CSSD1306::SwapFrameBuffers()
