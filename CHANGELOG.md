@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.5] - 2021-02-10
+
 ### Fixed
 
 - 128x32 SSD1306 displays were broken (flickering) since 0.8.4.
@@ -277,7 +279,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.5...HEAD
+[0.8.5]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4..v0.8.5
 [0.8.4]: https://github.com/dwhinham/mt32-pi/compare/v0.8.3..v0.8.4
 [0.8.3]: https://github.com/dwhinham/mt32-pi/compare/v0.8.2..v0.8.3
 [0.8.2]: https://github.com/dwhinham/mt32-pi/compare/v0.8.1..v0.8.2
