@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to circle-stdlib v15.6/Circle Step 43.3.
+
 ## [0.8.5] - 2021-02-10
 
 ### Fixed
