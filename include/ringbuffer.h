@@ -36,7 +36,7 @@ public:
 		: m_Lock(IRQ_LEVEL),
 		  m_nInPtr(0),
 		  m_nOutPtr(0),
-		  m_Data{0}
+		  m_Data{}
 	{
 	}
 

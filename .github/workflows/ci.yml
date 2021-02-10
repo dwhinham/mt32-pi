@@ -3,7 +3,7 @@ name: mt32-pi CI
 on: [push, pull_request]
 
 env:
-  toolchain-version: 9.2-2019.12
+  toolchain-version: 10.2-2020.11
 
 jobs:
   build:
@@ -13,9 +13,6 @@ jobs:
       fail-fast: false
       matrix:
         board: [pi2, pi3-64, pi4-64]
-    env:
-      toolchain-version: 9.2-2019.12
-
     steps:
     - uses: actions/checkout@v2
       with:
