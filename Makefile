@@ -95,7 +95,7 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 # Build kernel itself
 #
 all: circle-stdlib mt32emu fluidsynth
-	@$(MAKE) -f Kernel.mk
+	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #
 # Clean kernel only

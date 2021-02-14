@@ -19,32 +19,33 @@ USERBAUD?=115200
 GC_SECTIONS?=1
 
 # Toolchain setup
-ifeq ($(BOARD), pi0)
-RASPBERRYPI=1
-BITS=32
-PREFIX=arm-none-eabi-
-else ifeq ($(BOARD), pi2)
+ifeq ($(BOARD), pi2)
 RASPBERRYPI=2
 BITS=32
 PREFIX=arm-none-eabi-
+KERNEL=kernel7
 else ifeq ($(BOARD), pi3)
 RASPBERRYPI=3
 BITS=32
 PREFIX=arm-none-eabi-
+KERNEL=kernel8-32
 else ifeq ($(BOARD), pi3-64)
 RASPBERRYPI=3
 BITS=64
 PREFIX=aarch64-none-elf-
+KERNEL=kernel8
 else ifeq ($(BOARD), pi4)
 RASPBERRYPI=4
 BITS=32
 PREFIX=arm-none-eabi-
+KERNEL=kernel7l
 else ifeq ($(BOARD), pi4-64)
 RASPBERRYPI=4
 BITS=64
 PREFIX=aarch64-none-elf-
+KERNEL=kernel8-rpi4
 else
-$(error Invalid board type "$(BOARD)"; please specify one of [ pi0 | pi2 | pi3 | pi3-64 | pi4 | pi4-64 ])
+$(error Invalid board type "$(BOARD)"; please specify one of [ pi2 | pi3 | pi3-64 | pi4 | pi4-64 ])
 endif
 
 ifeq ($(PREFIX), arm-none-eabi-)
