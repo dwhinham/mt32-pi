@@ -444,13 +444,7 @@ void CSSD1306::DrawSC55Dots(u8 nFirstRow, u8 nRows)
 			const u8 nScaledX = nOffsetX + nPosX * nScaleX;
 			const u8 nScaledY = nOffsetY + nPosY * nScaleY;
 
-			for (u8 nX = 0; nX < nScaleX; ++nX)
-			{
-				for (u8 nY = 0; nY < nScaleY; ++nY)
-				{
-					SetPixel(nScaledX + nX, nScaledY + nY);
-				}
-			}
+			DrawFilledRect(nScaledX, nScaledY, nScaledX + nScaleX - 1, nScaledY + nScaleY - 1);
 		}
 	}
 }
