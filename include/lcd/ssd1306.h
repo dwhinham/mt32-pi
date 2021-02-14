@@ -62,13 +62,15 @@ protected:
 	void WriteCommand(u8 nCommand) const;
 	virtual void WriteFrameBuffer(bool bForceFullUpdate = false) const;
 	void SwapFrameBuffers();
+
 	void SetPixel(u8 nX, u8 nY);
 	void ClearPixel(u8 nX, u8 nY);
+	void DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate = false);
 	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
 	void DrawImage();
 
 	void DrawSystemState();
-	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true,
+	void DrawChannelLevels(u8 nBarXOffset, u8 nBarYOffset, u8 nBarWidth, u8 nBarHeight, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true,
 						   bool bDrawBarBases = true);
 	void DrawSC55Dots(u8 nFirstRow, u8 nRows);
 

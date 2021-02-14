@@ -250,6 +250,58 @@ void CSSD1306::ClearPixel(u8 nX, u8 nY)
 	pFrameBuffer[((nY & 0xF8) << 4) + nX] &= ~(1 << (nY & 7));
 }
 
+void CSSD1306::DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate)
+{
+	if (nX1 >= m_nWidth || nX2 >= m_nWidth || nY1 >= m_nHeight || nY2 >= m_nHeight)
+		return;
+
+	if (nX1 > nX2)
+		Utility::Swap(nX1, nX2);
+
+	if (nY1 > nY2)
+		Utility::Swap(nY1, nY2);
+
+	const u8 nStartPage = nY1 / 8;
+	const u8 nEndPage   = nY2 / 8;
+	const u8 nMidPage   = nEndPage - nStartPage;
+
+	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	u8* pPixel       = &pFrameBuffer[nStartPage * m_nWidth + nX1];
+	u8 nMask         = 0xFF << (nY1 & 7);
+
+	// Rectangle starts and ends within the same page
+	if (nMidPage == 0)
+		nMask &= (0xFF >> (7 - (nY2 & 7)));
+
+	// Draw top page
+	for (u8 nX = nX1; nX <= nX2; ++nX)
+		*pPixel++ |= nMask;
+
+	// Draw middle pages
+	if (nMidPage > 1)
+	{
+		nMask = 0xFF;
+		for (u8 nY = 1; nY < nMidPage; ++nY)
+		{
+			pPixel = &pFrameBuffer[nStartPage * m_nWidth + nX1 + nY * m_nWidth];
+			for (u8 nX = nX1; nX <= nX2; ++nX)
+				*pPixel++ = nMask;
+		}
+	}
+
+	// Draw bottom page
+	if (nMidPage >= 1)
+	{
+		nMask  = 0xFF >> (7 - (nY2 & 7));
+		pPixel = &pFrameBuffer[nEndPage * m_nWidth + nX1];
+		for (u8 nX = nX1; nX <= nX2; ++nX)
+			*pPixel++ |= nMask;
+	}
+
+	if (bImmediate)
+		WriteFrameBuffer(true);
+}
+
 void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, bool bDoubleWidth)
 {
 	const size_t nRowOffset    = nCursorY * m_nWidth * 2;
@@ -335,64 +387,32 @@ void CSSD1306::DrawSystemState()
 	}
 }
 
-void CSSD1306::DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarWidth, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
+void CSSD1306::DrawChannelLevels(u8 nBarXOffset, u8 nBarYOffset, u8 nBarWidth, u8 nBarHeight, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
 {
-	const size_t nFirstPageOffset = nFirstRow * m_nWidth;
-	const u8 nTotalPages          = nRows;
-	const u8 nBarHeight           = nRows * 8;
-	u8* pFrameBuffer              = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	const u8 nBarMaxY = nBarHeight - 1;
 
 	// For each channel
-	for (u8 i = 0; i < nChannels; ++i)
+	for (u8 nChannel = 0; nChannel < nChannels; ++nChannel)
 	{
-		u8 PageValues[nTotalPages];
-		u8 nPartLevelPixels = m_ChannelLevels[i] * nBarHeight;
-		if (bDrawBarBases && nPartLevelPixels == 0)
-			nPartLevelPixels = 1;
+		const u8 nLevelPixels = m_ChannelLevels[nChannel] * nBarMaxY;
+		const u8 nX1 = nBarXOffset + nChannel * (nBarWidth + nBarSpacing);
+		const u8 nX2 = nX1 + nBarWidth - 1;
 
-		const u8 nPeakLevelPixels = m_ChannelPeakLevels[i] * nBarHeight;
-		const u8 nFullPages       = nPartLevelPixels / 8;
-		const u8 nRemainder       = nPartLevelPixels % 8;
-
-		for (u8 j = 0; j < nFullPages; ++j)
-			PageValues[j] = 0xFF;
-
-		for (u8 j = nFullPages; j < nTotalPages; ++j)
-			PageValues[j] = 0;
-
-		if (nRemainder)
-			PageValues[nFullPages] = 0xFF << (8 - nRemainder);
-
-		// Peak meters
-		if (bDrawPeaks && nPeakLevelPixels)
+		if (nLevelPixels > 0 || bDrawBarBases)
 		{
-			const u8 nPeakPage      = nPeakLevelPixels / 8;
-			const u8 nPeakRemainder = nPeakLevelPixels % 8;
-
-			if (nPeakRemainder)
-				PageValues[nPeakPage] |= 1 << (8 - nPeakRemainder);
-			else
-				PageValues[nPeakPage - 1] |= 1;
+			const u8 nY1 = nBarYOffset + (nBarMaxY - nLevelPixels);
+			const u8 nY2 = nY1 + nLevelPixels;
+			DrawFilledRect(nX1, nY1, nX2, nY2);
 		}
 
-		// For each bar column
-		for (u8 j = 0; j < nBarWidth; ++j)
+		if (bDrawPeaks)
 		{
-			// For each bar row
-			for (u8 k = 0; k < nTotalPages; ++k)
+			const u8 nPeakLevelPixels = m_ChannelPeakLevels[nChannel] * nBarMaxY;
+			if (nPeakLevelPixels)
 			{
-				size_t nOffset = nFirstPageOffset;
-
-				// Start BarXOffset pixels from the left
-				nOffset += nBarXOffset;
-
-				// Start from bottom-most page
-				nOffset += (nTotalPages - 1) * m_nWidth - k * m_nWidth;
-
-				// i'th bar + j'th bar column
-				nOffset += i * (nBarWidth + nBarSpacing) + j;
-
-				pFrameBuffer[nOffset] = PageValues[k];
+				// TODO: DrawLine
+				const u8 nY = nBarYOffset + (nBarMaxY - nPeakLevelPixels);
+				DrawFilledRect(nX1, nY, nX2, nY);
 			}
 		}
 	}
@@ -486,9 +506,9 @@ void CSSD1306::Update(CMT32Synth& Synth)
 		DrawSystemState();
 	else
 	{
-		const u8 nRows = m_nHeight / 8 - 2;
 		const u8 nBarWidth = (m_nWidth - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
-		DrawChannelLevels(0, nRows, 2, nBarWidth, BarSpacing, MT32ChannelCount, true, false);
+		const u8 nBarHeight = m_nHeight - 16;
+		DrawChannelLevels(2, 0, nBarWidth, nBarHeight, BarSpacing, MT32ChannelCount, true, false);
 	}
 
 	// MT-32 status row
@@ -518,13 +538,12 @@ void CSSD1306::Update(CSoundFontSynth& Synth)
 		DrawSystemState();
 	else
 	{
-		const u8 nRows = m_nHeight / 8;
 		if (m_bSC55DisplayingDots)
-			DrawSC55Dots(0, nRows);
+			DrawSC55Dots(0, m_nHeight / 8);
 		else
 		{
 			const u8 nBarWidth = (m_nWidth - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
-			DrawChannelLevels(0, nRows, 1, nBarWidth, BarSpacing, MIDIChannelCount);
+			DrawChannelLevels(1, 0, nBarWidth, m_nHeight, BarSpacing, MIDIChannelCount);
 		}
 	}
 
