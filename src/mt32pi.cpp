@@ -240,8 +240,6 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		pLogger->Write(MT32PiName, LogNotice, "Using Pisound MIDI interface");
 	else if (m_bSerialMIDIEnabled)
 		pLogger->Write(MT32PiName, LogNotice, "Using serial MIDI interface");
-	else
-		pLogger->Write(MT32PiName, LogError, "No USB MIDI device or Pisound detected and serial port in use");
 
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(pConfig->SystemPowerSaveTimeout);
