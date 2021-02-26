@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update ARM toolchains to 10.2-2020.11.
 - Config file options are now case-insensitive.
 
+### Removed
+
+- Old ROM loading behavior now removed. If you have `MT32_CONTROL.ROM`/`MT32_PCM.ROM` files in the root of your SD card, please move them to the `roms` subdirectory otherwise they will fail to load.
+
 ## [0.8.5] - 2021-02-10
 
 ### Fixed

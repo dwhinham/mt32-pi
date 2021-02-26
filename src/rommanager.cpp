@@ -28,10 +28,6 @@
 const char ROMManagerName[] = "rommanager";
 const char ROMPath[] = "roms";
 
-// Filenames for original ROM loading behaviour
-const char MT32ControlROMName[] = "MT32_CONTROL.ROM";
-const char MT32PCMROMName[] = "MT32_PCM.ROM";
-
 // Custom File class for mt32emu
 class CROMFile : public MT32Emu::AbstractFile
 {
@@ -124,11 +120,7 @@ bool CROMManager::ScanROMs()
 		Result = f_findnext(&Dir, &FileInfo);
 	}
 
-	// Fall back on old ROM loading behavior if we haven't found at least one valid ROM set
-	if (!HaveROMSet(TMT32ROMSet::Any))
-		return CheckROM(MT32ControlROMName) && CheckROM(MT32PCMROMName);
-
-	return true;
+	return HaveROMSet(TMT32ROMSet::Any);
 }
 
 bool CROMManager::HaveROMSet(TMT32ROMSet ROMSet) const
