@@ -34,7 +34,7 @@ template <class T, const char* pEnumStrings[], size_t N> static bool ParseEnum(c
 {
 	for (size_t i = 0; i < N; ++i)
 	{
-		if (!strcmp(pString, pEnumStrings[i]))
+		if (!strcasecmp(pString, pEnumStrings[i]))
 		{
 			*pOut = static_cast<T>(i);
 			return true;
@@ -113,18 +113,18 @@ int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, co
 
 bool CConfig::ParseOption(const char* pString, bool* pOutBool)
 {
-	for (auto trueString : TrueStrings)
+	for (auto pTrueString : TrueStrings)
 	{
-		if (!strcmp(pString, trueString))
+		if (!strcasecmp(pString, pTrueString))
 		{
 			*pOutBool = true;
 			return true;
 		}
 	}
 
-	for (auto falseString : FalseStrings)
+	for (auto pFalseString : FalseStrings)
 	{
-		if (!strcmp(pString, falseString))
+		if (!strcasecmp(pString, pFalseString))
 		{
 			*pOutBool = false;
 			return true;
