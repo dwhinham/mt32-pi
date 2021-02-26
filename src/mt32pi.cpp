@@ -37,7 +37,6 @@ constexpr u32 LCDUpdatePeriodMillis                = 16;
 constexpr u32 MisterUpdatePeriodMillis             = 50;
 constexpr u32 LEDTimeoutMillis                     = 50;
 constexpr u32 ActiveSenseTimeoutMillis             = 330;
-constexpr u32 DeferredSoundFontSwitchTimeoutMillis = 1000;
 
 constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
@@ -267,7 +266,9 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 
 void CMT32Pi::MainTask()
 {
+	CConfig* const pConfig = CConfig::Get();
 	CLogger* const pLogger = CLogger::Get();
+
 	pLogger->Write(MT32PiName, LogNotice, "Main task on Core 0 starting up");
 
 	Awaken();
@@ -308,7 +309,7 @@ void CMT32Pi::MainTask()
 		CPower::Update();
 
 		// Check for deferred SoundFont switch
-		if (m_bDeferredSoundFontSwitchFlag && (ticks - m_nDeferredSoundFontSwitchTime) >= MSEC2HZ(DeferredSoundFontSwitchTimeoutMillis))
+		if (m_bDeferredSoundFontSwitchFlag && (ticks - m_nDeferredSoundFontSwitchTime) >= static_cast<unsigned int>(pConfig->ControlSwitchTimeout) * HZ)
 		{
 			SwitchSoundFont(m_nDeferredSoundFontSwitchIndex);
 			m_bDeferredSoundFontSwitchFlag = false;
@@ -318,7 +319,7 @@ void CMT32Pi::MainTask()
 		}
 
 		// Check for USB PnP events
-		if (CConfig::Get()->MIDIUSB && m_pUSBHCI->UpdatePlugAndPlay())
+		if (pConfig->MIDIUSB && m_pUSBHCI->UpdatePlugAndPlay())
 		{
 			if (!m_pUSBMIDIDevice && (m_pUSBMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE))))
 			{
