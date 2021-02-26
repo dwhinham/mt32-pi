@@ -207,10 +207,10 @@ bool CROMManager::CheckROM(const char* pPath)
 	}
 
 	// Check ROM and store if valid
-	const MT32Emu::ROMImage* rom = MT32Emu::ROMImage::makeROMImage(pFile);
-	if (!StoreROM(*rom))
+	const MT32Emu::ROMImage* pROM = MT32Emu::ROMImage::makeROMImage(pFile);
+	if (!StoreROM(*pROM))
 	{
-		MT32Emu::ROMImage::freeROMImage(rom);
+		MT32Emu::ROMImage::freeROMImage(pROM);
 		delete pFile;
 		return false;
 	}
