@@ -1,0 +1,52 @@
+diff --git a/lib/usb/Makefile b/lib/usb/Makefile
+index 88c33b4..35c9be0 100644
+--- a/lib/usb/Makefile
++++ b/lib/usb/Makefile
+@@ -26,11 +26,8 @@ include $(CIRCLEHOME)/Rules.mk
+ 
+ OBJS	= lan7800.o smsc951x.o usbbluetooth.o usbcdcethernet.o \
+ 	  usbconfigparser.o usbdevice.o usbdevicefactory.o usbendpoint.o usbfunction.o \
+-	  usbgamepad.o usbgamepadps3.o usbgamepadps4.o usbgamepadstandard.o usbgamepadswitchpro.o \
+-	  usbgamepadxbox360.o usbgamepadxboxone.o usbhiddevice.o usbhostcontroller.o \
+-	  usbkeyboard.o usbmassdevice.o usbmidi.o usbmouse.o usbprinter.o usbrequest.o \
+-	  usbstandardhub.o usbstring.o usbserial.o usbserialch341.o usbserialcp2102.o \
+-	  usbserialpl2303.o usbserialft231x.o usbserialcdc.o
++	  usbhiddevice.o usbhostcontroller.o usbkeyboard.o usbmassdevice.o usbmidi.o \
++	  usbrequest.o usbstandardhub.o usbstring.o
+ 
+ ifneq ($(strip $(RASPPI)),4)
+ OBJS	+= dwhcidevice.o dwhciframeschednper.o dwhciframeschednsplit.o dwhciframeschedper.o \
+diff --git a/lib/usb/usbdevicefactory.cpp b/lib/usb/usbdevicefactory.cpp
+index c67f36f..21c725e 100644
+--- a/lib/usb/usbdevicefactory.cpp
++++ b/lib/usb/usbdevicefactory.cpp
+@@ -59,6 +59,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+ 	{
+ 		pResult = new CUSBBulkOnlyMassStorageDevice (pParent);
+ 	}
++#if 0
+ 	else if (pName->Compare ("int3-1-1") == 0)
+ 	{
+ 		pResult = new CUSBKeyboardDevice (pParent);
+@@ -114,11 +115,13 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+ 	{
+ 		pResult = new CUSBBluetoothDevice (pParent);
+ 	}
++#endif
+ 	else if (   pName->Compare ("int1-3-0") == 0
+ 		 || pName->Compare ("ven582-12a") == 0)		// Roland UM-ONE MIDI interface
+ 	{
+ 		pResult = new CUSBMIDIDevice (pParent);
+ 	}
++#if 0
+ 	else if (pName->Compare ("int2-6-0") == 0)
+ 	{
+ 		pResult = new CUSBCDCEthernetDevice (pParent);
+@@ -144,6 +147,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+ 		pResult = new CUSBSerialFT231XDevice (pParent);
+ 	}
+ 	// new devices follow
++#endif
+ 
+ 	if (pResult != 0)
+ 	{

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Old ROM loading behavior now removed. If you have `MT32_CONTROL.ROM`/`MT32_PCM.ROM` files in the root of your SD card, please move them to the `roms` subdirectory otherwise they will fail to load.
+- Unused USB drivers removed (kernel size reduced).
 
 ## [0.8.5] - 2021-02-10
 
