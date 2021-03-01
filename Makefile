@@ -18,6 +18,11 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	# Apply patches
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-minimal-usb-drivers.patch
 
+ifeq ($(strip $(GC_SECTIONS)),1)
+	# Enable function/data sections for circle-stdlib
+	echo "CFLAGS_FOR_TARGET += -ffunction-sections -fdata-sections" >> $(CIRCLE_STDLIB_CONFIG)
+endif
+
 	# Enable multi-core
 	echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
 
