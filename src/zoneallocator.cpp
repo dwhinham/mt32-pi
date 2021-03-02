@@ -47,21 +47,22 @@ CZoneAllocator::CZoneAllocator()
 CZoneAllocator::~CZoneAllocator()
 {
 	// Release the entire heap
-	free(m_pHeap);
+	CMemorySystem::Get()->HeapFree(m_pHeap);
 }
 
 bool CZoneAllocator::Initialize()
 {
+	CMemorySystem* pMemorySystem = CMemorySystem::Get();
 	CLogger* pLogger = CLogger::Get();
 
 #if RASPPI >= 4
 	// Allocate all of the remaining HIGH region
-	m_nHeapSize = CMemorySystem::Get()->GetHeapFreeSpace(HEAP_HIGH) - sizeof(THeapBlockHeader);
-	m_pHeap     = CMemorySystem::Get()->HeapAllocate(m_nHeapSize, HEAP_HIGH);
+	m_nHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_HIGH) - sizeof(THeapBlockHeader);
+	m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_HIGH);
 #else
 	// Allocate the majority of the remaining LOW region
-	m_nHeapSize = CMemorySystem::Get()->GetHeapFreeSpace(HEAP_LOW) - 32 * MEGABYTE;
-	m_pHeap     = CMemorySystem::Get()->HeapAllocate(m_nHeapSize, HEAP_LOW);
+	m_nHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_LOW) - 32 * MEGABYTE;
+	m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_LOW);
 #endif
 
 	if (!m_pHeap)
@@ -428,11 +429,11 @@ void CZoneAllocator::Dump() const
 		// If the block is free, it doesn't need a valid tail magic
 		const bool bMagicOK = (pBlock->nMagic == BlockMagic) && (!pBlock->Tag || GetEndMagic(pBlock) == BlockMagic);
 		if (!bMagicOK)
-			CLogger::Get()->Write(ZoneAllocatorName, LogWarning, "WARNING: This memory block is probably corrupt!");
+			pLogger->Write(ZoneAllocatorName, LogWarning, "WARNING: This memory block is probably corrupt!");
 
-		CLogger::Get()->Write(ZoneAllocatorName, LogNotice, "\tSize:  %d bytes", pBlock->nSize);
-		CLogger::Get()->Write(ZoneAllocatorName, LogNotice, "\tTag:   0x%x", pBlock->Tag);
-		CLogger::Get()->Write(ZoneAllocatorName, LogNotice, "\tMagic: %s", bMagicOK ? "OK" : "BAD");
+		pLogger->Write(ZoneAllocatorName, LogNotice, "\tSize:  %d bytes", pBlock->nSize);
+		pLogger->Write(ZoneAllocatorName, LogNotice, "\tTag:   0x%x", pBlock->Tag);
+		pLogger->Write(ZoneAllocatorName, LogNotice, "\tMagic: %s", bMagicOK ? "OK" : "BAD");
 		pBlock = pBlock->pNext;
 	} while (pBlock != &m_MainBlock);
 }
