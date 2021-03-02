@@ -24,6 +24,7 @@
 
 #include <circle/logger.h>
 #include <circle/util.h>
+#include <fatfs/ff.h>
 #include <ini.h>
 
 #include "config.h"
@@ -80,13 +81,31 @@ CConfig::CConfig()
 
 bool CConfig::Initialize(const char* pPath)
 {
-	int result = ini_parse(pPath, INIHandler, this);
-	if (result == -1)
+	FIL File;
+	if (f_open(&File, pPath, FA_READ) != FR_OK)
+	{
 		CLogger::Get()->Write(ConfigName, LogError, "Couldn't open '%s' for reading", pPath);
-	else if (result > 0)
-		CLogger::Get()->Write(ConfigName, LogWarning, "Parse error on line %d", result);
+		return false;
+	}
 
-	return result >= 0;
+	const UINT nSize = f_size(&File);
+	char Buffer[nSize];
+	UINT nRead;
+
+	if (f_read(&File, Buffer, nSize, &nRead) != FR_OK)
+	{
+		CLogger::Get()->Write(ConfigName, LogError, "Error reading config file", pPath);
+		f_close(&File);
+		return false;
+	}
+
+	const int nResult = ini_parse_string(Buffer, INIHandler, this);
+	if (nResult > 0)
+		CLogger::Get()->Write(ConfigName, LogWarning, "Config parse error on line %d", nResult);
+
+	f_close(&File);
+	return nResult >= 0;
+
 }
 
 int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, const char* pValue)
