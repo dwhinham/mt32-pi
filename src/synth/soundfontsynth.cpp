@@ -467,11 +467,16 @@ bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath)
 
 	m_Lock.Release();
 
+	const unsigned int nLoadStart = CTimer::GetClockTicks();
+
 	if (fluid_synth_sfload(m_pSynth, pSoundFontPath, true) == FLUID_FAILED)
 	{
 		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to load SoundFont");
 		return false;
 	}
+
+	const float nLoadTime = (CTimer::GetClockTicks() - nLoadStart) / 1000000.0f;
+	CLogger::Get()->Write(SoundFontSynthName, TLogSeverity::LogNotice, "\"%s\" loaded in %0.2f seconds", pSoundFontPath, nLoadTime);
 
 	return true;
 }
