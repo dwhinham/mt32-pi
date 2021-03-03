@@ -37,7 +37,9 @@
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
+#include <circle/usb/usbmassdevice.h>
 #include <circle/usb/usbmidi.h>
+#include <fatfs/ff.h>
 
 #include "config.h"
 #include "control/control.h"
@@ -70,6 +72,7 @@ private:
 		Error,
 		Warning,
 		Notice,
+		Spinner,
 	};
 
 	static constexpr size_t MIDIRxBufferSize = 2048;
@@ -86,11 +89,16 @@ private:
 	virtual void OnUnexpectedStatus() override;
 	virtual void OnSysExOverflow() override;
 
+	// Initialization
+	bool InitMT32Synth();
+	bool InitSoundFontSynth();
+
 	// Tasks for specific CPU cores
 	void MainTask();
 	void UITask();
 	void AudioTask();
 
+	void UpdateUSB(bool bStartup = false);
 	void UpdateMIDI();
 	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
@@ -120,6 +128,7 @@ private:
 	CGPIOManager* m_pGPIOManager;
 	CSerialDevice* m_pSerial;
 	CUSBHCIDevice* m_pUSBHCI;
+	FATFS m_USBFileSystem;
 
 	CSynthLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
@@ -141,6 +150,7 @@ private:
 
 	// USB MIDI
 	CUSBMIDIDevice* volatile m_pUSBMIDIDevice;
+	CUSBBulkOnlyMassStorageDevice* volatile m_pUSBMassStorageDevice;
 
 	bool m_bActiveSenseFlag;
 	unsigned m_nActiveSenseTime;
@@ -169,7 +179,7 @@ private:
 	TEventQueue m_EventQueue;
 
 	static void EventHandler(const TEvent& Event);
-	static void USBDeviceRemovedHandler(CDevice* pDevice, void* pContext);
+	static void USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext);
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 	static void MIDIReceiveHandler(const u8* pData, size_t nSize);
 

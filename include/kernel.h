@@ -54,7 +54,7 @@ protected:
 	CScheduler m_Scheduler;
 	CUSBHCIDevice m_USBHCI;
 	CEMMCDevice m_EMMC;
-	FATFS m_FileSystem;
+	FATFS m_SDFileSystem;
 	CI2CMaster m_I2CMaster;
 	CSPIMaster m_SPIMaster;
 	CGPIOManager m_GPIOManager;

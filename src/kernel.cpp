@@ -38,7 +38,7 @@ CKernel::CKernel(void)
 	  m_Logger(mOptions.GetLogLevel(), &m_Timer),
 	  m_USBHCI(&mInterrupt, &m_Timer, true),
 	  m_EMMC(&mInterrupt, &m_Timer, &mActLED),
-	  m_FileSystem{},
+	  m_SDFileSystem{},
 
 	  m_I2CMaster(1, true),
 	  m_GPIOManager(&mInterrupt),
@@ -78,16 +78,14 @@ bool CKernel::Initialize(void)
 	if (!m_EMMC.Initialize())
 		return false;
 
-	char const* partitionName = "SD:";
-
-	if (f_mount(&m_FileSystem, partitionName, 1) != FR_OK)
+	if (f_mount(&m_SDFileSystem, "SD:", 1) != FR_OK)
 	{
-		m_Logger.Write(GetKernelName(), LogError, "Cannot mount partition: %s", partitionName);
+		m_Logger.Write(GetKernelName(), LogError, "Failed to mount SD card");
 		return false;
 	}
 
 	// Initialize newlib stdio with a reference to Circle's file system
-	CGlueStdioInit(m_FileSystem);
+	CGlueStdioInit(m_SDFileSystem);
 
 	// Load configuration file
 	if (!m_Config.Initialize("mt32-pi.cfg"))

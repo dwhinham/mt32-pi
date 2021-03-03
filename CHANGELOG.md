@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The number of seconds to wait before a SoundFont begins loading after using the switch button can now be adjusted (new configuration file option).
+- SoundFonts can now be loaded from USB mass storage devices.
+  * This feature should be considered **unstable/experimental** - some USB disk/Raspberry Pi combinations can encounter freezes/crashes.
+  * SoundFonts will be rescanned and the indices updated if a USB storage device is inserted or removed.
+  * USB storage devices must be FAT32 formatted.
+  * SoundFonts must be located under a `soundfonts` directory on the root of the device.
+  * Only one USB storage device is supported at a time.
+  * The SoundFont index continues counting after the last SD card SoundFont index. If there are no SoundFonts on the SD card, the first USB storage SoundFont starts at index zero.
 
 ### Changed
 

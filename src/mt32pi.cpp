@@ -64,6 +64,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pGPIOManager(pGPIOManager),
 	  m_pSerial(pSerialDevice),
 	  m_pUSBHCI(pUSBHCI),
+	  m_USBFileSystem{},
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
@@ -79,6 +80,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_bSerialMIDIAvailable(false),
 	  m_bSerialMIDIEnabled(false),
 	  m_pUSBMIDIDevice(nullptr),
+	  m_pUSBMassStorageDevice(nullptr),
 
 	  m_bActiveSenseFlag(false),
 	  m_nActiveSenseTime(0),
@@ -150,8 +152,14 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
 	LCDLog(TLCDLogType::Startup, "Init USB");
-	if (pConfig->MIDIUSB && !m_pUSBHCI->Initialize())
-		return false;
+	if (pConfig->MIDIUSB)
+	{
+		if (!m_pUSBHCI->Initialize())
+			return false;
+
+		// Perform an initial Plug and Play update to initialize devices early
+		UpdateUSB(true);
+	}
 #endif
 
 	// Check for Blokas Pisound
@@ -204,26 +212,10 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	}
 
 	LCDLog(TLCDLogType::Startup, "Init mt32emu");
-	m_pMT32Synth = new CMT32Synth(pConfig->AudioSampleRate, pConfig->MT32EmuResamplerQuality);
-	if (!m_pMT32Synth->Initialize())
-	{
-		pLogger->Write(MT32PiName, LogWarning, "mt32emu init failed; no ROMs present?");
-		delete m_pMT32Synth;
-		m_pMT32Synth = nullptr;
-	}
-
-	// Set initial MT-32 channel assignment from config
-	if (pConfig->MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
-		m_pMT32Synth->SetMIDIChannels(pConfig->MT32EmuMIDIChannels);
+	InitMT32Synth();
 
 	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
-	m_pSoundFontSynth = new CSoundFontSynth(pConfig->AudioSampleRate, pConfig->FluidSynthGain, pConfig->FluidSynthPolyphony);
-	if (!m_pSoundFontSynth->Initialize())
-	{
-		pLogger->Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");
-		delete m_pSoundFontSynth;
-		m_pSoundFontSynth = nullptr;
-	}
+	InitSoundFontSynth();
 
 	// Set initial synthesizer
 	if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
@@ -256,16 +248,9 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(pConfig->SystemPowerSaveTimeout);
 
-	// Attach LCD to synths and clear
+	// Clear LCD
 	if (m_pLCD)
-	{
-		if (m_pMT32Synth)
-			m_pMT32Synth->SetLCD(m_pLCD);
-		if (m_pSoundFontSynth)
-			m_pSoundFontSynth->SetLCD(m_pLCD);
-
 		m_pLCD->Clear();
-	}
 
 	// Start audio
 	m_pSound->Start();
@@ -275,6 +260,48 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		return false;
 
 	return true;
+}
+
+bool CMT32Pi::InitMT32Synth()
+{
+	assert(m_pMT32Synth == nullptr);
+
+	CConfig* const pConfig = CConfig::Get();
+
+	m_pMT32Synth = new CMT32Synth(pConfig->AudioSampleRate, pConfig->MT32EmuResamplerQuality);
+	if (!m_pMT32Synth->Initialize())
+	{
+		CLogger::Get()->Write(MT32PiName, LogWarning, "mt32emu init failed; no ROMs present?");
+		delete m_pMT32Synth;
+		m_pMT32Synth = nullptr;
+	}
+
+	// Set initial MT-32 channel assignment from config
+	if (pConfig->MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
+		m_pMT32Synth->SetMIDIChannels(pConfig->MT32EmuMIDIChannels);
+
+	m_pMT32Synth->SetLCD(m_pLCD);
+
+	return m_pMT32Synth != nullptr;
+}
+
+bool CMT32Pi::InitSoundFontSynth()
+{
+	assert(m_pSoundFontSynth == nullptr);
+
+	CConfig* const pConfig = CConfig::Get();
+
+	m_pSoundFontSynth = new CSoundFontSynth(pConfig->AudioSampleRate, pConfig->FluidSynthGain, pConfig->FluidSynthPolyphony);
+	if (!m_pSoundFontSynth->Initialize())
+	{
+		CLogger::Get()->Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");
+		delete m_pSoundFontSynth;
+		m_pSoundFontSynth = nullptr;
+	}
+
+	m_pSoundFontSynth->SetLCD(m_pLCD);
+
+	return m_pSoundFontSynth != nullptr;
 }
 
 void CMT32Pi::MainTask()
@@ -332,16 +359,8 @@ void CMT32Pi::MainTask()
 		}
 
 		// Check for USB PnP events
-		if (pConfig->MIDIUSB && m_pUSBHCI->UpdatePlugAndPlay())
-		{
-			if (!m_pUSBMIDIDevice && (m_pUSBMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE))))
-			{
-				m_pUSBMIDIDevice->RegisterRemovedHandler(USBDeviceRemovedHandler);
-				m_pUSBMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
-				pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
-				m_bSerialMIDIEnabled = false;
-			}
-		}
+		if (CConfig::Get()->MIDIUSB)
+			UpdateUSB();
 	}
 
 	// Stop audio
@@ -591,6 +610,61 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 	}
 }
 
+void CMT32Pi::UpdateUSB(bool bStartup)
+{
+	if (!m_pUSBHCI->UpdatePlugAndPlay())
+		return;
+
+	CLogger* const pLogger = CLogger::Get();
+	CUSBBulkOnlyMassStorageDevice* pUSBMassStorageDevice = static_cast<CUSBBulkOnlyMassStorageDevice*>(CDeviceNameService::Get()->GetDevice("umsd1", TRUE));
+
+	if (!m_pUSBMassStorageDevice && pUSBMassStorageDevice)
+	{
+		// USB disk was attached
+		pLogger->Write(MT32PiName, LogNotice, "USB mass storage device attached");
+
+		if (f_mount(&m_USBFileSystem, "USB:", 1) != FR_OK)
+			pLogger->Write(MT32PiName, LogError, "Failed to mount USB mass storage device");
+		else
+		{
+			if (!bStartup)
+			{
+				LCDLog(TLCDLogType::Spinner, "SoundFont rescan");
+				if (m_pSoundFontSynth)
+					m_pSoundFontSynth->GetSoundFontManager().ScanSoundFonts();
+				else
+					InitSoundFontSynth();
+
+				if (m_pSoundFontSynth)
+					LCDLog(TLCDLogType::Notice, "%d SoundFonts avail", m_pSoundFontSynth->GetSoundFontManager().GetSoundFontCount());
+			}
+		}
+	}
+	else if (m_pUSBMassStorageDevice && !pUSBMassStorageDevice)
+	{
+		// USB disk was removed
+		pLogger->Write(MT32PiName, LogNotice, "USB mass storage device removed");
+
+		f_unmount("USB:");
+
+		if (m_pSoundFontSynth)
+		{
+			LCDLog(TLCDLogType::Spinner, "SoundFont rescan");
+			m_pSoundFontSynth->GetSoundFontManager().ScanSoundFonts();
+			LCDLog(TLCDLogType::Notice, "%d SoundFonts avail", m_pSoundFontSynth->GetSoundFontManager().GetSoundFontCount());
+		}
+	}
+	m_pUSBMassStorageDevice = pUSBMassStorageDevice;
+
+	if (!m_pUSBMIDIDevice && (m_pUSBMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE))))
+	{
+		m_pUSBMIDIDevice->RegisterRemovedHandler(USBMIDIDeviceRemovedHandler);
+		m_pUSBMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
+		pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
+		m_bSerialMIDIEnabled = false;
+	}
+}
+
 void CMT32Pi::UpdateMIDI()
 {
 	size_t nBytes;
@@ -740,12 +814,26 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 		{
 			// Next SoundFont
 			const size_t nSoundFonts = m_pSoundFontSynth->GetSoundFontManager().GetSoundFontCount();
-			size_t nNextSoundFont;
-			if (m_bDeferredSoundFontSwitchFlag)
-				nNextSoundFont = (m_nDeferredSoundFontSwitchIndex + 1) % nSoundFonts;
+
+			if (!nSoundFonts)
+				LCDLog(TLCDLogType::Error, "No SoundFonts!");
 			else
-				nNextSoundFont = (m_pSoundFontSynth->GetSoundFontIndex() + 1) % nSoundFonts;
-			DeferSwitchSoundFont(nNextSoundFont);
+			{
+				size_t nNextSoundFont;
+				if (m_bDeferredSoundFontSwitchFlag)
+					nNextSoundFont = (m_nDeferredSoundFontSwitchIndex + 1) % nSoundFonts;
+				else
+				{
+					// Current SoundFont was probably on a USB stick that has since been removed
+					const size_t nCurrentSoundFont = m_pSoundFontSynth->GetSoundFontIndex();
+					if (nCurrentSoundFont > nSoundFonts)
+						nNextSoundFont = 0;
+					else
+						nNextSoundFont = (nCurrentSoundFont + 1) % nSoundFonts;
+				}
+
+				DeferSwitchSoundFont(nNextSoundFont);
+			}
 		}
 	}
 	else if (Event.Button == TButton::Button3)
@@ -871,7 +959,7 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 
 	// Let LCD task pick up the message in its next update
 	else
-		m_pLCD->OnSystemMessage(Buffer);
+		m_pLCD->OnSystemMessage(Buffer, Type == TLCDLogType::Spinner);
 }
 
 // TODO: Generic configurable DAC init class
@@ -909,7 +997,7 @@ void CMT32Pi::EventHandler(const TEvent& Event)
 	s_pThis->m_EventQueue.Enqueue(Event);
 }
 
-void CMT32Pi::USBDeviceRemovedHandler(CDevice* pDevice, void* pContext)
+void CMT32Pi::USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext)
 {
 	assert(s_pThis != nullptr);
 

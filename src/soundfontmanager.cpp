@@ -28,7 +28,8 @@
 #include "utility.h"
 
 const char SoundFontManagerName[] = "soundfontmanager";
-const char SoundFontPath[] = "soundfonts";
+const char* const Disks[] = { "SD", "USB" };
+const char SoundFontDirectory[] = "soundfonts";
 
 // Four-character codes used throughout SoundFont RIFF structure
 constexpr u32 FourCC(const char pFourCC[4])
@@ -60,27 +61,35 @@ bool CSoundFontManager::ScanSoundFonts()
 	for (size_t i = 0; i < m_nSoundFonts; ++i)
 		m_SoundFontList[i] = TSoundFontListEntry();
 
+	m_nSoundFonts = 0;
+
 	DIR Dir;
 	FILINFO FileInfo;
-	FRESULT Result = f_findfirst(&Dir, &FileInfo, SoundFontPath, "*");
+	FRESULT Result;
+	CString DirectoryPath;
 
-	char Path[sizeof(SoundFontPath) + FF_LFN_BUF];
-	strcpy(Path, SoundFontPath);
-	Path[sizeof(SoundFontPath) - 1] = '/';
-
-	// Loop over each file in the directory
-	while (Result == FR_OK && *FileInfo.fname && m_nSoundFonts < MaxSoundFonts)
+	// Loop over each disk
+	for (auto pDisk : Disks)
 	{
-		// Ensure not directory, hidden, or system file
-		if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+		DirectoryPath.Format("%s:/%s", pDisk, SoundFontDirectory);
+		Result = f_findfirst(&Dir, &FileInfo, DirectoryPath, "*");
+
+		// Loop over each file in the directory
+		while (Result == FR_OK && *FileInfo.fname && m_nSoundFonts < MaxSoundFonts)
 		{
-			// Assemble path
-			strcpy(Path + sizeof(SoundFontPath), FileInfo.fname);
+			// Ensure not directory, hidden, or system file
+			if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+			{
+				// Assemble path
+				CString SoundFontPath(static_cast<const char*>(DirectoryPath));
+				SoundFontPath.Append("/");
+				SoundFontPath.Append(FileInfo.fname);
 
-			CheckSoundFont(Path, FileInfo.fname);
+				CheckSoundFont(SoundFontPath, FileInfo.fname);
+			}
+
+			Result = f_findnext(&Dir, &FileInfo);
 		}
-
-		Result = f_findnext(&Dir, &FileInfo);
 	}
 
 	// Sort into alphabetical order
@@ -89,10 +98,10 @@ bool CSoundFontManager::ScanSoundFonts()
 		// Sort into lexicographical order
 		Utility::QSort(m_SoundFontList, SoundFontListComparator, 0, m_nSoundFonts - 1);
 
-		CLogger& Logger = *CLogger::Get();
-		Logger.Write(SoundFontManagerName, LogNotice, "%d SoundFonts found:", m_nSoundFonts);
+		CLogger* const pLogger = CLogger::Get();
+		pLogger->Write(SoundFontManagerName, LogNotice, "%d SoundFonts found:", m_nSoundFonts);
 		for (size_t i = 0; i < m_nSoundFonts; ++i)
-			Logger.Write(SoundFontManagerName, LogNotice, "%d: %s (%s)", i, static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
+			pLogger->Write(SoundFontManagerName, LogNotice, "%d: %s (%s)", i, static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
 
 		return true;
 	}
