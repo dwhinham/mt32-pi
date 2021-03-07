@@ -51,6 +51,15 @@ jobs:
         name: kernels
         path: kernel*.img
 
+    - name: Build (HDMI console)
+      run: make clean && make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
+
+    - name: Upload built kernel
+      uses: actions/upload-artifact@v2
+      with:
+        name: kernels-hdmi
+        path: kernel*.img
+
   package:
     needs: build
     runs-on: ubuntu-latest
