@@ -45,14 +45,18 @@
 4. Optionally add your favorite SoundFonts to the `soundfonts` directory.
     * For information on using multiple SoundFonts and switching between them, see the [SoundFont synthesis] wiki page.
     * Again, file names/extensions don't matter.
-5. Connect a [USB MIDI interface][USB MIDI interfaces] or [GPIO MIDI circuit][GPIO MIDI interface] to the Pi, and connect some speakers to the headphone jack.
-6. Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
+5. Edit the `mt32-pi.cfg` file to enable any optional hardware (Hi-Fi DAC, displays, buttons). Refer to [the wiki][mt32-pi wiki] to find supported hardware.
+    * **MiSTer users**: Read the [MiSTer setup] section of the wiki for the recommended configuration, and ignore the following two steps.
+6. Connect a [USB MIDI interface][USB MIDI interfaces] or [GPIO MIDI circuit][GPIO MIDI interface] to the Pi, and connect some speakers to the headphone jack.
+7. Connect your vintage PC's MIDI OUT to the Pi's MIDI IN and (optionally) vice versa.
 
 ## 📚 Documentation
 
 More detailed documentation for mt32-pi can now be found over at the [mt32-pi wiki]. Please read the wiki pages to learn about all of mt32-pi's features and supported hardware, and consider helping us improve it!
 
 ## ❓ Help
+
+Take a look at our [FAQ] page for answers to the most common questions about mt32-pi.
 
 If you need some help with mt32-pi and the wiki doesn't answer your questions, head over to the [discussions] area and feel free to start a topic.
 
@@ -74,6 +78,7 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [Configuration file]: https://github.com/dwhinham/mt32-pi/wiki/Configuration-file
 [Control surface]: https://github.com/dwhinham/mt32-pi/wiki/Control-surface
 [Discussions]: https://github.com/dwhinham/mt32-pi/discussions
+[FAQ]: https://github.com/dwhinham/mt32-pi/wiki/FAQ
 [FluidSynth]: http://www.fluidsynth.org
 [General MIDI]: https://en.wikipedia.org/wiki/General_MIDI
 [GeneralUser GS]: http://schristiancollins.com/generaluser.php
@@ -83,6 +88,7 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [LCD and OLED displays]: https://github.com/dwhinham/mt32-pi/wiki/LCD-and-OLED-displays
 [MiSTer FPGA user port connection]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection
 [MiSTer FPGA]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
+[MiSTer setup]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection#setup
 [MT-32 synthesis]: https://github.com/dwhinham/mt32-pi/wiki/MT-32-synthesis
 [mt32-pi wiki]: https://github.com/dwhinham/mt32-pi/wiki
 [Munt]: https://github.com/munt/munt
