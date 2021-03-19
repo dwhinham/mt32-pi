@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * SoundFonts must be located under a `soundfonts` directory on the root of the device.
   * Only one USB storage device is supported at a time.
   * The SoundFont index continues counting after the last SD card SoundFont index. If there are no SoundFonts on the SD card, the first USB storage SoundFont starts at index zero.
+- Ability to set master volume gain and reverb gain for mt32emu (new configuration file options).
 
 ### Changed
 

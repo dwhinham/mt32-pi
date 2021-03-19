@@ -268,7 +268,7 @@ bool CMT32Pi::InitMT32Synth()
 
 	CConfig* const pConfig = CConfig::Get();
 
-	m_pMT32Synth = new CMT32Synth(pConfig->AudioSampleRate, pConfig->MT32EmuResamplerQuality);
+	m_pMT32Synth = new CMT32Synth(pConfig->AudioSampleRate, pConfig->MT32EmuGain, pConfig->MT32EmuReverbGain, pConfig->MT32EmuResamplerQuality);
 	if (!m_pMT32Synth->Initialize())
 	{
 		CLogger::Get()->Write(MT32PiName, LogWarning, "mt32emu init failed; no ROMs present?");

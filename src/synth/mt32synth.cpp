@@ -37,10 +37,13 @@ constexpr u32 MemoryAddressMasterVolume     = 0x40016;
 const u8 CMT32Synth::StandardMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 const u8 CMT32Synth::AlternateMIDIChannelsSysEx[] = { 0x10, 0x00, 0x0D, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09 };
 
-CMT32Synth::CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality)
+CMT32Synth::CMT32Synth(unsigned nSampleRate, float nGain, float nReverbGain, TResamplerQuality ResamplerQuality)
 	: CSynthBase(nSampleRate),
 
 	  m_pSynth(nullptr),
+
+	  m_nGain(nGain),
+	  m_nReverbGain(nReverbGain),
 
 	  m_ResamplerQuality(ResamplerQuality),
 	  m_pSampleRateConverter(nullptr),
@@ -77,6 +80,9 @@ bool CMT32Synth::Initialize()
 
 	if (!m_pSynth->open(*m_pControlROMImage, *m_pPCMROMImage))
 		return false;
+
+	m_pSynth->setOutputGain(m_nGain);
+	m_pSynth->setReverbOutputGain(m_nReverbGain);
 
 	if (m_ResamplerQuality != TResamplerQuality::None)
 	{
@@ -222,6 +228,8 @@ bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 	m_Lock.Acquire();
 	m_pSynth->close();
 	assert(m_pSynth->open(*pControlROMImage, *pPCMROMImage));
+	m_pSynth->setOutputGain(m_nGain);
+	m_pSynth->setReverbOutputGain(m_nReverbGain);
 	m_Lock.Release();
 
 	m_pControlROMImage = pControlROMImage;

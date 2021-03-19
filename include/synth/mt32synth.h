@@ -49,7 +49,7 @@ public:
 	CONFIG_ENUM(TResamplerQuality, ENUM_RESAMPLERQUALITY);
 	CONFIG_ENUM(TMIDIChannels, ENUM_MIDICHANNELS);
 
-	CMT32Synth(unsigned nSampleRate, TResamplerQuality ResamplerQuality);
+	CMT32Synth(unsigned nSampleRate, float nGain, float nReverbGain, TResamplerQuality ResamplerQuality);
 	virtual ~CMT32Synth();
 
 	// CSynthBase
@@ -84,6 +84,9 @@ private:
 	static const u8 AlternateMIDIChannelsSysEx[];
 
 	MT32Emu::Synth* m_pSynth;
+
+	float m_nGain;
+	float m_nReverbGain;
 
 	TResamplerQuality m_ResamplerQuality;
 	MT32Emu::SampleRateConverter* m_pSampleRateConverter;
