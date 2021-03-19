@@ -47,7 +47,11 @@ public:
 			return false;
 
 		FSIZE_t nSize = f_size(&m_File);
-		m_pData       = new MT32Emu::Bit8u[nSize];
+		if (nSize > MaxROMFileSize)
+			return false;
+
+		if (!(m_pData = new MT32Emu::Bit8u[nSize]))
+			return false;
 
 		UINT nRead;
 		Result = f_read(&m_File, m_pData, nSize, &nRead);
@@ -66,6 +70,9 @@ public:
 	}
 
 private:
+	// The largest ROM is the CM-32L PCM ROM at 1MB; files larger than this cannot be valid
+	static constexpr size_t MaxROMFileSize = 1 * MEGABYTE;
+
 	FIL m_File;
 	MT32Emu::Bit8u* m_pData;
 };
