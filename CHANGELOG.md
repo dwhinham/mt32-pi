@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2021-03-19
+
 ### Added
 
 - The number of seconds to wait before a SoundFont begins loading after using the switch button can now be adjusted (new configuration file option).
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * SoundFonts must be located under a `soundfonts` directory on the root of the device.
   * Only one USB storage device is supported at a time.
   * The SoundFont index continues counting after the last SD card SoundFont index. If there are no SoundFonts on the SD card, the first USB storage SoundFont starts at index zero.
+  * Special thanks to @rsta2 for providing important USB driver fixes and mmmonkey Pete for donating a Raspberry Pi 3B for testing!
 - Ability to set master volume gain and reverb gain for mt32emu (new configuration file options).
 
 ### Changed
@@ -311,7 +314,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.8.5...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/dwhinham/mt32-pi/compare/v0.8.5..v0.9.0
 [0.8.5]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4..v0.8.5
 [0.8.4]: https://github.com/dwhinham/mt32-pi/compare/v0.8.3..v0.8.4
 [0.8.3]: https://github.com/dwhinham/mt32-pi/compare/v0.8.2..v0.8.3
