@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ccac10e2..00aaefa7 100644
+index 595e6a4c..2b0ed9c1 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -442,6 +442,7 @@ if ( ASTYLE )
@@ -86,7 +86,7 @@ index 140fc3c5..5780367b 100644
  /**
   * Creates a new SoundFont loader.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
-index e2afd346..b0b2fee5 100644
+index 1e0b29fb..cc3e0cc1 100644
 --- a/src/synth/fluid_synth.c
 +++ b/src/synth/fluid_synth.c
 @@ -95,7 +95,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
