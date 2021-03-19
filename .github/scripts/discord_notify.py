@@ -2,7 +2,6 @@
 
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from sys import argv
-import json
 import keepachangelog
 
 GITHUB_USER = "dwhinham"
@@ -63,6 +62,7 @@ embed.set_thumbnail(url=THUMBNAIL_URL)
 add_field(embed, changes, "✨ Added:", "added")
 add_field(embed, changes, "✏ Changed:", "changed")
 add_field(embed, changes, "🐛  Fixed:", "fixed")
+add_field(embed, changes, "🗑  Removed:", "removed")
 
 embed.set_footer(text="GitHub", icon_url=FOOTER_ICON_URL)
 embed.set_timestamp()
