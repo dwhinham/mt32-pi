@@ -69,6 +69,7 @@ public:
 	bool NextROMSet();
 	TMT32ROMSet GetROMSet() const;
 	const char* GetControlROMName() const;
+	CROMManager& GetROMManager() { return m_ROMManager; }
 
 	u8 GetMasterVolume() const;
 

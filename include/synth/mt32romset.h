@@ -29,7 +29,8 @@
 	ENUM(MT32Old, old)        \
 	ENUM(MT32New, new)        \
 	ENUM(CM32L, cm32l)        \
-	ENUM(Any, any)
+	ENUM(Any, any)            \
+	ENUM(All, all)
 
 CONFIG_ENUM(TMT32ROMSet, ENUM_MT32ROMSET);
 

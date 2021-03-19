@@ -26,7 +26,8 @@
 #include "rommanager.h"
 
 const char ROMManagerName[] = "rommanager";
-const char ROMPath[] = "roms";
+const char* const Disks[] = { "SD", "USB" };
+const char ROMDirectory[] = "roms";
 
 // Custom File class for mt32emu
 class CROMFile : public MT32Emu::AbstractFile
@@ -105,26 +106,40 @@ bool CROMManager::ScanROMs()
 {
 	DIR Dir;
 	FILINFO FileInfo;
-	FRESULT Result = f_findfirst(&Dir, &FileInfo, ROMPath, "*");
+	FRESULT Result;
+	CString DirectoryPath;
 
-	char Path[sizeof(ROMPath) + FF_LFN_BUF];
-	strcpy(Path, ROMPath);
-	Path[sizeof(ROMPath) - 1] = '/';
+	// Already have all ROMs
+	if (HaveROMSet(TMT32ROMSet::All))
+		return true;
 
-	// Loop over each file in the directory
-	while (Result == FR_OK && *FileInfo.fname)
+	// Loop over each disk
+	for (auto pDisk : Disks)
 	{
-		// Ensure not directory, hidden, or system file
-		if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+		DirectoryPath.Format("%s:/%s", pDisk, ROMDirectory);
+		Result = f_findfirst(&Dir, &FileInfo, DirectoryPath, "*");
+
+		// Loop over each file in the directory
+		while (Result == FR_OK && *FileInfo.fname)
 		{
-			// Assemble path
-			strcpy(Path + sizeof(ROMPath), FileInfo.fname);
+			// Ensure not directory, hidden, or system file
+			if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+			{
+				// Assemble path
+				CString ROMPath(static_cast<const char*>(DirectoryPath));
+				ROMPath.Append("/");
+				ROMPath.Append(FileInfo.fname);
 
-			// Try to open file
-			CheckROM(Path);
+				// Try to open file
+				CheckROM(ROMPath);
+
+				// Stop if we have all ROMs
+				if (HaveROMSet(TMT32ROMSet::All))
+					return true;
+			}
+
+			Result = f_findnext(&Dir, &FileInfo);
 		}
-
-		Result = f_findnext(&Dir, &FileInfo);
 	}
 
 	return HaveROMSet(TMT32ROMSet::Any);
@@ -136,6 +151,9 @@ bool CROMManager::HaveROMSet(TMT32ROMSet ROMSet) const
 	{
 		case TMT32ROMSet::Any:
 			return ((m_pMT32OldControl || m_pMT32NewControl) && m_pMT32PCM) || (m_pCM32LControl && m_pCM32LPCM);
+
+		case TMT32ROMSet::All:
+			return m_pMT32OldControl && m_pMT32NewControl && m_pCM32LControl && m_pMT32PCM && m_pCM32LPCM;
 
 		case TMT32ROMSet::MT32Old:
 			return m_pMT32OldControl && m_pMT32PCM;
@@ -198,6 +216,9 @@ bool CROMManager::GetROMSet(TMT32ROMSet ROMSet, TMT32ROMSet& pOutROMSet, const M
 			pOutPCM     = m_pCM32LPCM;
 			pOutROMSet  = TMT32ROMSet::CM32L;
 			break;
+
+		default:
+			return false;
 	}
 
 	return true;

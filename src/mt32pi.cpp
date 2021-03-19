@@ -629,6 +629,12 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 		{
 			if (!bStartup)
 			{
+				LCDLog(TLCDLogType::Spinner, "MT-32 ROM rescan");
+				if (m_pMT32Synth)
+					m_pMT32Synth->GetROMManager().ScanROMs();
+				else
+					InitMT32Synth();
+
 				LCDLog(TLCDLogType::Spinner, "SoundFont rescan");
 				if (m_pSoundFontSynth)
 					m_pSoundFontSynth->GetSoundFontManager().ScanSoundFonts();
@@ -647,6 +653,7 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 
 		f_unmount("USB:");
 
+		// Only need to rescan SoundFonts on storage removal; MT-32 ROMs are kept in memory
 		if (m_pSoundFontSynth)
 		{
 			LCDLog(TLCDLogType::Spinner, "SoundFont rescan");
