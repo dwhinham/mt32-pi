@@ -18,6 +18,8 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	# Apply patches
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-minimal-usb-drivers.patch
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-pi4-usb-fix.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-fix-hard-errors.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-retry-bulk-transfer.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
 	# Enable function/data sections for circle-stdlib
@@ -117,6 +119,8 @@ clean:
 #
 veryclean: clean
 	# Reverse patches
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-retry-bulk-transfer.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-fix-hard-errors.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-pi4-usb-fix.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-minimal-usb-drivers.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.1.7-circle.patch
