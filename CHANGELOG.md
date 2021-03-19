@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to FluidSynth v2.1.8.
 - Update ARM toolchains to 10.2-2020.11.
 - Config file options are now case-insensitive.
+- The `usb` configuration option has been moved to the `[system]` section. Please update your configuration file if you use this option.
 
 ### Fixed
 

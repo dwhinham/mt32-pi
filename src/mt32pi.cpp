@@ -152,7 +152,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
 	LCDLog(TLCDLogType::Startup, "Init USB");
-	if (pConfig->MIDIUSB)
+	if (pConfig->SystemUSB)
 	{
 		if (!m_pUSBHCI->Initialize())
 			return false;
@@ -359,7 +359,7 @@ void CMT32Pi::MainTask()
 		}
 
 		// Check for USB PnP events
-		if (CConfig::Get()->MIDIUSB)
+		if (CConfig::Get()->SystemUSB)
 			UpdateUSB();
 	}
 

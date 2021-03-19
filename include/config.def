@@ -37,12 +37,12 @@
 
 BEGIN_SECTION(system)
 CFG(default_synth,			TSystemDefaultSynth,		SystemDefaultSynth,			TSystemDefaultSynth::MT32				)
+CFG(usb,					bool,						SystemUSB,					true									)
 CFG(i2c_baud_rate,			int,						SystemI2CBaudRate,			400000									)
 CFG(power_save_timeout,		int,						SystemPowerSaveTimeout,		300										)
 END_SECTION
 
 BEGIN_SECTION(midi)
-CFG(usb,					bool,						MIDIUSB,					true									)
 CFG(gpio_baud_rate,			int,						MIDIGPIOBaudRate,			31250									)
 CFG(gpio_thru,				bool,						MIDIGPIOThru,				false									)
 END_SECTION
