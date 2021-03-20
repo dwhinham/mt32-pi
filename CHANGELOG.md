@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2021-03-20
+
+### Fixed
+
+- The `gpio_baud_rate` option was broken in v0.9.0. Thanks to Scandy for the quick report and testing the fix!
+
 ## [0.9.0] - 2021-03-19
 
 ### Added
@@ -314,7 +320,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.9.0...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/dwhinham/mt32-pi/compare/v0.9.0..v0.9.1
 [0.9.0]: https://github.com/dwhinham/mt32-pi/compare/v0.8.5..v0.9.0
 [0.8.5]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4..v0.8.5
 [0.8.4]: https://github.com/dwhinham/mt32-pi/compare/v0.8.3..v0.8.4
