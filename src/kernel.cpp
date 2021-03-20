@@ -60,8 +60,8 @@ bool CKernel::Initialize(void)
 	const char* pLogDeviceName = mOptions.GetLogDevice();
 	const bool bSerialMIDIEnabled = strcmp(pLogDeviceName, "ttyS1") != 0;
 
-	// Use MIDI baud if serial port not in-use for logging
-	if (!m_Serial.Initialize(bSerialMIDIEnabled ? 31250 : 115200))
+	// Init serial port early if used for logging
+	if (!bSerialMIDIEnabled && !m_Serial.Initialize(115200))
 		return false;
 
 	CDevice* pLogTarget =  mDeviceNameService.GetDevice(pLogDeviceName, false);
@@ -90,6 +90,10 @@ bool CKernel::Initialize(void)
 	// Load configuration file
 	if (!m_Config.Initialize("mt32-pi.cfg"))
 		m_Logger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
+
+	// Init serial port for MIDI with preferred baud rate if not used for logging
+	if (bSerialMIDIEnabled && !m_Serial.Initialize(m_Config.MIDIGPIOBaudRate))
+		return false;
 
 	// Init I2C; don't bother with Initialize() as it only sets the clock to 100/400KHz
 	m_I2CMaster.SetClock(m_Config.SystemI2CBaudRate);
