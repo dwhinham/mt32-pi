@@ -615,6 +615,8 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 	if (!m_pUSBHCI->UpdatePlugAndPlay())
 		return;
 
+	Awaken();
+
 	CLogger* const pLogger = CLogger::Get();
 	CUSBBulkOnlyMassStorageDevice* pUSBMassStorageDevice = static_cast<CUSBBulkOnlyMassStorageDevice*>(CDeviceNameService::Get()->GetDevice("umsd1", TRUE));
 
