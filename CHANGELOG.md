@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- USB plug/unplug events now bring mt32-pi out of power saving mode.
+
 ## [0.9.1] - 2021-03-20
 
 ### Fixed
