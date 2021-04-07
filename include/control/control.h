@@ -80,7 +80,7 @@ protected:
 class CControlSimpleEncoder : public CControl
 {
 public:
-	CControlSimpleEncoder(TEventQueue& pEventQueue, CRotaryEncoder::TEncoderType EncoderType);
+	CControlSimpleEncoder(TEventQueue& pEventQueue, CRotaryEncoder::TEncoderType EncoderType, bool bEncoderReversed);
 
 	virtual void Update() override;
 

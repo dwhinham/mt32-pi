@@ -51,11 +51,12 @@ constexpr u8 AccelThresholdMillis = 32;
 // Compile-time quadratic acceleration curve lookup table
 constexpr auto RotaryAccelLookupTable = QuadraticLookupTable<u8, 5, 16, AccelThresholdMillis>();
 
-CRotaryEncoder::CRotaryEncoder(TEncoderType Type, unsigned GPIOPinCLK, unsigned GPIOPinDAT)
+CRotaryEncoder::CRotaryEncoder(TEncoderType Type, bool bReversed, unsigned GPIOPinCLK, unsigned GPIOPinDAT)
 	: m_CLKPin(GPIOPinCLK, GPIOModeInputPullUp),
 	  m_DATPin(GPIOPinDAT, GPIOModeInputPullUp),
 
 	  m_Type(Type),
+	  m_bReversed(bReversed),
 	  m_nDelta(0),
 	  m_nPreviousState(0),
 
@@ -104,12 +105,12 @@ s8 CRotaryEncoder::Read()
 		m_nLastReadTime = nTicks;
 	}
 
-	return nResult;
+	return m_bReversed ? -nResult : nResult;
 }
 
 void CRotaryEncoder::ReadGPIOPins()
 {
-	ReadGPIOPins(m_CLKPin.Read(), m_CLKPin.Read());
+	ReadGPIOPins(m_CLKPin.Read(), m_DATPin.Read());
 }
 
 void CRotaryEncoder::ReadGPIOPins(bool bCLKValue, bool bDATValue)

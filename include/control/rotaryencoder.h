@@ -38,7 +38,7 @@ public:
 
 	CONFIG_ENUM(TEncoderType, ENUM_ENCODERTYPE);
 
-	CRotaryEncoder(TEncoderType Type, unsigned GPIOPinCLK, unsigned GPIOPinDAT);
+	CRotaryEncoder(TEncoderType Type, bool bReversed, unsigned GPIOPinCLK, unsigned GPIOPinDAT);
 
 	s8 Read();
 	void ReadGPIOPins();
@@ -49,6 +49,7 @@ private:
 	CGPIOPin m_DATPin;
 
 	TEncoderType m_Type;
+	bool m_bReversed;
 	s8 m_nDelta;
 	s8 m_nPreviousState;
 
