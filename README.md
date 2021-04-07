@@ -36,7 +36,8 @@
 ## ✨ Quick-start guide
 
 1. Download the latest release from the [Releases] section.
-2. Extract contents to a blank FAT32-formatted SD card.
+2. Extract contents to a blank [FAT32-formatted SD card][SD card preparation].
+    * Read the [SD card preparation] wiki page for hints on formatting an SD card correctly (especially under Windows).
     * If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
 3. For MT-32 support, add your MT-32 or CM-32L ROM images to the `roms` directory - you have to provide these for copyright reasons.
     * You will need at least one control ROM and one PCM ROM.
@@ -95,6 +96,7 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [Releases]: https://github.com/dwhinham/mt32-pi/releases
 [Roland GS]: https://en.wikipedia.org/wiki/Roland_GS
 [Roland MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
+[SD card preparation]: https://github.com/dwhinham/mt32-pi/wiki/SD-card-preparation
 [SoundFont synthesis]: https://github.com/dwhinham/mt32-pi/wiki/SoundFont-synthesis
 [SoundFont]: https://en.wikipedia.org/wiki/SoundFont
 [USB MIDI interfaces]: https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces
