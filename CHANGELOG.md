@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The rotary encoder direction can now be reversed (new configuration file option).
+
 ### Fixed
 
 - USB plug/unplug events now bring mt32-pi out of power saving mode.

@@ -202,7 +202,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	if (pConfig->ControlScheme == CConfig::TControlScheme::SimpleButtons)
 		m_pControl = new CControlSimpleButtons(m_EventQueue);
 	else if (pConfig->ControlScheme == CConfig::TControlScheme::SimpleEncoder)
-		m_pControl = new CControlSimpleEncoder(m_EventQueue, pConfig->ControlEncoderType);
+		m_pControl = new CControlSimpleEncoder(m_EventQueue, pConfig->ControlEncoderType, pConfig->ControlEncoderReversed);
 
 	if (m_pControl && !m_pControl->Initialize())
 	{

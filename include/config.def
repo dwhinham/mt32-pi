@@ -58,8 +58,9 @@ END_SECTION
 BEGIN_SECTION(control)
 CFG(scheme,					TControlScheme,				ControlScheme,				TControlScheme::None					)
 CFG(encoder_type,			TEncoderType,				ControlEncoderType,			TEncoderType::Full						)
+CFG(encoder_reversed,		bool,						ControlEncoderReversed,		false									)
 CFG(mister,					bool,						ControlMister,				false									)
-CFG(switch_timeout,	    	int,						ControlSwitchTimeout,		3										)
+CFG(switch_timeout,			int,						ControlSwitchTimeout,		3										)
 END_SECTION
 
 BEGIN_SECTION(mt32emu)

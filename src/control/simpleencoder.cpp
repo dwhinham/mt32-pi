@@ -34,14 +34,14 @@ constexpr u8 ButtonMask = 1 << static_cast<u8>(TButton::Button1) |
 						  1 << static_cast<u8>(TButton::Button2) |
 						  1 << static_cast<u8>(TButton::EncoderButton);
 
-CControlSimpleEncoder::CControlSimpleEncoder(TEventQueue& pEventQueue, CRotaryEncoder::TEncoderType EncoderType)
+CControlSimpleEncoder::CControlSimpleEncoder(TEventQueue& pEventQueue, CRotaryEncoder::TEncoderType EncoderType, bool bEncoderReversed)
 	: CControl(pEventQueue),
 
 	  m_GPIOEncoderButton(GPIOPinEncoderButton, TGPIOMode::GPIOModeInputPullUp),
 	  m_GPIOButton1(GPIOPinButton1, TGPIOMode::GPIOModeInputPullUp),
 	  m_GPIOButton2(GPIOPinButton2, TGPIOMode::GPIOModeInputPullUp),
 
-	  m_Encoder(EncoderType, GPIOPinEncoderCLK, GPIOPinEncoderDAT)
+	  m_Encoder(EncoderType, bEncoderReversed, GPIOPinEncoderCLK, GPIOPinEncoderDAT)
 {
 }
 
