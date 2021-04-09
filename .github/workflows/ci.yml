@@ -65,6 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       boot-home: external/circle-stdlib/libs/circle/boot
+      wlan-home: external/circle-stdlib/libs/circle/addon/wlan
 
     steps:
     - uses: actions/checkout@v2.3.4
@@ -88,6 +89,13 @@ jobs:
           sdcard/start_cd.elf
           sdcard/start4cd.elf
         key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
+
+    - name: Cache WLAN firmware
+      id: cache-wlan-firmware
+      uses: actions/cache@v2.1.4
+      with:
+        path: sdcard/firmware
+        key: cache-wlan-firmware-${{ hashFiles(join(env.wlan-home, '/firmware/Makefile')) }}
 
     - name: Cache ARM toolchains
       if: steps.cache-boot-files.outputs.cache-hit != 'true'
@@ -121,6 +129,22 @@ jobs:
             ${{ env.boot-home }}/start_cd.elf \
             ${{ env.boot-home }}/start4cd.elf \
             sdcard
+
+    - name: Download WLAN firmware if not retrieved from cache
+      if: steps.cache-wlan-firmware.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p sdcard/firmware
+        make -C ${{ env.wlan-home }}/firmware
+        cp  ${{ env.wlan-home }}/firmware/LICENCE.broadcom_bcm43xx \
+            ${{ env.wlan-home }}/firmware/brcmfmac43430-sdio.bin \
+            ${{ env.wlan-home }}/firmware/brcmfmac43430-sdio.txt \
+            ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.bin \
+            ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.txt \
+            ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.clm_blob \
+            ${{ env.wlan-home }}/firmware/brcmfmac43456-sdio.bin \
+            ${{ env.wlan-home }}/firmware/brcmfmac43456-sdio.txt \
+            ${{ env.wlan-home }}/firmware/brcmfmac43456-sdio.clm_blob \
+            sdcard/firmware
 
     - name: Cache GeneralUser GS SoundFont
       id: cache-generaluser-gs
