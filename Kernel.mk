@@ -32,7 +32,8 @@ OBJS		:=	src/config.o \
 EXTRACLEAN	+=	src/*.d src/*.o \
 				src/control/*.d src/control/*.o \
 				src/lcd/*.d src/lcd/*.o \
-				src/net/*.d src/net/*.o
+				src/net/*.d src/net/*.o \
+				src/synth/*.d src/synth/*.o
 
 #
 # inih
