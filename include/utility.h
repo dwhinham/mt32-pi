@@ -72,6 +72,13 @@ namespace Utility
 		return value && ((value & (value-1)) == 0);
 	}
 
+	// Rounds a number to a nearest multiple; only works for integer values/multiples
+	template <class T>
+	constexpr T RoundToNearestMultiple(T nValue, T nMultiple)
+	{
+		return ((nValue + nMultiple / 2) / nMultiple) * nMultiple;
+	}
+
 	// Computes the Roland checksum
 	constexpr u8 RolandChecksum(const u8* pData, size_t nSize)
 	{

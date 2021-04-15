@@ -20,6 +20,7 @@
 // mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <circle/hdmisoundbasedevice.h>
 #include <circle/i2ssoundbasedevice.h>
 #include <circle/memory.h>
 #include <circle/pwmsoundbasedevice.h>
@@ -38,7 +39,6 @@ constexpr u32 MisterUpdatePeriodMillis             = 50;
 constexpr u32 LEDTimeoutMillis                     = 50;
 constexpr u32 ActiveSenseTimeoutMillis             = 330;
 
-constexpr float Sample16BitMax = (1 << 16 - 1) - 1;
 constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
 enum class TCustomSysExCommand : u8
@@ -176,26 +176,45 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		m_pPisound = nullptr;
 	}
 
-	if (pConfig->AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC)
+	// Queue size of just one chunk
+	unsigned int nQueueSize = pConfig->AudioChunkSize;
+
+	switch (pConfig->AudioOutputDevice)
 	{
-		LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
+		case CConfig::TAudioOutputDevice::PWM:
+			LCDLog(TLCDLogType::Startup, "Init audio (PWM)");
+			m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, pConfig->AudioSampleRate, pConfig->AudioChunkSize);
+			break;
 
-		// Pisound provides clock
-		const bool bSlave = m_pPisound != nullptr;
-		m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, pConfig->AudioSampleRate, pConfig->AudioChunkSize, bSlave);
-		m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
+		case CConfig::TAudioOutputDevice::HDMI:
+		{
+			LCDLog(TLCDLogType::Startup, "Init audio (HDMI)");
 
-		if (pConfig->AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
-			InitPCM51xx(pConfig->AudioI2CDACAddress);
+			// Chunk size must be a multiple of 384
+			const unsigned int nChunkSize = Utility::RoundToNearestMultiple(pConfig->AudioChunkSize, IEC958_SUBFRAMES_PER_BLOCK);
+			nQueueSize = nChunkSize;
+
+			m_pSound = new CHDMISoundBaseDevice(m_pInterrupt, pConfig->AudioSampleRate, nChunkSize);
+			break;
+		}
+
+		case CConfig::TAudioOutputDevice::I2S:
+		{
+			LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
+
+			// Pisound provides clock
+			const bool bSlave = m_pPisound != nullptr;
+			m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, pConfig->AudioSampleRate, pConfig->AudioChunkSize, bSlave);
+
+			if (pConfig->AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
+				InitPCM51xx(pConfig->AudioI2CDACAddress);
+
+			break;
+		}
 	}
-	else
-	{
-		LCDLog(TLCDLogType::Startup, "Init audio (PWM)");
-		m_pSound = new CPWMSoundBaseDevice(m_pInterrupt, pConfig->AudioSampleRate, pConfig->AudioChunkSize);
-		m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned16);
-	}
 
-	if (!m_pSound->AllocateQueueFrames(pConfig->AudioChunkSize))
+	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
+	if (!m_pSound->AllocateQueueFrames(nQueueSize))
 		pLogger->Write(MT32PiName, LogPanic, "Failed to allocate sound queue");
 
 	LCDLog(TLCDLogType::Startup, "Init controls");
@@ -427,41 +446,34 @@ void CMT32Pi::AudioTask()
 	CLogger* const pLogger = CLogger::Get();
 	pLogger->Write(MT32PiName, LogNotice, "Audio task on Core 2 starting up");
 
-	const bool bUse24Bit    = CConfig::Get()->AudioOutputDevice == CConfig::TAudioOutputDevice::I2SDAC;
-	const size_t nQueueSize = m_pSound->GetQueueSizeFrames();
-	float FloatBuffer[nQueueSize * 2];
-	s16 Int16Buffer[nQueueSize * 2];
-	s32 Int32Buffer[nQueueSize * 2];
+	constexpr u8 nChannels = 2;
+
+	// FIXME: Circle's "fast path" for I2S 24-bit really expects 32-bit samples
+	const bool bI2S = CConfig::Get()->AudioOutputDevice == CConfig::TAudioOutputDevice::I2S;
+	const u8 nBytesPerSample = bI2S ? sizeof(s32) : 3;
+	const u8 nBytesPerFrame = 2 * nBytesPerSample;
+
+	const size_t nQueueSizeFrames = m_pSound->GetQueueSizeFrames();
+
+	// Extra byte so that we can write to the 24-bit buffer with overlapping 32-bit writes (efficiency)
+	float FloatBuffer[nQueueSizeFrames * nChannels];
+	s8 IntBuffer[nQueueSizeFrames * nBytesPerFrame + bI2S ? 0 : 1];
 
 	while (m_bRunning)
 	{
-		const size_t nFrames = nQueueSize - m_pSound->GetQueueFramesAvail();
+		const size_t nFrames = nQueueSizeFrames - m_pSound->GetQueueFramesAvail();
+		const size_t nWriteBytes = nFrames * nBytesPerFrame;
+
 		m_pCurrentSynth->Render(FloatBuffer, nFrames);
 
-		size_t nWriteBytes;
-		int nResult;
-
-		if (bUse24Bit)
+		// Convert to signed 24-bit integers
+		for (size_t i = 0; i < nFrames * nChannels; ++i)
 		{
-			nWriteBytes = nFrames * 2 * sizeof(*Int32Buffer);
-
-			// Convert to signed 24-bit integers
-			for (size_t i = 0; i < nFrames * 2; ++i)
-				Int32Buffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample24BitMax;
-
-			nResult = m_pSound->Write(Int32Buffer, nWriteBytes);
-		}
-		else
-		{
-			nWriteBytes = nFrames * 2 * sizeof(*Int16Buffer);
-
-			// Convert to signed 16-bit integers
-			for (size_t i = 0; i < nFrames * 2; ++i)
-				Int16Buffer[i] = Utility::Clamp(FloatBuffer[i], -1.0f, 1.0f) * Sample16BitMax;
-
-			nResult = m_pSound->Write(Int16Buffer, nWriteBytes);
+			s32* const pSample = reinterpret_cast<s32*>(IntBuffer + i * nBytesPerSample);
+			*pSample = FloatBuffer[i] * Sample24BitMax;
 		}
 
+		const int nResult = m_pSound->Write(IntBuffer, nWriteBytes);
 		if (nResult != static_cast<int>(nWriteBytes))
 			pLogger->Write(MT32PiName, LogError, "Sound data dropped");
 	}

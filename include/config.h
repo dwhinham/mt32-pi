@@ -38,7 +38,8 @@ public:
 
 	#define ENUM_AUDIOOUTPUTDEVICE(ENUM) \
 		ENUM(PWM, pwm)                   \
-		ENUM(I2SDAC, i2s)
+		ENUM(HDMI, hdmi)                 \
+		ENUM(I2S, i2s)
 
 	#define ENUM_AUDIOI2CDACINIT(ENUM) \
 		ENUM(None, none)               \
