@@ -78,6 +78,8 @@ jobs:
         path: |
           sdcard/armstub8-rpi4.bin
           sdcard/bcm2711-rpi-4-b.dtb
+          sdcard/bcm2711-rpi-400.dtb
+          sdcard/bcm2711-rpi-cm4.dtb
           sdcard/bootcode.bin
           sdcard/COPYING.linux
           sdcard/fixup_cd.dat
@@ -109,6 +111,8 @@ jobs:
         make -C ${{ env.boot-home }} firmware armstub64
         cp  ${{ env.boot-home }}/armstub8-rpi4.bin \
             ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
+            ${{ env.boot-home }}/bcm2711-rpi-400.dtb \
+            ${{ env.boot-home }}/bcm2711-rpi-cm4.dtb \
             ${{ env.boot-home }}/bootcode.bin \
             ${{ env.boot-home }}/COPYING.linux \
             ${{ env.boot-home }}/fixup_cd.dat \
