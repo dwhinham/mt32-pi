@@ -42,15 +42,13 @@ enum class TRolandAddress : u32
 {
 	SystemModeSet = 0x00007F,
 
-	GSReset          = 0x40007F,
-	UseForRhythmPart = 0x401015,
+	GSReset = 0x40007F,
 
 	SC55DisplayText = 0x100000,
 	SC55DisplayDots = 0x100100,
 };
 
 constexpr u32 DefaultAddressMask   = 0xFFFFFF;
-constexpr u32 PatchPartAddressMask = 0xFFF0FF;
 
 template <TRolandModelID TModelID, TRolandAddress TAddress, u32 nAddressMask, size_t nDataSize>
 struct TRolandSysExMessage
@@ -86,10 +84,8 @@ struct TRolandSysExMessage
 }
 PACKED;
 
-using TRolandGSResetSysExMessage          = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::GSReset, DefaultAddressMask, 1>;
-using TRolandSystemModeSetSysExMessage    = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::SystemModeSet, DefaultAddressMask, 1>;
-
-using TRolandUseForRhythmPartSysExMessage = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::UseForRhythmPart, PatchPartAddressMask, 1>;
+using TRolandGSResetSysExMessage       = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::GSReset, DefaultAddressMask, 1>;
+using TRolandSystemModeSetSysExMessage = TRolandSysExMessage<TRolandModelID::GS, TRolandAddress::SystemModeSet, DefaultAddressMask, 1>;
 
 using TSC55DisplayTextSysExMessage = TRolandSysExMessage<TRolandModelID::SC55, TRolandAddress::SC55DisplayText, DefaultAddressMask, 32>;
 using TSC55DisplayDotsSysExMessage = TRolandSysExMessage<TRolandModelID::SC55, TRolandAddress::SC55DisplayDots, DefaultAddressMask, 64>;
