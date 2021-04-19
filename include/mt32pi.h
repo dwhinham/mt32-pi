@@ -132,6 +132,9 @@ private:
 
 	bool InitPCM51xx(u8 nAddress);
 
+	CLogger* volatile m_pLogger;
+	CConfig* volatile m_pConfig;
+
 	CTimer* m_pTimer;
 	CActLED* m_pActLED;
 
