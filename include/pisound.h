@@ -31,12 +31,12 @@
 class CPisound
 {
 public:
-	using MIDIReceiveHandler = void (*)(const u8* pData, size_t nSize);
+	using TMIDIReceiveHandler = void (*)(const u8* pData, size_t nSize);
 
 	CPisound(CSPIMaster* pSPIMaster, CGPIOManager* pGPIOManager, unsigned nSamplerate);
 
 	bool Initialize();
-	void RegisterMIDIReceiveHandler(MIDIReceiveHandler pHandler) { m_pReceiveHandler = pHandler; }
+	void RegisterMIDIReceiveHandler(TMIDIReceiveHandler pHandler) { m_pReceiveHandler = pHandler; }
 
 private:
 	u16 Transfer16(u16 nValue) const;
@@ -59,7 +59,7 @@ private:
 	CGPIOPin m_OversamplingRatio1;
 	CGPIOPin m_OversamplingRatio2;
 
-	MIDIReceiveHandler m_pReceiveHandler;
+	TMIDIReceiveHandler m_pReceiveHandler;
 
 	char m_SerialNumber[MaxSerialNumberStringLength];
 	char m_ID[MaxIDStringLength];
