@@ -37,6 +37,8 @@ public:
 	const char* GetSoundFontName(size_t nIndex) const;
 	const char* GetFirstValidSoundFontPath() const;
 
+	static constexpr size_t MaxSoundFonts = 256;
+
 private:
 	struct TSoundFontListEntry
 	{
@@ -44,7 +46,6 @@ private:
 		CString Path;
 	};
 
-	static constexpr size_t MaxSoundFonts = 256;
 	static constexpr size_t MaxSoundFontNameLength = 256;
 
 	void CheckSoundFont(const char* pFullPath, const char* pFileName);

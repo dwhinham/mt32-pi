@@ -28,6 +28,7 @@
 
 #include "control/rotaryencoder.h"
 #include "lcd/ssd1306.h"
+#include "synth/fxprofile.h"
 #include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
@@ -89,6 +90,8 @@ public:
 	#define CFG(_1, TYPE, MEMBER_NAME, _2, _3...) TYPE MEMBER_NAME;
 	#include "config.def"
 
+	TFXProfile FXProfiles[CSoundFontManager::MaxSoundFonts];
+
 private:
 	static int INIHandler(void* pUser, const char* pSection, const char* pName, const char* pValue);
 
@@ -109,6 +112,9 @@ private:
 	static bool ParseOption(const char* pString, TEncoderType* pOut);
 	static bool ParseOption(const char* pString, TLCDRotation* pOut);
 	static bool ParseOption(const char* pString, TNetworkMode* pOut);
+
+	static bool ParseFXProfileSection(const char* pSection, size_t* pOutFXProfileIndex);
+	static bool ParseFXProfileOption(const char* pString, const char* pValue, TFXProfile* pOutFXProfile);
 
 	static CConfig* s_pThis;
 };

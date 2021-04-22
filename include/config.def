@@ -72,9 +72,19 @@ CFG(rom_set,				TMT32EmuROMSet,				MT32EmuROMSet,				TMT32EmuROMSet::MT32Old				
 END_SECTION
 
 BEGIN_SECTION(fluidsynth)
-CFG(soundfont,				int,						FluidSynthSoundFont,		0										)
-CFG(gain,					float,						FluidSynthGain,				0.2f									)
-CFG(polyphony,				int,						FluidSynthPolyphony,		256										)
+CFG(soundfont,				int,						FluidSynthSoundFont,				0								)
+CFG(gain,					float,						FluidSynthGain,						0.2f							)
+CFG(polyphony,				int,						FluidSynthPolyphony,				256								)
+CFG(reverb,					bool,						FluidSynthDefaultReverbActive,		true							)
+CFG(reverb_damping,			float,						FluidSynthDefaultReverbDamping,		0.0								)
+CFG(reverb_level,			float,						FluidSynthDefaultReverbLevel,		0.9								)
+CFG(reverb_room_size,		float,						FluidSynthDefaultReverbRoomSize,	0.2								)
+CFG(reverb_width, 			float,						FluidSynthDefaultReverbWidth,		0.5								)
+CFG(chorus,					bool,						FluidSynthDefaultChorusActive,		true							)
+CFG(chorus_depth,			float,						FluidSynthDefaultChorusDepth,		8.0								)
+CFG(chorus_level,			float,						FluidSynthDefaultChorusLevel,		2.0								)
+CFG(chorus_voices,			int,						FluidSynthDefaultChorusVoices,		3								)
+CFG(chorus_speed,			float,						FluidSynthDefaultChorusSpeed,		0.3								)
 END_SECTION
 
 BEGIN_SECTION(lcd)

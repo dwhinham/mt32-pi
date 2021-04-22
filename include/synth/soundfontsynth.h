@@ -28,6 +28,7 @@
 #include <fluidsynth.h>
 
 #include "soundfontmanager.h"
+#include "synth/fxprofile.h"
 #include "synth/synthbase.h"
 
 class CSoundFontSynth : public CSynthBase
@@ -53,7 +54,8 @@ public:
 	CSoundFontManager& GetSoundFontManager() { return m_SoundFontManager; }
 
 private:
-	bool Reinitialize(const char* pSoundFontPath);
+	bool Reinitialize(const char* pSoundFontPath, const TFXProfile* pFXProfile);
+	void DumpFXSettings() const;
 
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
