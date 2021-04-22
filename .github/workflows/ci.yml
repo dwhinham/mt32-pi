@@ -176,8 +176,9 @@ jobs:
         args: |
             mt32-pi-*.zip
 
-    - name: Notify Discord of release
+    - name: Notify Discord servers of release
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         sudo pip3 install keepachangelog discord-webhook
-        .github/scripts/discord_notify.py ${{ secrets.DISCORD_WEBHOOK }} ${{ steps.get_version.outputs.version }}
+        .github/scripts/discord_notify.py ${{ secrets.MISTER_DISCORD_WEBHOOK }} ${{ steps.get_version.outputs.version }}
+        .github/scripts/discord_notify.py ${{ secrets.FPGAMING_DISCORD_WEBHOOK }} ${{ steps.get_version.outputs.version }}
