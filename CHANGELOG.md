@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * macOS users can use this feature without any additional software (see [Apple documentation](https://support.apple.com/en-gb/guide/audio-midi-setup/ams1012/mac)).
   * Windows users can use [rtpMIDI by Tobias Erichsen](https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html).
   * Linux users can use [rtpmidid by David Moreno](https://github.com/davidmoreno/rtpmidid).
+- Ability to configure FluidSynth reverb/chorus effects (new configuration file options).
+  * Defaults can be set in the `[fluidsynth]` section.
+  * Additional sections can be added to create "profiles" that override the defaults for specific SoundFonts.
+  * An example section has been added for GeneralUser GS (assumed to be at index 0) as recommended by S. Christian Collins.
 - The rotary encoder direction can now be reversed (new configuration file option).
 - Ability to use the HDMI port for digital audio (new configuration value for `output_device`). This allows you to use inexpensive HDMI audio extractors or VGA+audio dongles to get better audio quality out of the Raspberry Pi (compared to the headphone jack).
 - Additional boot files for the Compute Module 4 and Raspberry Pi 400 are now included.
