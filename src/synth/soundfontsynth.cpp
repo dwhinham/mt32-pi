@@ -307,7 +307,7 @@ void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 
 	// No special handling; forward to FluidSynth SysEx parser, excluding leading 0xF0 and trailing 0xF7
 	m_Lock.Acquire();
-	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 1, nullptr, nullptr, nullptr, false);
+	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 2, nullptr, nullptr, nullptr, false);
 	m_Lock.Release();
 }
 
