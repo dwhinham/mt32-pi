@@ -186,6 +186,8 @@ bool CSoundFontSynth::Initialize()
 		return false;
 	}
 
+	// Set device ID to match the default Roland Sound Canvas ID so that it recognises some GS SysEx messages
+	fluid_settings_setint(m_pSettings, "synth.device-id", static_cast<int>(TDeviceID::SoundCanvasDefault));
 	fluid_settings_setnum(m_pSettings, "synth.sample-rate", static_cast<double>(m_nSampleRate));
 	fluid_settings_setint(m_pSettings, "synth.threadsafe-api", false);
 

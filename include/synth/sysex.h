@@ -35,7 +35,8 @@ enum class TManufacturerID : u8
 
 enum class TDeviceID : u8
 {
-	AllCall = 0x7F,
+	SoundCanvasDefault = 0x10, // The default device ID of Roland Sound Canvas modules
+	AllCall            = 0x7F,
 };
 
 enum class TUniversalSubID : u8
