@@ -42,23 +42,23 @@ namespace Utility
 {
 	// Templated function for clamping a value between a minimum and a maximum
 	template <class T>
-	constexpr T Clamp(T value, T min, T max)
+	constexpr T Clamp(const T& nValue, const T& nMin, const T& nMax)
 	{
-		return (value < min) ? min : (value > max) ? max : value;
+		return (nValue < nMin) ? nMin : (nValue > nMax) ? nMax : nValue;
 	}
 
 	// Templated function for taking the minimum of two values
 	template <class T>
-	constexpr T Min(T lhs, T rhs)
+	constexpr T Min(const T& nLHS, const T& nRHS)
 	{
-		return lhs < rhs ? lhs : rhs;
+		return nLHS < nRHS ? nLHS : nRHS;
 	}
 
 	// Templated function for taking the maximum of two values
 	template <class T>
-	constexpr T Max(T lhs, T rhs)
+	constexpr T Max(const T& nLHS, const T& nRHS)
 	{
-		return lhs > rhs ? lhs : rhs;
+		return nLHS > nRHS ? nLHS : nRHS;
 	}
 
 	// Return number of elements in an array
@@ -67,14 +67,14 @@ namespace Utility
 
 	// Returns whether some value is a power of 2
 	template <class T>
-	constexpr bool IsPowerOfTwo(T value)
+	constexpr bool IsPowerOfTwo(const T& nValue)
 	{
-		return value && ((value & (value-1)) == 0);
+		return nValue && ((nValue & (nValue - 1)) == 0);
 	}
 
 	// Rounds a number to a nearest multiple; only works for integer values/multiples
 	template <class T>
-	constexpr T RoundToNearestMultiple(T nValue, T nMultiple)
+	constexpr T RoundToNearestMultiple(const T& nValue, const T& nMultiple)
 	{
 		return ((nValue + nMultiple / 2) / nMultiple) * nMultiple;
 	}
