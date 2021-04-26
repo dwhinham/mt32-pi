@@ -3,6 +3,7 @@ boot_delay=0
 disable_splash=1
 force_eeprom_read=0
 gpu_mem=16
+disable_overscan=1
 
 # Uncomment the following line if your HDMI audio extractor isn't outputting any sound.
 # This forces HDMI signalling in case your device is detected as a DVI device.
