@@ -25,6 +25,7 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-parity32.patch
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-iec958.patch
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-hdmi-sound-base.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-allow-any-screen-size.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
 	# Enable function/data sections for circle-stdlib
@@ -122,6 +123,7 @@ clean:
 #
 veryclean: clean
 	# Reverse patches
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-allow-any-screen-size.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-hdmi-sound-base.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-iec958.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-parity32.patch
