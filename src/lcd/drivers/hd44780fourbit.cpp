@@ -22,7 +22,7 @@
 
 #include <circle/timer.h>
 
-#include "lcd/hd44780.h"
+#include "lcd/drivers/hd44780.h"
 
 constexpr u8 GPIOPinRS = 10;
 constexpr u8 GPIOPinRW = 9;

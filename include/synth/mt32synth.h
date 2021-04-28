@@ -61,8 +61,8 @@ public:
 	virtual void SetMasterVolume(u8 nVolume) override;
 	virtual size_t Render(s16* pBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pBuffer, size_t nFrames) override;
-	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) override;
 	virtual void ReportStatus() const override;
+	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) override;
 
 	void SetMIDIChannels(TMIDIChannels Channels);
 	bool SwitchROMSet(TMT32ROMSet ROMSet);
@@ -74,11 +74,29 @@ public:
 	u8 GetMasterVolume() const;
 
 private:
-	// ReportHandler
+	enum class TLCDState
+	{
+		DisplayingPartStates,
+		DisplayingTimbreName,
+		DisplayingMessage,
+	};
+
+	static constexpr size_t MT32ChannelCount = 9;
+
+	// N characters plus null terminator
+	static constexpr size_t LCDTextBufferSize = 20 + 1;
+	static constexpr unsigned LCDMessageDisplayTimeMillis = 200;
+	static constexpr unsigned LCDTimbreDisplayTimeMillis = 1200;
+
+	void UpdatePartStateText(bool bNarrow);
+	void GetPartLevels(unsigned int nTicks, float PartLevels[9], float PartPeaks[9]);
+
+	// MT32Emu::ReportHandler
 	virtual bool onMIDIQueueOverflow() override;
 	virtual void onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName) override;
 	virtual void printDebug(const char* pFmt, va_list pList) override;
 	virtual void showLCDMessage(const char* pMessage) override;
+	virtual void onDeviceReset() override;
 
 	static const u8 StandardMIDIChannelsSysEx[];
 	static const u8 AlternateMIDIChannelsSysEx[];
@@ -95,6 +113,12 @@ private:
 	TMT32ROMSet m_CurrentROMSet;
 	const MT32Emu::ROMImage* m_pControlROMImage;
 	const MT32Emu::ROMImage* m_pPCMROMImage;
+
+	// LCD state
+	TLCDState m_LCDState;
+	unsigned m_nLCDStateTime;
+	char m_LCDTextBuffer[LCDTextBufferSize];
+	u8 m_nPreviousMasterVolume;
 };
 
 #endif

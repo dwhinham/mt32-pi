@@ -11,13 +11,14 @@ OBJS		:=	src/config.o \
 				src/control/simplebuttons.o \
 				src/control/simpleencoder.o \
 				src/kernel.o \
-				src/lcd/hd44780.o \
-				src/lcd/hd44780fourbit.o \
-				src/lcd/hd44780i2c.o \
-				src/lcd/sh1106.o \
-				src/lcd/ssd1306.o \
-				src/lcd/synthlcd.o \
+				src/lcd/drivers/hd44780.o \
+				src/lcd/drivers/hd44780fourbit.o \
+				src/lcd/drivers/hd44780i2c.o \
+				src/lcd/drivers/sh1106.o \
+				src/lcd/drivers/ssd1306.o \
+				src/lcd/ui.o \
 				src/main.o \
+				src/midimonitor.o \
 				src/midiparser.o \
 				src/mt32pi.o \
 				src/net/applemidi.o \
@@ -32,6 +33,7 @@ OBJS		:=	src/config.o \
 EXTRACLEAN	+=	src/*.d src/*.o \
 				src/control/*.d src/control/*.o \
 				src/lcd/*.d src/lcd/*.o \
+				src/lcd/drivers/*.d src/lcd/drivers/*.o \
 				src/net/*.d src/net/*.o \
 				src/synth/*.d src/synth/*.o
 

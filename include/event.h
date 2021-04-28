@@ -24,7 +24,7 @@
 #define _event_h
 
 #include "control/button.h"
-#include "lcd/synthlcd.h"
+#include "lcd/images.h"
 #include "ringbuffer.h"
 #include "synth/mt32romset.h"
 #include "synth/synth.h"
@@ -62,7 +62,7 @@ struct TAllSoundOffEvent
 
 struct TDisplayImageEvent
 {
-	CSynthLCD::TImage Image;
+	TImage Image;
 };
 
 enum class TEventType

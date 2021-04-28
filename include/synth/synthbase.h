@@ -23,10 +23,12 @@
 #ifndef _synthbase_h
 #define _synthbase_h
 
-#include <circle/synchronize.h>
+#include <circle/spinlock.h>
 #include <circle/types.h>
 
-class CSynthLCD;
+#include "lcd/lcd.h"
+#include "lcd/ui.h"
+#include "midimonitor.h"
 
 class CSynthBase
 {
@@ -34,28 +36,28 @@ public:
 	CSynthBase(unsigned int nSampleRate)
 		: m_Lock(TASK_LEVEL),
 		  m_nSampleRate(nSampleRate),
-		  m_pLCD(nullptr)
+		  m_pUI(nullptr)
 	{
 	}
 
 	virtual ~CSynthBase() = default;
 
 	virtual bool Initialize() = 0;
-	virtual void HandleMIDIShortMessage(u32 nMessage) = 0;
+	virtual void HandleMIDIShortMessage(u32 nMessage) { m_MIDIMonitor.OnShortMessage(nMessage); };
 	virtual void HandleMIDISysExMessage(const u8* pData, size_t nSize) = 0;
 	virtual bool IsActive() = 0;
-	virtual void AllSoundOff() = 0;
+	virtual void AllSoundOff() { m_MIDIMonitor.AllNotesOff(); };
 	virtual void SetMasterVolume(u8 nVolume) = 0;
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
-	virtual u8 GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels) = 0;
 	virtual void ReportStatus() const = 0;
-	void SetLCD(CSynthLCD* pLCD) { m_pLCD = pLCD; }
+	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) = 0;
+	void SetUserInterface(CUserInterface* pUI) { m_pUI = pUI; }
 
-protected:
 	CSpinLock m_Lock;
 	unsigned int m_nSampleRate;
-	CSynthLCD* m_pLCD;
+	CMIDIMonitor m_MIDIMonitor;
+	CUserInterface* m_pUI;
 };
 
 #endif

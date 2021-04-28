@@ -79,6 +79,19 @@ namespace Utility
 		return ((nValue + nMultiple / 2) / nMultiple) * nMultiple;
 	}
 
+	// Convert between milliseconds and ticks of a 1MHz clock
+	template <class T>
+	constexpr T MillisToTicks(const T& nMillis)
+	{
+		return nMillis * 1000;
+	}
+
+	template <class T>
+	constexpr T TicksToMillis(const T& nTicks)
+	{
+		return nTicks / 1000;
+	}
+
 	// Computes the Roland checksum
 	constexpr u8 RolandChecksum(const u8* pData, size_t nSize)
 	{

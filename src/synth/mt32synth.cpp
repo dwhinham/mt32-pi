@@ -21,8 +21,10 @@
 //
 
 #include <circle/logger.h>
+#include <circle/timer.h>
 
 #include "config.h"
+#include "lcd/ui.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
 
@@ -31,6 +33,7 @@ const char MT32SynthName[] = "mt32synth";
 constexpr size_t ROMOffsetVersionStringOld  = 0x4015;
 constexpr size_t ROMOffsetVersionString1_07 = 0x4011;
 constexpr size_t ROMOffsetVersionStringNew  = 0x2206;
+constexpr u32 MemoryAddressMIDIChannels     = 0x4000D;
 constexpr u32 MemoryAddressMasterVolume     = 0x40016;
 
 // SysEx commands for setting MIDI channel assignment (no SysEx framing, just 3-byte address and 9 channel values)
@@ -50,7 +53,12 @@ CMT32Synth::CMT32Synth(unsigned nSampleRate, float nGain, float nReverbGain, TRe
 
 	  m_CurrentROMSet(TMT32ROMSet::Any),
 	  m_pControlROMImage(nullptr),
-	  m_pPCMROMImage(nullptr)
+	  m_pPCMROMImage(nullptr),
+
+	  m_LCDState(TLCDState::DisplayingPartStates),
+	  m_nLCDStateTime(0),
+	  m_LCDTextBuffer{'\0'},
+	  m_nPreviousMasterVolume(0)
 {
 }
 
@@ -117,13 +125,14 @@ bool CMT32Synth::Initialize()
 
 void CMT32Synth::HandleMIDIShortMessage(u32 nMessage)
 {
-	// TODO: timestamping
 	m_pSynth->playMsg(nMessage);
+
+	// Update MIDI monitor
+	CSynthBase::HandleMIDIShortMessage(nMessage);
 }
 
 void CMT32Synth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
-	// TODO: timestamping
 	m_pSynth->playSysex(pData, nSize);
 }
 
@@ -132,6 +141,9 @@ void CMT32Synth::AllSoundOff()
 	// Stop all sound immediately; mt32emu treats CC 0x7C like "All Sound Off", ignoring pedal
 	for (uint8_t i = 0; i < 8; ++i)
 		m_pSynth->playMsgOnPart(i, 0x0B, 0x7C, 0);
+
+	// Reset MIDI monitor
+	CSynthBase::AllSoundOff();
 }
 
 void CMT32Synth::SetMasterVolume(u8 nVolume)
@@ -164,35 +176,62 @@ size_t CMT32Synth::Render(float* pOutBuffer, size_t nFrames)
 	return nFrames;
 }
 
-u8 CMT32Synth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChannels)
-{
-	u8 Keys[MT32Emu::DEFAULT_MAX_PARTIALS];
-	u8 Velocities[MT32Emu::DEFAULT_MAX_PARTIALS];
-	u32 nPartStates = m_pSynth->getPartStates();
-	nMaxChannels = Utility::Min(nMaxChannels, static_cast<size_t>(9));
-
-	// Initialize output array
-	memset(pOutVelocities, 0, nMaxChannels);
-
-	for (u8 nPart = 0; nPart < nMaxChannels; ++nPart)
-	{
-		// No active partials on this part; skip
-		if (!(nPartStates & 1 << nPart))
-			continue;
-
-		// Store maximum velocity for this part
-		u32 nPlayingNotes = m_pSynth->getPlayingNotes(nPart, Keys, Velocities);
-		for (u8 nNote = 0; nNote < nPlayingNotes; ++nNote)
-			pOutVelocities[nPart] = Utility::Max(pOutVelocities[nPart], Velocities[nNote]);
-	}
-
-	return nMaxChannels;
-}
-
 void CMT32Synth::ReportStatus() const
 {
-	if (m_pLCD)
-		m_pLCD->OnSystemMessage(GetControlROMName());
+	if (m_pUI)
+		m_pUI->ShowSystemMessage(GetControlROMName());
+}
+
+void CMT32Synth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
+{
+	const u8 nMasterVolume = GetMasterVolume();
+	const unsigned int nDeltaTicks = nTicks - m_nLCDStateTime;
+	bool bNarrowPartStateText = false;
+
+	// Hide message if master volume changed and message has been displayed long enough
+	if (m_nPreviousMasterVolume != nMasterVolume)
+	{
+		if (m_LCDState != TLCDState::DisplayingMessage || nDeltaTicks >= Utility::MillisToTicks(LCDMessageDisplayTimeMillis))
+		{
+			m_nPreviousMasterVolume = nMasterVolume;
+			m_LCDState = TLCDState::DisplayingPartStates;
+			m_nLCDStateTime = nTicks;
+		}
+	}
+
+	// Timbre change timeout
+	if (m_LCDState == TLCDState::DisplayingTimbreName && nDeltaTicks >= Utility::MillisToTicks(LCDTimbreDisplayTimeMillis))
+	{
+		m_LCDState = TLCDState::DisplayingPartStates;
+		m_nLCDStateTime = nTicks;
+	}
+
+	const u8 nWidth = LCD.Width();
+	const u8 nHeight = LCD.Height();
+	u8 nStatusRow, nBarHeight;
+
+	if (LCD.GetType() == CLCD::TType::Character)
+	{
+		nStatusRow = nHeight - 1;
+		nBarHeight = nHeight - 1;
+
+		// For 16-character wide LCDs
+		if (nWidth < 20)
+			bNarrowPartStateText = true;
+	}
+	else
+	{
+		nStatusRow = nHeight / 16 - 1;
+		nBarHeight = nHeight - 16;
+	}
+
+	if (m_LCDState == TLCDState::DisplayingPartStates)
+		UpdatePartStateText(bNarrowPartStateText);
+
+	float PartLevels[9], PartPeaks[9];
+	GetPartLevels(nTicks, PartLevels, PartPeaks);
+	CUserInterface::DrawChannelLevels(LCD, nBarHeight, PartLevels, PartPeaks, 9, false);
+	LCD.Print(m_LCDTextBuffer, 0, nStatusRow, true, false);
 }
 
 void CMT32Synth::SetMIDIChannels(TMIDIChannels Channels)
@@ -211,16 +250,16 @@ bool CMT32Synth::SwitchROMSet(TMT32ROMSet ROMSet)
 	// Is this ROM set already active?
 	if (ROMSet == m_CurrentROMSet)
 	{
-		if (m_pLCD)
-			m_pLCD->OnSystemMessage("Already selected!");
+		if (m_pUI)
+			m_pUI->ShowSystemMessage("Already selected!");
 		return false;
 	}
 
 	// Get ROM set if available
 	if (!m_ROMManager.GetROMSet(ROMSet, m_CurrentROMSet, pControlROMImage, pPCMROMImage))
 	{
-		if (m_pLCD)
-			m_pLCD->OnSystemMessage("ROM set not avail!");
+		if (m_pUI)
+			m_pUI->ShowSystemMessage("ROM set not avail!");
 		return false;
 	}
 
@@ -254,8 +293,8 @@ bool CMT32Synth::NextROMSet()
 
 	if (nNextROMSetIndex == nCurrentROMSetIndex)
 	{
-		if (m_pLCD)
-			m_pLCD->OnSystemMessage("No other ROM sets!");
+		if (m_pUI)
+			m_pUI->ShowSystemMessage("No other ROM sets!");
 		return false;
 	}
 
@@ -287,6 +326,47 @@ u8 CMT32Synth::GetMasterVolume() const
 	return nVolume;
 }
 
+void CMT32Synth::UpdatePartStateText(bool bNarrow)
+{
+	const u32 nPartStates = m_pSynth->getPartStates();
+
+	// First 5 parts
+	for (u8 i = 0; i < 5; ++i)
+	{
+		const bool bState = (nPartStates >> i) & 1;
+		m_LCDTextBuffer[i * 2] = bState ? '\xFF' : ('1' + i);
+		m_LCDTextBuffer[i * 2 + 1] = ' ';
+	}
+
+	// Rhythm
+	const bool bState = (nPartStates >> 8) & 1;
+	m_LCDTextBuffer[10] = bState ? '\xFF' : 'R';
+	m_LCDTextBuffer[11] = ' ';
+
+	// Volume
+	snprintf(m_LCDTextBuffer + 12, sizeof(m_LCDTextBuffer), bNarrow ? "|%3d" : "|vol:%3d", GetMasterVolume());
+}
+
+void CMT32Synth::GetPartLevels(unsigned int nTicks, float PartLevels[9], float PartPeaks[9])
+{
+	float ChannelLevels[16], ChannelPeaks[16];
+	u8 MIDIChannelPartMap[9];
+	u16 nPercussionMask;
+
+	// Find which MIDI channels each MT-32 part is mapped to and identify percussion channel
+	m_pSynth->readMemory(MemoryAddressMIDIChannels, 9, MIDIChannelPartMap);
+	nPercussionMask = 1 << MIDIChannelPartMap[8];
+
+	// Map channel levels to part levels
+	m_MIDIMonitor.GetChannelLevels(nTicks, ChannelLevels, ChannelPeaks, nPercussionMask);
+	for (u8 nPart = 0; nPart < 9; ++nPart)
+	{
+		const u8 nChannel = MIDIChannelPartMap[nPart];
+		PartLevels[nPart] = ChannelLevels[nChannel];
+		PartPeaks[nPart] = ChannelPeaks[nChannel];
+	}
+}
+
 bool CMT32Synth::onMIDIQueueOverflow()
 {
 	CLogger::Get()->Write(MT32SynthName, LogError, "MIDI queue overflow");
@@ -295,8 +375,16 @@ bool CMT32Synth::onMIDIQueueOverflow()
 
 void CMT32Synth::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
-	if (m_pLCD)
-		m_pLCD->OnProgramChanged(nPartNum, pSoundGroupName, pPatchName);
+	const unsigned nTicks = CTimer::GetClockTicks();
+
+	// Bail out if displaying an MT-32 message and it hasn't been on-screen long enough
+	if (m_LCDState == TLCDState::DisplayingMessage && (nTicks - m_nLCDStateTime) <= Utility::MillisToTicks(LCDMessageDisplayTimeMillis))
+		return;
+
+	snprintf(m_LCDTextBuffer, sizeof(m_LCDTextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
+
+	m_LCDState = TLCDState::DisplayingTimbreName;
+	m_nLCDStateTime = nTicks;
 }
 
 void CMT32Synth::printDebug(const char* pFmt, va_list pList)
@@ -307,6 +395,17 @@ void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 void CMT32Synth::showLCDMessage(const char* pMessage)
 {
 	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
-	if (m_pLCD)
-		m_pLCD->OnMT32Message(pMessage);
+	const unsigned nTicks = CTimer::GetClockTicks();
+
+	snprintf(m_LCDTextBuffer, sizeof(m_LCDTextBuffer), pMessage);
+
+	m_LCDState = TLCDState::DisplayingMessage;
+	m_nLCDStateTime = nTicks;
+}
+
+void CMT32Synth::onDeviceReset()
+{
+	CLogger::Get()->Write(MT32SynthName, LogDebug, "MT-32 reset");
+	m_MIDIMonitor.AllNotesOff();
+	m_MIDIMonitor.ResetControllers(false);
 }

@@ -20,7 +20,7 @@
 // mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "lcd/ssd1306.h"
+#include "lcd/drivers/ssd1306.h"
 
 enum TSH1106Command : u8
 {

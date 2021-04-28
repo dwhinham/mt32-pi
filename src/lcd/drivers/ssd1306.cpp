@@ -22,9 +22,9 @@
 
 #include <type_traits>
 
+#include "lcd/drivers/ssd1306.h"
 #include "lcd/font6x8.h"
 #include "lcd/images.h"
-#include "lcd/ssd1306.h"
 #include "utility.h"
 
 enum TSSD1306Command : u8
@@ -148,12 +148,10 @@ constexpr auto MisterLogo = CSSD1306Image<128, 32>(MisterLogo128x32);
 // Drawing constants
 constexpr u8 BarSpacing = 2;
 
-CSSD1306::CSSD1306(CI2CMaster *pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation)
-	: CSynthLCD(),
+CSSD1306::CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation)
+	: CLCD(nWidth, nHeight),
 	  m_pI2CMaster(pI2CMaster),
 	  m_nAddress(nAddress),
-	  m_nWidth(nWidth),
-	  m_nHeight(nHeight),
 	  m_Rotation(Rotation),
 
 	  m_FrameBuffers{{0x40, {0}}, {0x40, {0}}},
@@ -336,26 +334,31 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 	}
 }
 
-void CSSD1306::DrawImage()
+void CSSD1306::Flip()
 {
-	u8* pFrameBuffer     = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
-	const u8* pPixelData = nullptr;
-	u8 nImageWidth       = 0;
-	u8 nImageHeight      = 0;
+	WriteFrameBuffer();
+	SwapFrameBuffers();
+}
 
-	switch (m_CurrentImage)
+void CSSD1306::DrawImage(TImage Image)
+{
+	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
+	const CSSD1306Image<128, 32>* pImage;
+
+	switch (Image)
 	{
 		case TImage::MisterLogo:
-			pPixelData   = MisterLogo.GetPixelData();
-			nImageWidth  = MisterLogo.Width();
-			nImageHeight = MisterLogo.Height();
+			pImage = &MisterLogo;
 			break;
 
 		default:
 			return;
 	}
 
-	const size_t nBytes = nImageWidth * nImageHeight / 8;
+	const u8* pPixelData  = pImage->GetPixelData();
+	const u8 nImageWidth  = pImage->Width();
+	const u8 nImageHeight = pImage->Height();
+	const size_t nBytes   = nImageWidth * nImageHeight / 8;
 
 	// Exact framebuffer size match
 	if (nImageWidth == m_nWidth && nImageHeight == m_nHeight)
@@ -373,79 +376,6 @@ void CSSD1306::DrawImage()
 		const size_t nImageX = i % nImageWidth;
 		const size_t nImageY = i / nImageWidth * m_nWidth;
 		pFrameBuffer[nOffsetX + nOffsetY + nImageX + nImageY] = pPixelData[i];
-	}
-}
-
-void CSSD1306::DrawSystemState()
-{
-	if (m_SystemState == TSystemState::DisplayingImage)
-		DrawImage();
-	else
-	{
-		const u8 nMessageRow = m_nHeight == 32 ? 0 : 1;
-		Print(m_SystemMessageTextBuffer, 0, nMessageRow, true);
-	}
-}
-
-void CSSD1306::DrawChannelLevels(u8 nBarXOffset, u8 nBarYOffset, u8 nBarWidth, u8 nBarHeight, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks, bool bDrawBarBases)
-{
-	const u8 nBarMaxY = nBarHeight - 1;
-
-	// For each channel
-	for (u8 nChannel = 0; nChannel < nChannels; ++nChannel)
-	{
-		const u8 nLevelPixels = m_ChannelLevels[nChannel] * nBarMaxY;
-		const u8 nX1 = nBarXOffset + nChannel * (nBarWidth + nBarSpacing);
-		const u8 nX2 = nX1 + nBarWidth - 1;
-
-		if (nLevelPixels > 0 || bDrawBarBases)
-		{
-			const u8 nY1 = nBarYOffset + (nBarMaxY - nLevelPixels);
-			const u8 nY2 = nY1 + nLevelPixels;
-			DrawFilledRect(nX1, nY1, nX2, nY2);
-		}
-
-		if (bDrawPeaks)
-		{
-			const u8 nPeakLevelPixels = m_ChannelPeakLevels[nChannel] * nBarMaxY;
-			if (nPeakLevelPixels)
-			{
-				// TODO: DrawLine
-				const u8 nY = nBarYOffset + (nBarMaxY - nPeakLevelPixels);
-				DrawFilledRect(nX1, nY, nX2, nY);
-			}
-		}
-	}
-}
-
-void CSSD1306::DrawSC55Dots(u8 nFirstRow, u8 nRows)
-{
-	// Pixel data is 16x16, scale to 128x64 or 64x32 and center
-	const u8 nScaleX      = m_nHeight == 64 ? 8 : 4;
-	const u8 nScaleY      = m_nHeight == 64 ? 4 : 2;
-	const size_t nOffsetX = (m_nWidth - 16 * nScaleX) / 2;
-	const size_t nOffsetY = (m_nHeight - 16 * nScaleY) / 2;
-
-	for (u8 nByte = 0; nByte < sizeof(m_SC55PixelBuffer); ++nByte)
-	{
-		// First 48 bytes have 5 columns of pixels, last 16 bytes have only 1
-		const u8 nPixels = nByte < 48 ? 5 : 1;
-
-		for (u8 nPixel = 0; nPixel < nPixels; ++nPixel)
-		{
-			const bool bPixelValue = (m_SC55PixelBuffer[nByte] >> (5 - 1 - nPixel)) & 1;
-
-			if (!bPixelValue)
-				continue;
-
-			const u8 nPosX = nByte / 16 * 5 + nPixel;
-			const u8 nPosY = nByte % 16;
-
-			const u8 nScaledX = nOffsetX + nPosX * nScaleX;
-			const u8 nScaledY = nOffsetY + nPosY * nScaleY;
-
-			DrawFilledRect(nScaledX, nScaledY, nScaledX + nScaleX - 1, nScaledY + nScaleY - 1);
-		}
 	}
 }
 
@@ -476,71 +406,10 @@ void CSSD1306::Clear(bool bImmediate)
 		WriteFrameBuffer(true);
 }
 
-void CSSD1306::SetBacklightEnabled(bool bEnabled)
+void CSSD1306::SetBacklightState(bool bEnabled)
 {
-	CSynthLCD::SetBacklightEnabled(bEnabled);
+	m_bBacklightEnabled = bEnabled;
 
 	// Power on/off display
 	WriteCommand(bEnabled ? SetDisplayOn : SetDisplayOff);
-}
-
-void CSSD1306::Update(CMT32Synth& Synth)
-{
-	CSynthLCD::Update(Synth);
-
-	// Bail out if display is off
-	if (!m_bBacklightEnabled)
-		return;
-
-	Clear(false);
-	UpdateChannelLevels(Synth);
-	UpdateChannelPeakLevels();
-
-	if (m_SystemState != TSystemState::None)
-		DrawSystemState();
-	else
-	{
-		const u8 nBarWidth = (m_nWidth - (MT32ChannelCount * BarSpacing)) / MT32ChannelCount;
-		const u8 nBarHeight = m_nHeight - 16;
-		DrawChannelLevels(2, 0, nBarWidth, nBarHeight, BarSpacing, MT32ChannelCount, true, false);
-	}
-
-	// MT-32 status row
-	if (m_SystemState != TSystemState::EnteringPowerSavingMode && m_SystemState != TSystemState::DisplayingImage)
-	{
-		const u8 nStatusRow = m_nHeight == 32 ? 1 : 3;
-		Print(m_MT32TextBuffer, 0, nStatusRow, true);
-	}
-
-	WriteFrameBuffer();
-	SwapFrameBuffers();
-}
-
-void CSSD1306::Update(CSoundFontSynth& Synth)
-{
-	CSynthLCD::Update(Synth);
-
-	// Bail out if display is off
-	if (!m_bBacklightEnabled)
-		return;
-
-	Clear(false);
-	UpdateChannelLevels(Synth);
-	UpdateChannelPeakLevels();
-
-	if (m_SystemState != TSystemState::None)
-		DrawSystemState();
-	else
-	{
-		if (m_bSC55DisplayingDots)
-			DrawSC55Dots(0, m_nHeight / 8);
-		else
-		{
-			const u8 nBarWidth = (m_nWidth - (MIDIChannelCount * BarSpacing)) / MIDIChannelCount;
-			DrawChannelLevels(1, 0, nBarWidth, m_nHeight, BarSpacing, MIDIChannelCount);
-		}
-	}
-
-	WriteFrameBuffer();
-	SwapFrameBuffers();
 }

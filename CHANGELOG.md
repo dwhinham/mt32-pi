@@ -29,9 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to circle-stdlib v15.8/Circle Step 44.1.
 - Update to libmt32emu v2.5.0.
 - Update to FluidSynth v2.2.1.
+- Complete overhaul of LCD code.
+  * MIDI level meters now account for channel volume and expression properly and are much more responsive.
+  * Long text messages (e.g. SoundFont names) are now scrolled.
+  * Basic support for smaller 16-character wide screens has been added.
 - The activity LED no longer illuminates for System Common or System Real-Time messages.
 - Default clock speeds/voltages have been lowered for Pi 4/CM4 in config.txt for reduced energy usage and SoC temperature.
 - Reduced energy usage when LCD and MiSTer control interface are both disabled (core suspended).
+- "GM Mode On"/"GS Reset" SysEx messages are now handled by new internal FluidSynth code which also changes how MIDI Bank Select messages are interpreted. Additionally, "XG Reset" SysEx messages are now handled.
 
 ### Fixed
 
@@ -39,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Some USB MIDI devices that violate the USB specification were unusable (discussion #102) - a workaround in the USB driver has been implemented. Thanks to @fabbrimichele for reporting and @rsta2 for the fix!
 - Hang on "Init USB" when no USB controller is present (e.g. a Compute Module 4-based system with no external XHCI controller). Huge thanks to Serdaco for donating the CM4 and I/O board for testing!
 - Boot failure on the 1GB Raspberry Pi 4/CM4 because of a bug in the memory allocator.
+- The MIDI level meters would often miss fast notes (e.g. percussion).
 
 ## [0.9.1] - 2021-03-20
 

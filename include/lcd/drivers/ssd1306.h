@@ -26,11 +26,11 @@
 #include <circle/i2cmaster.h>
 #include <circle/types.h>
 
-#include "lcd/synthlcd.h"
+#include "lcd/lcd.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
 
-class CSSD1306 : public CSynthLCD
+class CSSD1306 : public CLCD
 {
 public:
 	#define ENUM_LCDROTATION(ENUM) \
@@ -41,15 +41,23 @@ public:
 
 	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3C, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
 
-	// CCharacterLCD
+	// CLCD
 	virtual bool Initialize() override;
-	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = false) override;
-	virtual void Clear(bool bImmediate = false) override;
-	virtual void SetBacklightEnabled(bool bEnabled) override;
+	virtual TType GetType() const override { return TType::Graphical; };
 
-	// CSynthLCD
-	virtual void Update(CMT32Synth& Synth) override;
-	virtual void Update(CSoundFontSynth& Synth) override;
+	// Character functions
+	virtual void Clear(bool bImmediate = false) override;
+	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = false) override;
+
+	// Graphics functions
+	virtual void SetPixel(u8 nX, u8 nY) override;
+	virtual void ClearPixel(u8 nX, u8 nY) override;
+	virtual void DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate = false) override;
+	virtual void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false) override;
+	virtual void DrawImage(TImage Image) override;
+	virtual void Flip() override;
+
+	virtual void SetBacklightState(bool bEnabled) override;
 
 protected:
 	struct TFrameBufferUpdatePacket
@@ -63,21 +71,8 @@ protected:
 	virtual void WriteFrameBuffer(bool bForceFullUpdate = false) const;
 	void SwapFrameBuffers();
 
-	void SetPixel(u8 nX, u8 nY);
-	void ClearPixel(u8 nX, u8 nY);
-	void DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate = false);
-	void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false);
-	void DrawImage();
-
-	void DrawSystemState();
-	void DrawChannelLevels(u8 nBarXOffset, u8 nBarYOffset, u8 nBarWidth, u8 nBarHeight, u8 nBarSpacing, u8 nChannels, bool bDrawPeaks = true,
-						   bool bDrawBarBases = true);
-	void DrawSC55Dots(u8 nFirstRow, u8 nRows);
-
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;
-	u8 m_nWidth;
-	u8 m_nHeight;
 	TLCDRotation m_Rotation;
 
 	// Double framebuffers

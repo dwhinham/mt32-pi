@@ -50,7 +50,7 @@
 #include "control/control.h"
 #include "control/mister.h"
 #include "event.h"
-#include "lcd/synthlcd.h"
+#include "lcd/ui.h"
 #include "midiparser.h"
 #include "net/applemidi.h"
 #include "pisound.h"
@@ -158,8 +158,9 @@ private:
 
 	CBcmRandomNumberGenerator m_Random;
 
-	CSynthLCD* m_pLCD;
+	CLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
+	CUserInterface m_UserInterface;
 #ifdef MONITOR_TEMPERATURE
 	unsigned m_nTempUpdateTime;
 #endif

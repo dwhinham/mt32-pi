@@ -27,7 +27,8 @@
 #include <circle/types.h>
 
 #include "control/rotaryencoder.h"
-#include "lcd/ssd1306.h"
+#include "lcd/drivers/ssd1306.h"
+#include "soundfontmanager.h"
 #include "synth/fxprofile.h"
 #include "synth/mt32romset.h"
 #include "synth/mt32synth.h"

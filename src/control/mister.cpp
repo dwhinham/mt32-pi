@@ -163,7 +163,7 @@ void CMisterControl::EnqueueDisplayImageEvent()
 {
 	TEvent Event;
 	Event.Type = TEventType::DisplayImage;
-	Event.DisplayImage.Image = CSynthLCD::TImage::MisterLogo;
+	Event.DisplayImage.Image = TImage::MisterLogo;
 	m_pEventQueue->Enqueue(Event);
 }
 

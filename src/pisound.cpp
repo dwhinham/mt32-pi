@@ -75,7 +75,7 @@ bool CPisound::Initialize()
 {
 	assert(m_pSPIMaster != nullptr);
 
-	CLogger& Logger = *CLogger::Get();
+	CLogger* const pLogger = CLogger::Get();
 
 	// Set the oversampling ratio pins
 	switch (m_nSamplerate)
@@ -117,10 +117,10 @@ bool CPisound::Initialize()
 	// Flash the LEDs
 	Transfer16(0xF008);
 
-	Logger.Write(PisoundName, LogNotice, "Serial number: %s", m_SerialNumber);
-	Logger.Write(PisoundName, LogNotice, "ID: %s", m_ID);
-	Logger.Write(PisoundName, LogNotice, "Firmware version: %s", m_FirmwareVersion);
-	Logger.Write(PisoundName, LogNotice, "Hardware version: %s", m_HardwareVersion);
+	pLogger->Write(PisoundName, LogNotice, "Serial number: %s", m_SerialNumber);
+	pLogger->Write(PisoundName, LogNotice, "ID: %s", m_ID);
+	pLogger->Write(PisoundName, LogNotice, "Firmware version: %s", m_FirmwareVersion);
+	pLogger->Write(PisoundName, LogNotice, "Hardware version: %s", m_HardwareVersion);
 
 	return true;
 }
@@ -132,7 +132,8 @@ u16 CPisound::Transfer16(u16 nTxValue) const
 	TxBuffer[0] = nTxValue >> 8;
 	TxBuffer[1] = nTxValue & 0xFF;
 
-	assert(m_pSPIMaster->WriteRead(SPIChipSelect, TxBuffer, RxBuffer, sizeof(RxBuffer)) > 0);
+	if (m_pSPIMaster->WriteRead(SPIChipSelect, TxBuffer, RxBuffer, sizeof(RxBuffer)) < 0)
+		return 0;
 
 	return (RxBuffer[0] << 8) | RxBuffer[1];
 }

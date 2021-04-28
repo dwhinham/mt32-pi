@@ -196,6 +196,7 @@ constexpr u8 CustomBarCharDataNarrow[][8] =
 };
 
 // Use ASCII space for empty bar, custom chars for 1-8 rows
-constexpr char BarChars[] = { ' ', '\x0', '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7' };
+// N.B. Use indices 0x08-0x0F into CG RAM instead of 0x00-0x07 to allow us to use them in C strings (avoid clash with null terminator)
+constexpr char BarChars[] = { ' ', '\x08', '\x09', '\x0A', '\x0B', '\x0C', '\x0D', '\x0E', '\x0F' };
 
 #endif

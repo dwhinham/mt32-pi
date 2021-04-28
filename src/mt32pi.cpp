@@ -28,8 +28,9 @@
 
 #include <cstdarg>
 
-#include "lcd/hd44780.h"
-#include "lcd/ssd1306.h"
+#include "lcd/drivers/hd44780.h"
+#include "lcd/drivers/ssd1306.h"
+#include "lcd/ui.h"
 #include "mt32pi.h"
 
 const char MT32PiName[] = "mt32-pi";
@@ -361,7 +362,7 @@ bool CMT32Pi::InitMT32Synth()
 	if (m_pConfig->MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
 		m_pMT32Synth->SetMIDIChannels(m_pConfig->MT32EmuMIDIChannels);
 
-	m_pMT32Synth->SetLCD(m_pLCD);
+	m_pMT32Synth->SetUserInterface(&m_UserInterface);
 
 	return m_pMT32Synth != nullptr;
 }
@@ -378,7 +379,7 @@ bool CMT32Pi::InitSoundFontSynth()
 		m_pSoundFontSynth = nullptr;
 	}
 
-	m_pSoundFontSynth->SetLCD(m_pLCD);
+	m_pSoundFontSynth->SetUserInterface(&m_UserInterface);
 
 	return m_pSoundFontSynth != nullptr;
 }
@@ -438,13 +439,19 @@ void CMT32Pi::MainTask()
 		CPower::Update();
 
 		// Check for deferred SoundFont switch
-		if (m_bDeferredSoundFontSwitchFlag && (ticks - m_nDeferredSoundFontSwitchTime) >= static_cast<unsigned int>(m_pConfig->ControlSwitchTimeout) * HZ)
+		if (m_bDeferredSoundFontSwitchFlag)
 		{
-			SwitchSoundFont(m_nDeferredSoundFontSwitchIndex);
-			m_bDeferredSoundFontSwitchFlag = false;
+			// Delay switch if scrolling a long SoundFont name
+			if (m_UserInterface.IsScrolling())
+				m_nDeferredSoundFontSwitchTime = ticks;
+			else if ((ticks - m_nDeferredSoundFontSwitchTime) >= static_cast<unsigned int>(m_pConfig->ControlSwitchTimeout) * HZ)
+			{
+				SwitchSoundFont(m_nDeferredSoundFontSwitchIndex);
+				m_bDeferredSoundFontSwitchFlag = false;
 
-			// Trigger an awaken so we don't immediately go to sleep
-			Awaken();
+				// Trigger an awaken so we don't immediately go to sleep
+				Awaken();
+			}
 		}
 
 		// Check for USB PnP events
@@ -481,20 +488,17 @@ void CMT32Pi::UITask()
 
 	while (m_bRunning)
 	{
-		unsigned ticks = m_pTimer->GetTicks();
+		const unsigned int nTicks = CTimer::GetClockTicks();
 
 		// Update LCD
-		if (m_pLCD && (ticks - m_nLCDUpdateTime) >= MSEC2HZ(LCDUpdatePeriodMillis))
+		if (m_pLCD && (nTicks - m_nLCDUpdateTime) >= Utility::MillisToTicks(LCDUpdatePeriodMillis))
 		{
-			if (m_pCurrentSynth == m_pMT32Synth)
-				m_pLCD->Update(*m_pMT32Synth);
-			else
-				m_pLCD->Update(*m_pSoundFontSynth);
-			m_nLCDUpdateTime = ticks;
+			m_UserInterface.Update(*m_pLCD, *m_pCurrentSynth, nTicks);
+			m_nLCDUpdateTime = nTicks;
 		}
 
 		// Poll MiSTer interface
-		if (bMisterEnabled && (ticks - m_nMisterUpdateTime) >= MSEC2HZ(MisterUpdatePeriodMillis))
+		if (bMisterEnabled && (nTicks - m_nMisterUpdateTime) >= Utility::MillisToTicks(MisterUpdatePeriodMillis))
 		{
 			TMisterStatus Status{TMisterSynth::Unknown, 0xFF, 0xFF};
 
@@ -510,7 +514,7 @@ void CMT32Pi::UITask()
 				Status.SoundFontIndex = m_pSoundFontSynth->GetSoundFontIndex();
 
 			m_MisterControl.Update(Status);
-			m_nMisterUpdateTime = ticks;
+			m_nMisterUpdateTime = nTicks;
 		}
 	}
 
@@ -581,18 +585,14 @@ void CMT32Pi::OnEnterPowerSavingMode()
 {
 	CPower::OnEnterPowerSavingMode();
 	m_pSound->Cancel();
-
-	if (m_pLCD)
-		m_pLCD->EnterPowerSavingMode();
+	m_UserInterface.EnterPowerSavingMode();
 }
 
 void CMT32Pi::OnExitPowerSavingMode()
 {
 	CPower::OnExitPowerSavingMode();
 	m_pSound->Start();
-
-	if (m_pLCD)
-		m_pLCD->ExitPowerSavingMode();
+	m_UserInterface.ExitPowerSavingMode();
 }
 
 void CMT32Pi::OnThrottleDetected()
@@ -941,8 +941,7 @@ void CMT32Pi::ProcessEventQueue()
 				break;
 
 			case TEventType::DisplayImage:
-				if (m_pLCD)
-					m_pLCD->OnDisplayImage(Event.DisplayImage.Image);
+				m_UserInterface.DisplayImage(Event.DisplayImage.Image);
 				break;
 
 			case TEventType::Encoder:
@@ -1107,8 +1106,7 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 	if (!m_pLCD)
 		return;
 
-	// Up to 20 characters plus null terminator
-	char Buffer[21];
+	char Buffer[256];
 
 	va_list Args;
 	va_start(Args, pFormat);
@@ -1124,7 +1122,7 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 
 	// Let LCD task pick up the message in its next update
 	else
-		m_pLCD->OnSystemMessage(Buffer, Type == TLCDLogType::Spinner);
+		m_UserInterface.ShowSystemMessage(Buffer, Type == TLCDLogType::Spinner);
 }
 
 // TODO: Generic configurable DAC init class

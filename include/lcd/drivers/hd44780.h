@@ -28,24 +28,20 @@
 #include <circle/sched/scheduler.h>
 #include <circle/types.h>
 
-#include "lcd/clcd.h"
-#include "lcd/synthlcd.h"
 #include "synth/mt32synth.h"
 
-class CHD44780Base : public CSynthLCD
+class CHD44780Base : public CLCD
 {
 public:
 	CHD44780Base(u8 nColumns = 20, u8 nRows = 2);
 	virtual ~CHD44780Base() = default;
 
-	// CCharacterLCD
 	virtual bool Initialize() override;
-	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = true) override;
-	virtual void Clear(bool bImmediate = true) override;
+	virtual TType GetType() const override { return TType::Character; }
 
-	// CSynthLCD
-	virtual void Update(CMT32Synth& Synth) override;
-	virtual void Update(CSoundFontSynth& Synth) override;
+	// Character functions
+	virtual void Clear(bool bImmediate = true) override;
+	virtual void Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine = false, bool bImmediate = true) override;
 
 protected:
 	enum class TWriteMode
@@ -70,10 +66,7 @@ protected:
 
 	void SetCustomChar(u8 nIndex, const u8 nCharData[8]);
 	void SetBarChars(TBarCharSet CharSet);
-	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarXOffset, u8 nBarSpacing, u8 nChannels, bool bDrawBarBases = true);
-
-	u8 m_nRows;
-	u8 m_nColumns;
+	void DrawChannelLevels(u8 nFirstRow, u8 nRows, u8 nBarOffsetX, u8 nBarSpacing, u8 nChannels, bool bDrawBarBases = true);
 
 	u8 m_RowOffsets[4];
 
@@ -102,7 +95,7 @@ class CHD44780I2C : public CHD44780Base
 public:
 	CHD44780I2C(CI2CMaster* pI2CMaster, u8 nAddress = 0x27, u8 nColumns = 20, u8 nRows = 2);
 
-	virtual void SetBacklightEnabled(bool bEnabled) override;
+	virtual void SetBacklightState(bool bEnabled) override;
 
 protected:
 	virtual void WriteNybble(u8 nNybble, TWriteMode Mode) override;
