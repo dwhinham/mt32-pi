@@ -71,6 +71,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pSerial(pSerialDevice),
 	  m_pUSBHCI(pUSBHCI),
 	  m_USBFileSystem{},
+	  m_bUSBAvailable(false),
 
 	  m_pNet(nullptr),
 	  m_WLAN(WLANFirmwarePath),
@@ -161,10 +162,9 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	// the initialization must be skipped in this case, or an
 	// exit happens here under 64-bit QEMU.
 	LCDLog(TLCDLogType::Startup, "Init USB");
-	if (m_pConfig->SystemUSB)
+	if (m_pConfig->SystemUSB && m_pUSBHCI->Initialize())
 	{
-		if (!m_pUSBHCI->Initialize())
-			return false;
+		m_bUSBAvailable = true;
 
 		// Perform an initial Plug and Play update to initialize devices early
 		UpdateUSB(true);
@@ -434,8 +434,7 @@ void CMT32Pi::MainTask()
 		}
 
 		// Check for USB PnP events
-		if (m_pConfig->SystemUSB)
-			UpdateUSB();
+		UpdateUSB();
 
 		// Allow other tasks to run
 		pScheduler->Yield();
@@ -705,7 +704,7 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 
 void CMT32Pi::UpdateUSB(bool bStartup)
 {
-	if (!m_pUSBHCI->UpdatePlugAndPlay())
+	if (!m_bUSBAvailable || !m_pUSBHCI->UpdatePlugAndPlay())
 		return;
 
 	Awaken();

@@ -145,6 +145,7 @@ private:
 	CSerialDevice* m_pSerial;
 	CUSBHCIDevice* m_pUSBHCI;
 	FATFS m_USBFileSystem;
+	bool m_bUSBAvailable;
 
 	// Networking
 	CNetSubSystem* m_pNet;
