@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - USB plug/unplug events now bring mt32-pi out of power saving mode.
 - Some USB MIDI devices that violate the USB specification were unusable (discussion #102) - a workaround in the USB driver has been implemented. Thanks to @fabbrimichele for reporting and @rsta2 for the fix!
 - Hang on "Init USB" when no USB controller is present (e.g. a Compute Module 4-based system with no external XHCI controller). Huge thanks to Serdaco for donating the CM4 and I/O board for testing!
+- Boot failure on the 1GB Raspberry Pi 4/CM4 because of a bug in the memory allocator.
 
 ## [0.9.1] - 2021-03-20
 

@@ -27,6 +27,8 @@
 #include "utility.h"
 #include "zoneallocator.h"
 
+constexpr size_t MallocHeapSize = 32 * MEGABYTE;
+
 const char ZoneAllocatorName[] = "zoneallocator";
 
 // #define ZONE_ALLOCATOR_DEBUG
@@ -55,14 +57,22 @@ bool CZoneAllocator::Initialize()
 	CMemorySystem* pMemorySystem = CMemorySystem::Get();
 	CLogger* pLogger = CLogger::Get();
 
-#if RASPPI >= 4
-	// Allocate all of the remaining HIGH region
-	m_nHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_HIGH) - sizeof(THeapBlockHeader);
-	m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_HIGH);
-#else
-	// Allocate the majority of the remaining LOW region
-	m_nHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_LOW) - 32 * MEGABYTE;
-	m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_LOW);
+#if RASPI >= 4
+	const size_t nHighHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_HIGH);
+	if (nHighHeapSize)
+	{
+		// >1GB RAM Pi 4 - allocate all of the remaining HIGH region
+		m_nHeapSize = nHighHeapSize - sizeof(THeapBlockHeader);
+		m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_HIGH);
+	}
+	else
+	{
+#endif
+		// Allocate the majority of the remaining LOW region; leave some space for Circle/libc malloc()
+		m_nHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_LOW) - MallocHeapSize;
+		m_pHeap     = pMemorySystem->HeapAllocate(m_nHeapSize, HEAP_LOW);
+#if RASPI >= 4
+	}
 #endif
 
 	if (!m_pHeap)
