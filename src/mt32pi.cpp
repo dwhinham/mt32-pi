@@ -32,6 +32,8 @@
 #include "lcd/ssd1306.h"
 #include "mt32pi.h"
 
+#define MIDI_DEBUG 1
+
 const char MT32PiName[] = "mt32-pi";
 
 const char WLANFirmwarePath[] = "SD:/firmware/";
@@ -598,6 +600,21 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 	// Flash LED
 	LEDOn();
 
+#ifdef MIDI_DEBUG
+	char Buffer[32] = {'\0'};
+	char* pChar = Buffer;
+
+	for (u8 i = 0; i < sizeof(nMessage); ++i)
+	{
+		const u8 nByte = (nMessage >> i * 8) & 0xFF;
+		if (!nByte)
+			break;
+		pChar += snprintf(pChar, sizeof(Buffer) - i, "%02X ", nByte);
+	}
+
+	CLogger::Get()->Write(MT32PiName, LogDebug, "Short message: %s", Buffer);
+#endif
+
 	m_pCurrentSynth->HandleMIDIShortMessage(nMessage);
 
 	// Wake from power saving mode if necessary
@@ -608,6 +625,16 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 {
 	// Flash LED
 	LEDOn();
+
+#ifdef MIDI_DEBUG
+	char Buffer[4096] = {'\0'};
+	char* pChar = Buffer;
+
+	for (size_t i = 0; i < nSize; ++i)
+		pChar += snprintf(pChar, sizeof(Buffer) - i, "%02X ", pData[i]);
+
+	CLogger::Get()->Write(MT32PiName, LogDebug, "SysEx: %s", Buffer);
+#endif
 
 	// If we don't consume the SysEx message, forward it to the synthesizer
 	if (!ParseCustomSysEx(pData, nSize))
