@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to libmt32emu v2.5.0.
 - Update to FluidSynth v2.2.0.
+- The activity LED no longer illuminates for System Common or System Real-Time messages.
 
 ### Fixed
 

@@ -595,8 +595,9 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 		return;
 	}
 
-	// Flash LED
-	LEDOn();
+	// Flash LED for channel messages
+	if ((nMessage & 0xFF) < 0xF0)
+		LEDOn();
 
 	m_pCurrentSynth->HandleMIDIShortMessage(nMessage);
 
