@@ -32,7 +32,8 @@
 #include "lcd/ssd1306.h"
 #include "mt32pi.h"
 
-#define MIDI_DEBUG 1
+#define MIDI_IRQ_DEBUG 1
+// #define MIDI_PARSER_DEBUG 1
 
 const char MT32PiName[] = "mt32-pi";
 
@@ -600,7 +601,7 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 	// Flash LED
 	LEDOn();
 
-#ifdef MIDI_DEBUG
+#ifdef MIDI_PARSER_DEBUG
 	char Buffer[32] = {'\0'};
 	char* pChar = Buffer;
 
@@ -626,7 +627,7 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 	// Flash LED
 	LEDOn();
 
-#ifdef MIDI_DEBUG
+#ifdef MIDI_PARSER_DEBUG
 	char Buffer[4096] = {'\0'};
 	char* pChar = Buffer;
 
@@ -1190,6 +1191,20 @@ void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLengt
 void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
 {
 	assert(s_pThis != nullptr);
+
+#ifdef MIDI_IRQ_DEBUG
+	// Ignore MIDI beat clock
+	if (!(nSize == 1 && pData[0] == 0xF8))
+	{
+		char Buffer[4096] = {'\0'};
+		char* pChar = Buffer;
+
+		for (size_t i = 0; i < nSize; ++i)
+			pChar += snprintf(pChar, sizeof(Buffer) - i, "%02X ", pData[i]);
+
+		CLogger::Get()->Write(MT32PiName, LogDebug, "IRQ: %s", Buffer);
+	}
+#endif
 
 	// Enqueue data into ring buffer
 	if (s_pThis->m_MIDIRxBuffer.Enqueue(pData, nSize) != nSize)
