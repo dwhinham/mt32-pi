@@ -9,7 +9,7 @@ disable_overscan=1
 # This forces HDMI signalling in case your device is detected as a DVI device.
 #hdmi_drive=2
 
-# Uncomment the following line to disable undervoltage/temperature warnings and throttling
+# Uncomment the following line to disable undervoltage/temperature warnings and throttling.
 # WARNING: Possible instability; use at your own risk! Use a heatsink!
 #avoid_warnings=2
 
@@ -22,3 +22,10 @@ kernel=kernel8.img
 arm_64bit=1
 armstub=armstub8-rpi4.bin
 kernel=kernel8-rpi4.img
+
+# Optimized frequency settings for lower energy use/temperature on Pi 4
+arm_freq=600
+arm_freq_min=100
+gpu_freq=100
+over_voltage=-16
+over_voltage_min=-16
