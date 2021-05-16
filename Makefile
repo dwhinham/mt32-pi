@@ -16,16 +16,7 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
 
 	# Apply patches
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-minimal-usb-drivers.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-pi4-usb-fix.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-fix-hard-errors.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-retry-bulk-transfer.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-low-speed-bulk-fix.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-move-dma-defines.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-parity32.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-iec958.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-hdmi-sound-base.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-allow-any-screen-size.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-minimal-usb-drivers.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
 	# Enable function/data sections for circle-stdlib
@@ -123,16 +114,7 @@ clean:
 #
 veryclean: clean
 	# Reverse patches
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-allow-any-screen-size.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-hdmi-sound-base.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-iec958.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-add-parity32.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-move-dma-defines.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-low-speed-bulk-fix.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-retry-bulk-transfer.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-usb-fix-hard-errors.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-pi4-usb-fix.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-43.3-minimal-usb-drivers.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-minimal-usb-drivers.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.2.1-circle.patch
 
 	# Clean circle-stdlib
