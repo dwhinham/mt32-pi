@@ -24,10 +24,8 @@
 #define _optional_h
 
 #include <assert.h>
+#include <circle/new.h>
 #include <circle/types.h>
-
-// TODO: replace with circle/new.h when new version is released
-#include <new>
 
 template<typename T>
 class TOptional
