@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0e391b3d..dbd4ebcf 100644
+index 0e737e91..6226a35e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -465,6 +465,7 @@ if ( ASTYLE )
+@@ -487,6 +487,7 @@ if ( ASTYLE )
      )
  endif(ASTYLE)
  
@@ -10,7 +10,7 @@ index 0e391b3d..dbd4ebcf 100644
  if(NOT enable-pkgconfig)
  
      FIND_LIBRARY( GLIB_LIB NAMES glib glib-2.0 PATH GLIB_LIBRARY_DIR )
-@@ -623,6 +624,7 @@ else(NOT enable-pkgconfig)
+@@ -645,6 +646,7 @@ else(NOT enable-pkgconfig)
      endif ( enable-readline )
  
  endif(NOT enable-pkgconfig)
@@ -64,7 +64,7 @@ index f10abf34..1d70f9fb 100644
  
  set ( public_HEADERS
 diff --git a/src/sfloader/fluid_sfont.c b/src/sfloader/fluid_sfont.c
-index f5de0a5b..82d441de 100644
+index 8b4d4f17..fc5ecef5 100644
 --- a/src/sfloader/fluid_sfont.c
 +++ b/src/sfloader/fluid_sfont.c
 @@ -22,6 +22,7 @@
@@ -75,10 +75,10 @@ index f5de0a5b..82d441de 100644
  void *default_fopen(const char *path)
  {
      const char* msg;
-@@ -74,6 +75,13 @@ int safe_fseek(void *fd, fluid_long_long_t ofs, int whence)
- 
-     return FLUID_OK;
+@@ -82,6 +83,13 @@ int safe_fseek(void *fd, fluid_long_long_t ofs, int whence)
  }
+ 
+ #undef PRIi64
 +#endif
 +
 +void *default_fopen(const char *path);
@@ -90,10 +90,10 @@ index f5de0a5b..82d441de 100644
  /**
   * Creates a new SoundFont loader.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
-index 1eb5d737..331676cb 100644
+index d9946317..0423fd4e 100644
 --- a/src/synth/fluid_synth.c
 +++ b/src/synth/fluid_synth.c
-@@ -104,7 +104,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
+@@ -108,7 +108,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
  static fluid_voice_t *fluid_synth_free_voice_by_kill_LOCAL(fluid_synth_t *synth);
  static void fluid_synth_kill_by_exclusive_class_LOCAL(fluid_synth_t *synth,
          fluid_voice_t *new_voice);
@@ -103,7 +103,7 @@ index 1eb5d737..331676cb 100644
  static fluid_tuning_t *fluid_synth_get_tuning(fluid_synth_t *synth,
          int bank, int prog);
  static int fluid_synth_replace_tuning_LOCK(fluid_synth_t *synth,
-@@ -1139,6 +1141,7 @@ delete_fluid_synth(fluid_synth_t *synth)
+@@ -1143,6 +1145,7 @@ delete_fluid_synth(fluid_synth_t *synth)
  
      /* wait for and delete all the lazy sfont unloading timers */
  
@@ -111,7 +111,7 @@ index 1eb5d737..331676cb 100644
      for(list = synth->fonts_to_be_unloaded; list; list = fluid_list_next(list))
      {
          fluid_timer_t* timer = fluid_list_get(list);
-@@ -1149,6 +1152,7 @@ delete_fluid_synth(fluid_synth_t *synth)
+@@ -1153,6 +1156,7 @@ delete_fluid_synth(fluid_synth_t *synth)
      }
  
      delete_fluid_list(synth->fonts_to_be_unloaded);
@@ -119,7 +119,7 @@ index 1eb5d737..331676cb 100644
  
      if(synth->channel != NULL)
      {
-@@ -5319,14 +5323,17 @@ fluid_synth_sfont_unref(fluid_synth_t *synth, fluid_sfont_t *sfont)
+@@ -5431,14 +5435,17 @@ fluid_synth_sfont_unref(fluid_synth_t *synth, fluid_sfont_t *sfont)
          {
              FLUID_LOG(FLUID_DBG, "Unloaded SoundFont");
          } /* spin off a timer thread to unload the sfont later (SoundFont loader blocked unload) */
@@ -137,7 +137,7 @@ index 1eb5d737..331676cb 100644
  /* Callback to continually attempt to unload a SoundFont,
   * only if a SoundFont loader blocked the unload operation */
  static int
-@@ -5344,6 +5351,7 @@ fluid_synth_sfunload_callback(void *data, unsigned int msec)
+@@ -5456,6 +5463,7 @@ fluid_synth_sfunload_callback(void *data, unsigned int msec)
          return TRUE;
      }
  }
@@ -145,7 +145,7 @@ index 1eb5d737..331676cb 100644
  
  /**
   * Reload a SoundFont.  The SoundFont retains its ID and index on the SoundFont stack.
-@@ -7440,6 +7448,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
+@@ -7552,6 +7560,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
      FLUID_API_RETURN(result);
  }
  
@@ -153,7 +153,7 @@ index 1eb5d737..331676cb 100644
  /**
   * Handle MIDI event from MIDI router, used as a callback function.
   * @param data FluidSynth instance
-@@ -7496,6 +7505,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
+@@ -7608,6 +7617,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
  
      return FLUID_FAILED;
  }
@@ -176,7 +176,7 @@ index 132a98dd..2557ea76 100644
      float gain;                        /**< master gain */
      fluid_channel_t **channel;         /**< the channels */
 diff --git a/src/utils/fluid_settings.c b/src/utils/fluid_settings.c
-index 3ba2c2e4..c102e664 100644
+index 2d9f7b10..d7b0e093 100644
 --- a/src/utils/fluid_settings.c
 +++ b/src/utils/fluid_settings.c
 @@ -330,11 +330,13 @@ fluid_settings_init(fluid_settings_t *settings)
@@ -194,7 +194,7 @@ index 3ba2c2e4..c102e664 100644
  
  static int
 diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
-index b52bd20e..81b2bde1 100644
+index ea468262..705eaf76 100644
 --- a/src/utils/fluid_sys.c
 +++ b/src/utils/fluid_sys.c
 @@ -50,6 +50,7 @@
@@ -253,7 +253,7 @@ index b52bd20e..81b2bde1 100644
  /**
   * Get time in microseconds to be used in relative timing operations.
   * @return time in microseconds.
-@@ -1799,3 +1806,4 @@ char* fluid_get_windows_error(void)
+@@ -1801,3 +1808,4 @@ char* fluid_get_windows_error(void)
  #endif
  }
  #endif

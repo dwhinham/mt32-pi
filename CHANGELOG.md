@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update to libmt32emu v2.5.0.
-- Update to FluidSynth v2.2.0.
+- Update to FluidSynth v2.2.1.
 - The activity LED no longer illuminates for System Common or System Real-Time messages.
 - Default clock speeds/voltages have been lowered for Pi 4/CM4 in config.txt for reduced energy usage and SoC temperature.
 
