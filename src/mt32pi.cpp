@@ -109,7 +109,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 {
 	CConfig* const pConfig = CConfig::Get();
 	CLogger* const pLogger = CLogger::Get();
-        m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+	m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
 	m_bSerialMIDIAvailable = bSerialMIDIAvailable;
 	m_bSerialMIDIEnabled = bSerialMIDIAvailable;
 
@@ -909,16 +909,16 @@ void CMT32Pi::SwitchSynth(TSynth NewSynth)
         switch (NewSynth)
 	{
 		case TSynth::MT32:
-                        strcpy(pMode,"MT-32 Mode");
-        		m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+			strcpy(pMode,"MT-32 Mode");
+        	m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
 			break;
 		case TSynth::SoundFont:
-                        strcpy(pMode,"SoundFont Mode");
-        		m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+			strcpy(pMode,"SoundFont Mode");
+        	m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
 			break;
 		case TSynth::Passthrough:
-                        strcpy(pMode,"Passthrough Mode");
-        		m_bMIDIGPIOThru = 1;
+			strcpy(pMode,"Passthrough Mode");
+			m_bMIDIGPIOThru = 1;
 			break;
 	}
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to %s", pMode);
