@@ -95,7 +95,8 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_nMasterVolume(100),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
-	  m_pSoundFontSynth(nullptr)
+	  m_pSoundFontSynth(nullptr),
+	  m_pPassthroughSynth(nullptr)
 {
 	s_pThis = this;
 }
@@ -219,14 +220,20 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	LCDLog(TLCDLogType::Startup, "Init Passthrough");
 	InitPassthroughSynth();
 
+	LCDLog(TLCDLogType::Startup, "Past Passthrough");
+
 	// Set initial synthesizer
 	if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
 		m_pCurrentSynth = m_pMT32Synth;
 	else if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::SoundFont)
 		m_pCurrentSynth = m_pSoundFontSynth;
 	else if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::Passthrough)
+	{
 		m_pCurrentSynth = m_pPassthroughSynth;
+		m_bMIDIGPIOThru = 1;
+	}
 
+	LCDLog(TLCDLogType::Startup, "Past set initial synth");
 	if (!m_pCurrentSynth)
 	{
 		pLogger->Write(MT32PiName, LogError, "Preferred synth failed to initialize successfully");
@@ -310,12 +317,14 @@ bool CMT32Pi::InitSoundFontSynth()
 
 bool CMT32Pi::InitPassthroughSynth()
 {
-	assert(m_pPassthroughSynth == nullptr);
+	//assert(m_pPassthroughSynth == nullptr);
 
+	LCDLog(TLCDLogType::Startup, "In Init Passthrough");
 	CConfig* const pConfig = CConfig::Get();
 
 	m_pPassthroughSynth = new CPassthroughSynth(pConfig->AudioSampleRate, pConfig->FluidSynthGain, pConfig->FluidSynthPolyphony);
 
+	LCDLog(TLCDLogType::Startup, "Out Init Passthrough");
 	m_pPassthroughSynth->SetLCD(m_pLCD);
 
 	return m_pPassthroughSynth != nullptr;
@@ -878,6 +887,8 @@ void CMT32Pi::SwitchSynth(TSynth NewSynth)
 		pNewSynth = m_pMT32Synth;
 	else if (NewSynth == TSynth::SoundFont)
 		pNewSynth = m_pSoundFontSynth;
+	else if (NewSynth == TSynth::Passthrough)
+		pNewSynth = m_pPassthroughSynth;
 
 	if (pNewSynth == nullptr)
 	{
@@ -893,7 +904,23 @@ void CMT32Pi::SwitchSynth(TSynth NewSynth)
 
 	m_pCurrentSynth->AllSoundOff();
 	m_pCurrentSynth = pNewSynth;
-	const char* pMode = NewSynth == TSynth::MT32 ? "MT-32 mode" : "SoundFont mode";
+        m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+        char pMode[32];
+        switch (NewSynth)
+	{
+		case TSynth::MT32:
+                        strcpy(pMode,"MT-32 Mode");
+        		m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+			break;
+		case TSynth::SoundFont:
+                        strcpy(pMode,"SoundFont Mode");
+        		m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
+			break;
+		case TSynth::Passthrough:
+                        strcpy(pMode,"Passthrough Mode");
+        		m_bMIDIGPIOThru = 1;
+			break;
+	}
 	CLogger::Get()->Write(MT32PiName, LogNotice, "Switching to %s", pMode);
 	LCDLog(TLCDLogType::Notice, pMode);
 }

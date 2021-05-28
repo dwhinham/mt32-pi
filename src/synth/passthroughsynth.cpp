@@ -56,6 +56,8 @@ void CPassthroughSynth::FluidSynthLogCallback(int nLevel, const char* pMessage, 
 
 bool CPassthroughSynth::Initialize()
 {
+//	if (m_pLCD)
+//		m_pLCD->OnSystemMessage("Passthrough Initializing");
     	return 1;
 }
 
@@ -97,8 +99,8 @@ u8 CPassthroughSynth::GetChannelVelocities(u8* pOutVelocities, size_t nMaxChanne
 
 void CPassthroughSynth::ReportStatus() const
 {
-	//if (m_pLCD)
-	//	m_pLCD->OnSystemMessage(m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex));
+//	if (m_pLCD)
+//		m_pLCD->OnSystemMessage("Passthrough enabled");
 }
 
 bool CPassthroughSynth::SwitchSoundFont(size_t nIndex)
