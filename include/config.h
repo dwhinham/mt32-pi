@@ -35,7 +35,7 @@ public:
 	#define ENUM_SYSTEMDEFAULTSYNTH(ENUM) \
 		ENUM(MT32, mt32)                  \
 		ENUM(SoundFont, soundfont)    \
-                ENUM(Passthrough, passthrough)
+		ENUM(Passthrough, passthrough)
 
 	#define ENUM_AUDIOOUTPUTDEVICE(ENUM) \
 		ENUM(PWM, pwm)                   \
