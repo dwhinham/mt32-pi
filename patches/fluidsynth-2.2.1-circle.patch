@@ -22,7 +22,7 @@ diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index 356bb734..f44fc7f0 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -199,21 +199,21 @@ set ( libfluidsynth_SOURCES
+@@ -203,23 +203,23 @@
      synth/fluid_tuning.h
      synth/fluid_voice.c
      synth/fluid_voice.h
@@ -31,7 +31,9 @@ index 356bb734..f44fc7f0 100644
 -    midi/fluid_midi_router.c
 -    midi/fluid_midi_router.h
 -    midi/fluid_seqbind.c
+-    midi/fluid_seqbind_notes.cpp
 -    midi/fluid_seq.c
+-    midi/fluid_seq_queue.cpp
 -    drivers/fluid_adriver.c
 -    drivers/fluid_adriver.h
 -    drivers/fluid_mdriver.c
@@ -46,7 +48,9 @@ index 356bb734..f44fc7f0 100644
 +    #midi/fluid_midi_router.c
 +    #midi/fluid_midi_router.h
 +    #midi/fluid_seqbind.c
++    #midi/fluid_seqbind_notes.cpp
 +    #midi/fluid_seq.c
++    #midi/fluid_seq_queue.cpp
 +    #drivers/fluid_adriver.c
 +    #drivers/fluid_adriver.h
 +    #drivers/fluid_mdriver.c
@@ -71,7 +75,7 @@ index 140fc3c5..5780367b 100644
  void *default_fopen(const char *path)
  {
      const char* msg;
-@@ -74,6 +75,13 @@ int safe_fseek(void *fd, long ofs, int whence)
+@@ -80,6 +81,13 @@
  
      return FLUID_OK;
  }
@@ -79,12 +83,29 @@ index 140fc3c5..5780367b 100644
 +
 +void *default_fopen(const char *path);
 +int default_fclose(void *handle);
-+long default_ftell(void *handle);
-+int safe_fread(void *buf, int count, void *fd);
-+int safe_fseek(void *fd, long ofs, int whence);
++fluid_long_long_t default_ftell(void *handle);
++int safe_fread(void *buf, fluid_long_long_t count, void *fd);
++int safe_fseek(void *fd, fluid_long_long_t ofs, int whence);
+ 
+ #undef PRIi64
+ 
+@@ -147,7 +155,7 @@
+     loader->data = data;
+     return FLUID_OK;
+ }
+-
++//#endif
+ /**
+  * Obtain private data previously set with fluid_sfloader_set_data().
+  *
+@@ -202,6 +210,7 @@
+     // NOTE: if we ever make the instpatch loader public, this may return FLUID_FAILED
+     return FLUID_OK;
+ }
++//#endif
  
  /**
-  * Creates a new SoundFont loader.
+  * Creates a new virtual SoundFont instance structure.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
 index 1e0b29fb..cc3e0cc1 100644
 --- a/src/synth/fluid_synth.c
@@ -201,7 +222,7 @@ index 9da394e7..42abbabf 100644
  typedef struct
  {
      fluid_thread_func_t func;
-@@ -82,6 +83,7 @@ struct _fluid_server_socket_t
+@@ -82,6 +83,7 @@
  
  
  static int fluid_istream_gets(fluid_istream_t in, char *buf, int len);
@@ -209,7 +230,7 @@ index 9da394e7..42abbabf 100644
  
  static fluid_log_function_t fluid_log_function[LAST_LOG_LEVEL] =
  {
-@@ -198,6 +200,7 @@ fluid_log(int level, const char *fmt, ...)
+@@ -198,6 +200,7 @@
      return FLUID_FAILED;
  }
  
@@ -217,7 +238,7 @@ index 9da394e7..42abbabf 100644
  void* fluid_alloc(size_t len)
  {
      void* ptr = malloc(len);
-@@ -231,6 +234,7 @@ void fluid_free(void* ptr)
+@@ -295,6 +298,7 @@
  {
      free(ptr);
  }
@@ -225,7 +246,7 @@ index 9da394e7..42abbabf 100644
  
  /**
   * An improved strtok, still trashes the input string, but is portable and
-@@ -308,6 +312,7 @@ char *fluid_strtok(char **str, char *delim)
+@@ -372,6 +376,7 @@
      return token;
  }
  
@@ -233,7 +254,7 @@ index 9da394e7..42abbabf 100644
  /**
   * Suspend the execution of the current thread for the specified amount of time.
   * @param milliseconds to wait.
-@@ -316,6 +321,7 @@ void fluid_msleep(unsigned int msecs)
+@@ -380,6 +385,7 @@
  {
      g_usleep(msecs * 1000);
  }
@@ -241,7 +262,7 @@ index 9da394e7..42abbabf 100644
  
  /**
   * Get time in milliseconds to be used in relative timing operations.
-@@ -336,6 +342,7 @@ unsigned int fluid_curtime(void)
+@@ -400,6 +406,7 @@
      return (unsigned int)((now - initial_time) / 1000.0f);
  }
  
@@ -249,11 +270,14 @@ index 9da394e7..42abbabf 100644
  /**
   * Get time in microseconds to be used in relative timing operations.
   * @return time in microseconds.
-@@ -1688,3 +1695,4 @@ FILE* fluid_file_open(const char* path, const char** errMsg)
+@@ -1754,6 +1761,7 @@
      
      return handle;
  }
 +#endif
+ 
+ fluid_long_long_t fluid_file_tell(FILE* f)
+ {
 diff --git a/src/utils/fluid_sys.h b/src/utils/fluid_sys.h
 index 7c7db764..f76d943b 100644
 --- a/src/utils/fluid_sys.h

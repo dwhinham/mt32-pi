@@ -92,20 +92,20 @@ extern "C"
 		return FLUID_FAILED;
 	}
 
-	long default_ftell(void* handle)
+	fluid_long_long_t default_ftell(void* handle)
 	{
 		FIL* pFile = static_cast<FIL*>(handle);
 		return f_tell(pFile);
 	}
 
-	int safe_fread(void* buf, int count, void* fd)
+	int safe_fread(void* buf, fluid_long_long_t count, void* fd)
 	{
 		FIL* pFile = static_cast<FIL*>(fd);
 		UINT nRead;
 		return f_read(pFile, buf, count, &nRead) == FR_OK ? FLUID_OK : FLUID_FAILED;
 	}
 
-	int safe_fseek(void* fd, long ofs, int whence)
+	int safe_fseek(void* fd, fluid_long_long_t ofs, int whence)
 	{
 		FIL* pFile = static_cast<FIL*>(fd);
 
