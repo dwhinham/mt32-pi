@@ -73,7 +73,6 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_MisterControl(pI2CMaster, m_EventQueue),
 	  m_nMisterUpdateTime(0),
 
-	  m_bDeferredSoundFontSwitchFlag(false),
 	  m_nDeferredSoundFontSwitchIndex(0),
 	  m_nDeferredSoundFontSwitchTime(0),
 
@@ -109,7 +108,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 {
 	CConfig* const pConfig = CConfig::Get();
 	CLogger* const pLogger = CLogger::Get();
-
+        m_bMIDIGPIOThru = CConfig::Get()->MIDIGPIOThru;
 	m_bSerialMIDIAvailable = bSerialMIDIAvailable;
 	m_bSerialMIDIEnabled = bSerialMIDIAvailable;
 
@@ -217,11 +216,16 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
 	InitSoundFontSynth();
 
+	LCDLog(TLCDLogType::Startup, "Init Passthrough");
+	InitPassthroughSynth();
+
 	// Set initial synthesizer
 	if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
 		m_pCurrentSynth = m_pMT32Synth;
 	else if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::SoundFont)
 		m_pCurrentSynth = m_pSoundFontSynth;
+	else if (pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::Passthrough)
+		m_pCurrentSynth = m_pPassthroughSynth;
 
 	if (!m_pCurrentSynth)
 	{
@@ -302,6 +306,19 @@ bool CMT32Pi::InitSoundFontSynth()
 	m_pSoundFontSynth->SetLCD(m_pLCD);
 
 	return m_pSoundFontSynth != nullptr;
+}
+
+bool CMT32Pi::InitPassthroughSynth()
+{
+	assert(m_pPassthroughSynth == nullptr);
+
+	CConfig* const pConfig = CConfig::Get();
+
+	m_pPassthroughSynth = new CPassthroughSynth(pConfig->AudioSampleRate, pConfig->FluidSynthGain, pConfig->FluidSynthPolyphony);
+
+	m_pPassthroughSynth->SetLCD(m_pLCD);
+
+	return m_pPassthroughSynth != nullptr;
 }
 
 void CMT32Pi::MainTask()
@@ -731,7 +748,7 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 	}
 
 	// Replay received MIDI data out via the serial port ('software thru')
-	if (CConfig::Get()->MIDIGPIOThru)
+	if (m_bMIDIGPIOThru)
 	{
 		int nSendResult = m_pSerial->Write(pOutData, nResult);
 		if (nSendResult != nResult)

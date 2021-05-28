@@ -7,7 +7,7 @@ ARM_HOME?=$(HOME)/gcc-arm-10.2-2020.11-x86_64-arm-none-eabi
 AARCH64_HOME?=$(HOME)/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf
 
 # Valid options: pi0, pi2, pi3, pi4, pi4-64
-BOARD?=pi4
+BOARD?=pi3
 HDMI_CONSOLE?=0
 
 # Serial bootloader config

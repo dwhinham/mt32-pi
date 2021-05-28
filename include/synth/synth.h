@@ -27,6 +27,7 @@ enum class TSynth
 {
 	MT32,
 	SoundFont,
+        Passthrough,
 };
 
 #endif

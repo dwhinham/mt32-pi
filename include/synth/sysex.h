@@ -47,6 +47,7 @@ enum class TGeneralMIDISubID : u8
 {
 	GeneralMIDIOn  = 0x01,
 	GeneralMIDIOff = 0x02,
+	Passthrough = 0x03,
 };
 
 #endif

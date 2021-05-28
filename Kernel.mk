@@ -26,6 +26,7 @@ OBJS		:=	src/config.o \
 				src/soundfontmanager.o \
 				src/synth/mt32synth.o \
 				src/synth/soundfontsynth.o \
+				src/synth/passthroughsynth.o \
 				src/zoneallocator.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
