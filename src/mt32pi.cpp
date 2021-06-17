@@ -453,10 +453,17 @@ void CMT32Pi::UITask()
 {
 	m_pLogger->Write(MT32PiName, LogNotice, "UI task on Core 1 starting up");
 
+	const bool bMisterEnabled = m_pConfig->ControlMister;
+
+	// Nothing for this core to do; bail out
+	if (!(m_pLCD || bMisterEnabled))
+	{
+		m_bUITaskDone = true;
+		return;
+	}
+
 	// Display current MT-32 ROM version/SoundFont
 	m_pCurrentSynth->ReportStatus();
-
-	const bool bMisterEnabled = m_pConfig->ControlMister;
 
 	while (m_bRunning)
 	{
