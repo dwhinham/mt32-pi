@@ -42,6 +42,7 @@
 #include <circle/usb/usbhcidevice.h>
 #include <circle/usb/usbmassdevice.h>
 #include <circle/usb/usbmidi.h>
+#include <circle/usb/usbserial.h>
 #include <fatfs/ff.h>
 #include <wlan/bcm4343.h>
 #include <wlan/hostap/wpa_supplicant/wpasupplicant.h>
@@ -180,8 +181,9 @@ private:
 	bool m_bSerialMIDIAvailable;
 	bool m_bSerialMIDIEnabled;
 
-	// USB MIDI
-	CUSBMIDIDevice* volatile m_pUSBMIDIDevice;
+	// USB devices
+	CUSBMIDIDevice* m_pUSBMIDIDevice;
+	CUSBSerialDevice* m_pUSBSerialDevice;
 	CUSBBulkOnlyMassStorageDevice* volatile m_pUSBMassStorageDevice;
 
 	bool m_bActiveSenseFlag;

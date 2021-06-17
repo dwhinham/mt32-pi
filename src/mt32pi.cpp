@@ -99,6 +99,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_bSerialMIDIAvailable(false),
 	  m_bSerialMIDIEnabled(false),
 	  m_pUSBMIDIDevice(nullptr),
+	  m_pUSBSerialDevice(nullptr),
 	  m_pUSBMassStorageDevice(nullptr),
 
 	  m_bActiveSenseFlag(false),
@@ -783,9 +784,17 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 
 	if (!m_pUSBMIDIDevice && (m_pUSBMIDIDevice = static_cast<CUSBMIDIDevice*>(CDeviceNameService::Get()->GetDevice("umidi1", FALSE))))
 	{
-		m_pUSBMIDIDevice->RegisterRemovedHandler(USBMIDIDeviceRemovedHandler);
+		m_pUSBMIDIDevice->RegisterRemovedHandler(USBMIDIDeviceRemovedHandler, &m_pUSBMIDIDevice);
 		m_pUSBMIDIDevice->RegisterPacketHandler(USBMIDIPacketHandler);
 		m_pLogger->Write(MT32PiName, LogNotice, "Using USB MIDI interface");
+		m_bSerialMIDIEnabled = false;
+	}
+
+	if (!m_pUSBSerialDevice && (m_pUSBSerialDevice = static_cast<CUSBSerialDevice*>(CDeviceNameService::Get()->GetDevice("utty1", FALSE))))
+	{
+		m_pUSBSerialDevice->SetBaudRate(m_pConfig->MIDIUSBSerialBaudRate);
+		m_pUSBSerialDevice->RegisterRemovedHandler(USBMIDIDeviceRemovedHandler, &m_pUSBSerialDevice);
+		m_pLogger->Write(MT32PiName, LogNotice, "Using USB serial interface");
 		m_bSerialMIDIEnabled = false;
 	}
 }
@@ -841,6 +850,11 @@ void CMT32Pi::UpdateMIDI()
 	// Read MIDI messages from serial device or ring buffer
 	if (m_bSerialMIDIEnabled)
 		nBytes = ReceiveSerialMIDI(Buffer, sizeof(Buffer));
+	else if (m_pUSBSerialDevice)
+	{
+		const int nResult = m_pUSBSerialDevice->Read(Buffer, sizeof(Buffer));
+		nBytes = nResult > 0 ? static_cast<size_t>(nResult) : 0;
+	}
 	else
 		nBytes = m_MIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer));
 
@@ -1170,10 +1184,11 @@ void CMT32Pi::USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext)
 {
 	assert(s_pThis != nullptr);
 
-	s_pThis->m_pUSBMIDIDevice = nullptr;
+	void** pDevicePointer = reinterpret_cast<void**>(pContext);
+	*pDevicePointer = nullptr;
 
-	// Re-enable serial MIDI if not in-use by logger and not using Pisound
-	if (s_pThis->m_bSerialMIDIAvailable && !s_pThis->m_pPisound)
+	// Re-enable serial MIDI if not in-use by logger and no other MIDI devices available
+	if (s_pThis->m_bSerialMIDIAvailable && !(s_pThis->m_pUSBMIDIDevice || s_pThis->m_pUSBSerialDevice || s_pThis->m_pPisound))
 	{
 		s_pThis->m_pLogger->Write(MT32PiName, LogNotice, "Using serial MIDI interface");
 		s_pThis->m_bSerialMIDIEnabled = true;

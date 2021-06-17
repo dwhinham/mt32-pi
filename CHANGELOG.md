@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ability to use the HDMI port for digital audio (new configuration value for `output_device`). This allows you to use inexpensive HDMI audio extractors or VGA+audio dongles to get better audio quality out of the Raspberry Pi (compared to the headphone jack).
 - Additional boot files for the Compute Module 4 and Raspberry Pi 400 are now included.
   * The Raspberry Pi 400 is untested.
+- Ability to use USB serial devices for MIDI input (CDC class devices, CH341, CP2102, FT231x, PL2303); a new configuration file option has been added to allow setting the desired baud rate.
 
 ### Changed
 
