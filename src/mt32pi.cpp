@@ -81,6 +81,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
+#ifdef MONITOR_TEMPERATURE
+	  m_nTempUpdateTime(0),
+#endif
 
 	  m_pControl(nullptr),
 	  m_MisterControl(pI2CMaster, m_EventQueue),
@@ -420,6 +423,14 @@ void CMT32Pi::MainTask()
 		// Update power management
 		if (m_pCurrentSynth->IsActive())
 			Awaken();
+
+#ifdef MONITOR_TEMPERATURE
+		if (ticks - m_nTempUpdateTime >= MSEC2HZ(5000))
+		{
+			m_pLogger->Write(MT32PiName, LogDebug, "Temperature: %dC", CCPUThrottle::Get()->GetTemperature());
+			m_nTempUpdateTime = ticks;
+		}
+#endif
 
 		CPower::Update();
 

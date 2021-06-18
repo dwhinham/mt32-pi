@@ -61,6 +61,8 @@
 #include "synth/soundfontsynth.h"
 #include "synth/synth.h"
 
+//#define MONITOR_TEMPERATURE
+
 class CMT32Pi : CMultiCoreSupport, CPower, CMIDIParser, CAppleMIDIHandler
 {
 public:
@@ -158,6 +160,9 @@ private:
 
 	CSynthLCD* m_pLCD;
 	unsigned m_nLCDUpdateTime;
+#ifdef MONITOR_TEMPERATURE
+	unsigned m_nTempUpdateTime;
+#endif
 
 	CControl* m_pControl;
 
