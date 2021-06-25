@@ -31,7 +31,8 @@
 - [LCD status screen support][LCD and OLED displays] (for MT-32 SysEx messages and status information).
 - Simple [physical control surface][control surface] using buttons and rotary encoder.
 - [MiSTer FPGA integration via user port][MiSTer FPGA user port connection].
-- Network MIDI and auto-update is _planned_.
+- Network MIDI support via [macOS native network MIDI][macOS network MIDI], [rtpMIDI] on Windows, or [rtpmidid] on Linux.
+- FTP access to files and auto-update is _planned_.
 
 ## ✨ Quick-start guide
 
@@ -87,6 +88,7 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [I²S Hi-Fi DACs]: https://github.com/dwhinham/mt32-pi/wiki/I%C2%B2S-DACs
 [inih]: https://github.com/benhoyt/inih
 [LCD and OLED displays]: https://github.com/dwhinham/mt32-pi/wiki/LCD-and-OLED-displays
+[macOS network MIDI]: https://support.apple.com/en-gb/guide/audio-midi-setup/ams1012/mac
 [MiSTer FPGA user port connection]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection
 [MiSTer FPGA]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
 [MiSTer setup]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection#setup
@@ -96,6 +98,8 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [Releases]: https://github.com/dwhinham/mt32-pi/releases
 [Roland GS]: https://en.wikipedia.org/wiki/Roland_GS
 [Roland MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
+[rtpMIDI]: https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html
+[rtpmidid]: https://github.com/davidmoreno/rtpmidid
 [SD card preparation]: https://github.com/dwhinham/mt32-pi/wiki/SD-card-preparation
 [SoundFont synthesis]: https://github.com/dwhinham/mt32-pi/wiki/SoundFont-synthesis
 [SoundFont]: https://en.wikipedia.org/wiki/SoundFont
