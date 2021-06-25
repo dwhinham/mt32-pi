@@ -29,6 +29,9 @@ endif
 	# Disable delay loop calibration (boot speed improvement)
 	echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
 
+	# Improve I/O throughput
+	echo "DEFINE += -DNO_BUSY_WAIT" >> $(CIRCLE_CONFIG)
+
 #
 # Build circle-stdlib
 #
