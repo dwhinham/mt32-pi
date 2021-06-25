@@ -656,9 +656,6 @@ void CMT32Pi::OnAppleMIDIConnect(const CIPAddress* pIPAddress, const char* pName
 	if (!m_pLCD)
 		return;
 
-	if (strlen(pName) > 9)
-		pName = "RTP";
-
 	LCDLog(TLCDLogType::Notice, "%s connected!", pName);
 }
 
@@ -666,9 +663,6 @@ void CMT32Pi::OnAppleMIDIDisconnect(const CIPAddress* pIPAddress, const char* pN
 {
 	if (!m_pLCD)
 		return;
-
-	if (strlen(pName) > 6)
-		pName = "RTP";
 
 	LCDLog(TLCDLogType::Notice, "%s disconnected!", pName);
 }
