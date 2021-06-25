@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2021-06-26
+
 ### Added
 
 - Brand new boot splash logo when using graphical displays - many thanks to James Sparkman for the excellent pixel art conversion!
@@ -362,7 +364,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.9.1...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/dwhinham/mt32-pi/compare/v0.9.1..v0.10.0
 [0.9.1]: https://github.com/dwhinham/mt32-pi/compare/v0.9.0..v0.9.1
 [0.9.0]: https://github.com/dwhinham/mt32-pi/compare/v0.8.5..v0.9.0
 [0.8.5]: https://github.com/dwhinham/mt32-pi/compare/v0.8.4..v0.8.5
