@@ -36,6 +36,7 @@
 #endif
 
 BEGIN_SECTION(system)
+CFG(verbose,			bool,				SystemVerbose,				false						)
 CFG(default_synth,		TSystemDefaultSynth,		SystemDefaultSynth,			TSystemDefaultSynth::MT32			)
 CFG(usb,			bool,				SystemUSB,				true						)
 CFG(i2c_baud_rate,		int,				SystemI2CBaudRate,			400000						)

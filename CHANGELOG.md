@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Brand new boot splash logo when using graphical displays - many thanks to James Sparkman for the excellent pixel art conversion!
+  * You can re-enable verbose startup messages with a new configuration file option.
 - Basic networking support (Wi-Fi or Ethernet) - read the new `[network]` section of the configuration file to learn how to enable and set it up.
   * In order to use Wi-Fi, firmware must be copied to the root of the SD card (new `firmware` directory in release package), and SSID/password must be added to `wpa_supplicant.conf` (example file in release package).
 - Support for receiving MIDI over the network via Wi-Fi or Ethernet using the RTP-MIDI/AppleMIDI protocol.
@@ -278,7 +280,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to circle-stdlib v15.2/Circle Step 43.
 - Boot speed improved by ~0.5 seconds by using `start_cd.elf`/`start4cd.elf` and `fixup_cd.dat`/`fixup4cd.dat`.
-  * If updating from an old version, make sure you replace `config.txt` and add the new `*.elf` and `*.dat` files when updating your SD card to benefit from this. 
+  * If updating from an old version, make sure you replace `config.txt` and add the new `*.elf` and `*.dat` files when updating your SD card to benefit from this.
 - LCD/OLED part level meters moved to the upper row(s).
 - Config file parsing now more efficient.
 

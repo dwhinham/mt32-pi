@@ -33,7 +33,9 @@
 #include "lcd/ui.h"
 #include "mt32pi.h"
 
-const char MT32PiName[] = "mt32-pi";
+#define MT32_PI_NAME "mt32-pi"
+const char MT32PiName[] = MT32_PI_NAME;
+const char MT32PiFullName[] = MT32_PI_NAME " " MT32_PI_VERSION;
 
 const char WLANFirmwarePath[] = "SD:/firmware/";
 const char WLANConfigFile[]   = "SD:/wpa_supplicant.conf";
@@ -153,8 +155,16 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	{
 		if (m_pLCD->Initialize())
 		{
-			m_pLCD->Print("mt32-pi " MT32_PI_VERSION, 0, 0, false, true);
 			m_pLogger->RegisterPanicHandler(PanicHandler);
+
+			// Splash screen
+			if (m_pLCD->GetType() == CLCD::TType::Graphical && !m_pConfig->SystemVerbose)
+				m_pLCD->DrawImage(TImage::MT32PiLogo, true);
+			else
+			{
+				const u8 nOffsetX = CUserInterface::CenterMessageOffset(*m_pLCD, MT32PiFullName);
+				m_pLCD->Print(MT32PiFullName, nOffsetX, 0, false, true);
+			}
 		}
 		else
 		{
@@ -272,8 +282,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			m_pCurrentSynth = m_pSoundFontSynth;
 		else
 		{
-			m_pLogger->Write(MT32PiName, LogError, "No synths available");
-			LCDLog(TLCDLogType::Startup, "Synth init failed!");
+			m_pLogger->Write(MT32PiName, LogPanic, "No synths available; ROMs/SoundFonts not found");
 			return false;
 		}
 	}
@@ -1110,8 +1119,11 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 	// LCD task hasn't started yet; print directly
 	if (Type == TLCDLogType::Startup)
 	{
-		m_pLCD->Print("~", 0, 1, false, false);
-		m_pLCD->Print(Buffer, 2, 1, true, true);
+		if (m_pLCD->GetType() == CLCD::TType::Graphical && !m_pConfig->SystemVerbose)
+			return;
+
+		u8 nOffsetX = CUserInterface::CenterMessageOffset(*m_pLCD, Buffer);
+		m_pLCD->Print(Buffer, nOffsetX, 1, true, true);
 	}
 
 	// Let LCD task pick up the message in its next update
