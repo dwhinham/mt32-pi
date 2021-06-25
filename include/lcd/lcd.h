@@ -59,7 +59,7 @@ public:
 	virtual void ClearPixel(u8 nX, u8 nY) {};
 	virtual void DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate = false) {};
 	virtual void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false) {};
-	virtual void DrawImage(TImage Image) {};
+	virtual void DrawImage(TImage Image, bool bImmediate = false) {};
 	virtual void Flip() {};
 
 	bool GetBacklightState() const { return m_bBacklightEnabled; }

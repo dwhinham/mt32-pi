@@ -54,7 +54,7 @@ public:
 	virtual void ClearPixel(u8 nX, u8 nY) override;
 	virtual void DrawFilledRect(u8 nX1, u8 nY1, u8 nX2, u8 nY2, bool bImmediate = false) override;
 	virtual void DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted = false, bool bDoubleWidth = false) override;
-	virtual void DrawImage(TImage Image) override;
+	virtual void DrawImage(TImage Image, bool bImmediate = false) override;
 	virtual void Flip() override;
 
 	virtual void SetBacklightState(bool bEnabled) override;

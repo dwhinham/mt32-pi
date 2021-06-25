@@ -341,7 +341,7 @@ void CSSD1306::Flip()
 	SwapFrameBuffers();
 }
 
-void CSSD1306::DrawImage(TImage Image)
+void CSSD1306::DrawImage(TImage Image, bool bImmediate)
 {
 	u8* pFrameBuffer = m_FrameBuffers[m_nCurrentFrameBuffer].FrameBuffer;
 	const CSSD1306Image<128, 32>* pImage;
@@ -369,6 +369,8 @@ void CSSD1306::DrawImage(TImage Image)
 	if (nImageWidth == m_nWidth && nImageHeight == m_nHeight)
 	{
 		memcpy(pFrameBuffer, pPixelData, nBytes);
+		if (bImmediate)
+			WriteFrameBuffer(true);
 		return;
 	}
 
@@ -382,6 +384,9 @@ void CSSD1306::DrawImage(TImage Image)
 		const size_t nImageY = i / nImageWidth * m_nWidth;
 		pFrameBuffer[nOffsetX + nOffsetY + nImageX + nImageY] = pPixelData[i];
 	}
+
+	if (bImmediate)
+		WriteFrameBuffer(true);
 }
 
 void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
