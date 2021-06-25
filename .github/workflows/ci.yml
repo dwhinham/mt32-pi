@@ -199,7 +199,6 @@ jobs:
         PRE_RELEASE: "false"
         CHANGELOG_FILE: "CHANGELOG.md"
         ALLOW_EMPTY_CHANGELOG: "false"
-        ALLOW_TAG_PREFIX: "true"
       with:
         args: |
             mt32-pi-*.zip
