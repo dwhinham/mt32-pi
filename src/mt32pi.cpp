@@ -151,7 +151,10 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	if (m_pLCD)
 	{
 		if (m_pLCD->Initialize())
+		{
 			m_pLCD->Print("mt32-pi " MT32_PI_VERSION, 0, 0, false, true);
+			m_pLogger->RegisterPanicHandler(PanicHandler);
+		}
 		else
 		{
 			m_pLogger->Write(MT32PiName, LogWarning, "LCD init failed; invalid dimensions?");
@@ -1190,4 +1193,109 @@ void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
 		s_pThis->m_pLogger->Write(MT32PiName, LogWarning, pErrorString);
 		s_pThis->LCDLog(TLCDLogType::Error, pErrorString);
 	}
+}
+
+void CMT32Pi::PanicHandler()
+{
+	if (!s_pThis || !s_pThis->m_pLCD)
+		return;
+
+	const char* pGuru = "Guru Meditation:";
+	u8 nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pGuru);
+	s_pThis->m_pLCD->Clear(true);
+	s_pThis->m_pLCD->Print(pGuru, nOffsetX, 0, true, true);
+
+	char Buffer[LOGGER_BUFSIZE];
+	s_pThis->m_pLogger->Read(Buffer, sizeof(Buffer), false);
+
+	// Find last newline
+	char* pMessageStart = strrchr(Buffer, '\n');
+	if (!pMessageStart)
+		return;
+	*pMessageStart = '\0';
+
+	// Find second-last newline
+	pMessageStart = strrchr(Buffer, '\n');
+	if (!pMessageStart)
+		return;
+
+	// Skip past timestamp and log source, kill color control characters
+	pMessageStart = strstr(pMessageStart, ": ") + 2;
+	char* pMessageEnd = strstr(pMessageStart, "\x1b[0m");
+	*pMessageEnd = '\0';
+
+	const size_t nMessageLength = strlen(pMessageStart);
+	size_t nCurrentScrollOffset = 0;
+	const char* pGuruFlash = pGuru;
+	bool bFlash = false;
+
+	unsigned int nTicks = CTimer::GetClockTicks();
+	unsigned int nPanicStart = nTicks;
+	unsigned int nFlashTime = nTicks;
+	unsigned int nScrollTime = nTicks;
+
+	const u8 nWidth = s_pThis->m_pLCD->Width();
+	const u8 nHeight = s_pThis->m_pLCD->Height();
+
+	// TODO: API for getting width in pixels/characters for a string
+	const bool bGraphical = s_pThis->m_pLCD->GetType() == CLCD::TType::Graphical;
+	const size_t nCharWidth = bGraphical ? 20 : nWidth;
+
+	while (true)
+	{
+		s_pThis->m_pLCD->Clear(false);
+		nTicks = CTimer::GetClockTicks();
+
+		if (Utility::TicksToMillis(nTicks - nFlashTime) > 1000)
+		{
+			bFlash = !bFlash;
+			nFlashTime = nTicks;
+		}
+
+		if (nMessageLength > nCharWidth)
+		{
+			if (nMessageLength - nCurrentScrollOffset > nCharWidth)
+			{
+				const unsigned int nTimeout = nCurrentScrollOffset == 0 ? 1500 : 175;
+				if (Utility::TicksToMillis(nTicks - nScrollTime) >= nTimeout)
+				{
+					++nCurrentScrollOffset;
+					nScrollTime = nTicks;
+				}
+			}
+			else if (Utility::TicksToMillis(nTicks - nScrollTime) >= 3000)
+			{
+				nCurrentScrollOffset = 0;
+				nScrollTime = nTicks;
+			}
+		}
+
+		if (Utility::TicksToMillis(nTicks - nPanicStart) > 2 * 60 * 1000)
+			break;
+
+		if (!bGraphical)
+			pGuruFlash = bFlash ? "" : pGuru;
+
+		u8 nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pGuruFlash);
+		s_pThis->m_pLCD->Print(pGuruFlash, nOffsetX, 0, true, false);
+		s_pThis->m_pLCD->Print(pMessageStart + nCurrentScrollOffset, 0, 1, true, false);
+
+		if (bGraphical && bFlash)
+		{
+			s_pThis->m_pLCD->DrawFilledRect(0, 0, nWidth - 1, 1);
+			s_pThis->m_pLCD->DrawFilledRect(0, nHeight - 1, nWidth - 1, nHeight - 2);
+			s_pThis->m_pLCD->DrawFilledRect(0, 0, 1, nHeight - 1);
+			s_pThis->m_pLCD->DrawFilledRect(nWidth - 1, 0, nWidth - 2, nHeight - 1);
+		}
+
+		s_pThis->m_pLCD->Flip();
+	}
+
+	s_pThis->m_pLCD->Clear(true);
+	const char* pMessage = "System halted";
+	nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pMessage);
+	s_pThis->m_pLCD->Print(pMessage, nOffsetX, 0, true, true);
+	pMessage = "Please reboot";
+	nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pMessage);
+	s_pThis->m_pLCD->Print(pMessage, nOffsetX, 1, true, true);
 }

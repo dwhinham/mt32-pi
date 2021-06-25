@@ -214,6 +214,8 @@ private:
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
 	static void IRQMIDIReceiveHandler(const u8* pData, size_t nSize);
 
+	static void PanicHandler();
+
 	static CMT32Pi* s_pThis;
 };
 
