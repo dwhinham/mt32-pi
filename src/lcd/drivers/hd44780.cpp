@@ -135,7 +135,14 @@ bool CHD44780Base::Initialize()
 
 void CHD44780Base::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
-	WriteCommand(0x80 | m_RowOffsets[nCursorY] + nCursorX);
+	if (bClearLine)
+	{
+		WriteCommand(0x80 | m_RowOffsets[nCursorY]);
+		for (u8 nChar = 0; nChar < nCursorX; ++nChar)
+			WriteData(' ');
+	}
+	else
+		WriteCommand(0x80 | m_RowOffsets[nCursorY] + nCursorX);
 
 	const char* p = pText;
 	while (*p && (p - pText) < (m_nWidth - nCursorX))

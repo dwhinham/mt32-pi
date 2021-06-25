@@ -381,6 +381,12 @@ void CSSD1306::DrawImage(TImage Image)
 
 void CSSD1306::Print(const char* pText, u8 nCursorX, u8 nCursorY, bool bClearLine, bool bImmediate)
 {
+	if (bClearLine)
+	{
+		for (u8 nChar = 0; nChar < nCursorX; ++nChar)
+			DrawChar(' ', nChar, nCursorY);
+	}
+
 	while (*pText && nCursorX < 20)
 	{
 		DrawChar(*pText++, nCursorX, nCursorY);
