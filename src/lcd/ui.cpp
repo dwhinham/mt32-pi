@@ -202,6 +202,14 @@ void CUserInterface::ExitPowerSavingMode()
 	m_State = TState::None;
 }
 
+u8 CUserInterface::CenterMessageOffset(CLCD& LCD, const char* pMessage)
+{
+	// TODO: API for getting width in pixels/characters for a string
+	const u8 nCharWidth = LCD.GetType() == CLCD::TType::Graphical ? 20 : LCD.Width();
+	const size_t nMessageLength = strlen(pMessage);
+	return nMessageLength >= nCharWidth ? 0 : (nCharWidth - nMessageLength) / 2;
+}
+
 void CUserInterface::DrawChannelLevels(CLCD& LCD, u8 nBarHeight, float* pChannelLevels, float* pPeakLevels, u8 nChannels, bool bDrawBarBases)
 {
 	if (LCD.GetType() == CLCD::TType::Character)
@@ -307,10 +315,9 @@ bool CUserInterface::DrawSystemState(CLCD& LCD) const
 		else
 		{
 			const u8 nMessageRow = nHeight == 32 ? 0 : 1;
-			if (m_State == TState::DisplayingSC55Text)
-				LCD.Print(m_SC55TextBuffer + m_nCurrentScrollOffset, 0, nMessageRow, true, false);
-			else
-				LCD.Print(m_SystemMessageTextBuffer + m_nCurrentScrollOffset, 0, nMessageRow, true, false);
+			const char* const pMessage = m_State == TState::DisplayingSC55Text ? m_SC55TextBuffer : m_SystemMessageTextBuffer;
+			const u8 nOffsetX = CenterMessageOffset(LCD, pMessage);
+			LCD.Print(pMessage + m_nCurrentScrollOffset, nOffsetX, nMessageRow, true, false);
 		}
 	}
 	else
@@ -324,20 +331,14 @@ bool CUserInterface::DrawSystemState(CLCD& LCD) const
 
 		if (nHeight == 2)
 		{
-			if (m_State == TState::DisplayingSC55Text)
-				LCD.Print(m_SC55TextBuffer + m_nCurrentScrollOffset, 0, 0, true);
-			else
-				LCD.Print(m_SystemMessageTextBuffer + m_nCurrentScrollOffset, 0, 0, true);
+			LCD.Print(pMessage + m_nCurrentScrollOffset, nOffsetX, 0, true);
 			LCD.Print("", 0, 1, true);
 		}
 		else if (nHeight == 4)
 		{
 			// Clear top line
 			LCD.Print("", 0, 0, true);
-			if (m_State == TState::DisplayingSC55Text)
-				LCD.Print(m_SC55TextBuffer + m_nCurrentScrollOffset, 0, 1, true);
-			else
-			LCD.Print(m_SystemMessageTextBuffer + m_nCurrentScrollOffset, 0, 1, true);
+			LCD.Print(pMessage + m_nCurrentScrollOffset, nOffsetX, 1, true);
 			LCD.Print("", 0, 2, true);
 			LCD.Print("", 0, 3, true);
 		}

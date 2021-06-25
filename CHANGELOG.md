@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to FluidSynth v2.2.1.
 - Complete overhaul of LCD code.
   * MIDI level meters now account for channel volume and expression properly and are much more responsive.
-  * Long text messages (e.g. SoundFont names) are now scrolled.
+  * Long text messages (e.g. SoundFont names) are now scrolled, short text messages are now centered.
   * Basic support for smaller 16-character wide screens has been added.
 - The activity LED no longer illuminates for System Common or System Real-Time messages.
 - Default clock speeds/voltages have been lowered for Pi 4/CM4 in config.txt for reduced energy usage and SoC temperature.

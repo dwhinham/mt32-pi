@@ -59,6 +59,7 @@ public:
 
 	bool IsScrolling() const { return m_bIsScrolling; }
 
+	static u8 CenterMessageOffset(CLCD& LCD, const char* pMessage);
 	static void DrawChannelLevels(CLCD& LCD, u8 nBarHeight, float* pChannelLevels, float* pPeakLevels, u8 nChannels, bool bDrawBarBases);
 
 private:
