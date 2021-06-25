@@ -143,6 +143,7 @@ namespace
 constexpr auto FontSingle = Font<Utility::ArraySize(Font6x8), decltype(SingleColumn)>(Font6x8, SingleColumn);
 constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleColumn)>(Font6x8, DoubleColumn);
 
+constexpr auto MT32PiLogo = CSSD1306Image<128, 32>(MT32PiLogo128x32);
 constexpr auto MisterLogo = CSSD1306Image<128, 32>(MisterLogo128x32);
 
 // Drawing constants
@@ -347,6 +348,10 @@ void CSSD1306::DrawImage(TImage Image)
 
 	switch (Image)
 	{
+		case TImage::MT32PiLogo:
+			pImage = &MT32PiLogo;
+			break;
+
 		case TImage::MisterLogo:
 			pImage = &MisterLogo;
 			break;
