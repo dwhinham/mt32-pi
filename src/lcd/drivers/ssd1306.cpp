@@ -177,23 +177,23 @@ bool CSSD1306::Initialize()
 	const u8 InitSequence[] =
 	{
 		SetDisplayOff,
-		SetDisplayClockDivideRatio,	0x80,					// Default value
-		SetMultiplexRatio,			nMultiplexRatio,		// Screen height - 1
-		SetDisplayOffset,			0x00,					// None
-		SetStartLine | 0x00,								// Set start line
-		SetChargePump,				0x14,					// Enable charge pump
-		SetMemoryAddressingMode,	0x00,					// 00 = horizontal
+		SetDisplayClockDivideRatio,	0x80,				// Default value
+		SetMultiplexRatio,		nMultiplexRatio,		// Screen height - 1
+		SetDisplayOffset,		0x00,				// None
+		SetStartLine | 0x00,						// Set start line
+		SetChargePump,			0x14,				// Enable charge pump
+		SetMemoryAddressingMode,	0x00,				// 00 = horizontal
 		nSegRemap,
-		nCOMScanDir,										// COM output scan direction
-		SetCOMPins,					nCOMPins,				// Alternate COM config and disable COM left/right
-		SetContrast,				0x7F,					// 00-FF, default to half
-		SetPrechargePeriod,			0x22,					// Default value
-		SetVCOMHDeselectLevel,		0x20,					// Default value
-		EntireDisplayOnResume,								// Resume to RAM content display
+		nCOMScanDir,							// COM output scan direction
+		SetCOMPins,			nCOMPins,			// Alternate COM config and disable COM left/right
+		SetContrast,			0x7F,				// 00-FF, default to half
+		SetPrechargePeriod,		0x22,				// Default value
+		SetVCOMHDeselectLevel,		0x20,				// Default value
+		EntireDisplayOnResume,						// Resume to RAM content display
 		SetNormalDisplay,
 		SetDisplayOn,
-		SetColumnAddress,			0x00,	nColumnAddrRange,
-		SetPageAddress,				0x00,	nPageAddrRange,
+		SetColumnAddress,		0x00,	nColumnAddrRange,
+		SetPageAddress,			0x00,	nPageAddrRange,
 	};
 
 	for (u8 nCommand : InitSequence)
