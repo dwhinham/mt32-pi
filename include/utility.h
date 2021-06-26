@@ -109,31 +109,31 @@ namespace Utility
 		using TComparator = bool (*)(const T&, const T&);
 
 		template<class T>
-		inline bool LessThan(const T& lhs, const T& rhs)
+		inline bool LessThan(const T& ObjectA, const T& ObjectB)
 		{
-			return lhs < rhs;
+			return ObjectA < ObjectB;
 		}
 
 		template<class T>
-		inline bool GreaterThan(const T& ItemA, const T& ItemB)
+		inline bool GreaterThan(const T& ObjectA, const T& ObjectB)
 		{
-			return ItemA > ItemB;
+			return ObjectA > ObjectB;
 		}
 
-		inline bool CaseInsensitiveAscending(const CString& lhs, const CString& rhs)
+		inline bool CaseInsensitiveAscending(const CString& StringA, const CString& StringB)
 		{
-			return strcasecmp(lhs, rhs) < 0;
+			return strcasecmp(StringA, StringB) < 0;
 		}
 	}
 
 	// Swaps two objects in-place
 	template<class T>
-	inline void Swap(T& lhs, T& rhs)
+	inline void Swap(T& ObjectA, T& ObjectB)
 	{
-		u8 temp[sizeof(T)];
-		memcpy(temp, &lhs, sizeof(T));
-		memcpy(&lhs, &rhs, sizeof(T));
-		memcpy(&rhs, temp, sizeof(T));
+		u8 Buffer[sizeof(T)];
+		memcpy(Buffer, &ObjectA, sizeof(T));
+		memcpy(&ObjectA, &ObjectB, sizeof(T));
+		memcpy(&ObjectB, Buffer, sizeof(T));
 	}
 
 	namespace
