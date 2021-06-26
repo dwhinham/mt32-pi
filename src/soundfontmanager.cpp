@@ -198,17 +198,17 @@ void CSoundFontManager::CheckSoundFont(const char* pFullPath, const char* pFileN
 	// Clean up
 	f_close(&File);
 
-	TSoundFontListEntry& entry = m_SoundFontList[m_nSoundFonts++];
-	entry.Path  = pFullPath;
+	TSoundFontListEntry& Entry = m_SoundFontList[m_nSoundFonts++];
+	Entry.Path = pFullPath;
 
 	// If we got a name, use it, otherwise fall back on filename
 	if (Name[0] != '\0')
-		entry.Name = Name;
+		Entry.Name = Name;
 	else
-		entry.Name = pFileName;
+		Entry.Name = pFileName;
 }
 
-inline bool CSoundFontManager::SoundFontListComparator(const TSoundFontListEntry& lhs, const TSoundFontListEntry& rhs)
+inline bool CSoundFontManager::SoundFontListComparator(const TSoundFontListEntry& EntryA, const TSoundFontListEntry& EntryB)
 {
-	return strcasecmp(lhs.Path, rhs.Path) < 0;
+	return strcasecmp(EntryA.Path, EntryB.Path) < 0;
 }
