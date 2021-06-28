@@ -23,6 +23,18 @@ ifeq ($(strip $(GC_SECTIONS)),1)
 	echo "CFLAGS_FOR_TARGET += -ffunction-sections -fdata-sections" >> $(CIRCLE_STDLIB_CONFIG)
 endif
 
+ifeq ($(RASPBERRYPI), 4)
+ifeq ($(strip $(USE_EMBEDDED_MMC_CM4)), 1)
+	# Build with Compute Module 4 eMMC support instead of external SD card (non-Lite only)
+	echo "DEFINE += -DUSE_EMBEDDED_MMC_CM4" >> $(CIRCLE_CONFIG)
+endif
+
+ifeq ($(strip $(USE_XHCI_INTERNAL)), 1)
+	# Build with internal XHCI controller support instead of external PCI-e XHCI controller
+	echo "DEFINE += -DUSE_XHCI_INTERNAL" >> $(CIRCLE_CONFIG)
+endif
+endif
+
 	# Enable multi-core
 	echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
 

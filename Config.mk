@@ -6,9 +6,17 @@
 ARM_HOME?=$(HOME)/gcc-arm-10.2-2020.11-x86_64-arm-none-eabi
 AARCH64_HOME?=$(HOME)/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf
 
-# Valid options: pi3, pi3-64, pi4, pi4-64
+# Valid options: pi2, pi3, pi3-64, pi4, pi4-64
 BOARD?=pi3-64
+
+# Enable HDMI logging console (debug only; causes audio timing issues)
 HDMI_CONSOLE?=0
+
+# Build with Compute Module 4 eMMC support instead of external SD card (non-Lite only)
+USE_EMBEDDED_MMC_CM4?=0
+
+# Build with internal XHCI controller support instead of external PCI-e XHCI controller
+USE_XHCI_INTERNAL?=0
 
 # Serial bootloader config
 SERIALPORT?=/dev/ttyUSB0

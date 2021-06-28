@@ -13,6 +13,17 @@ jobs:
       fail-fast: false
       matrix:
         board: [pi2, pi3-64, pi4-64]
+        include:
+        - board: pi4-64
+          kernel-suffix: emmc
+          make-options: USE_EMBEDDED_MMC_CM4=1
+        - board: pi4-64
+          kernel-suffix: intxhci
+          make-options: USE_XHCI_INTERNAL=1
+        - board: pi4-64
+          kernel-suffix: emmc-intxhci
+          make-options: USE_EMBEDDED_MMC_CM4=1 USE_XHCI_INTERNAL=1
+
     steps:
     - uses: actions/checkout@v2.3.4
       with:
@@ -43,7 +54,9 @@ jobs:
         done
 
     - name: Build
-      run: make -j BOARD=${{ matrix.board }}
+      run: |
+        make -j BOARD=${{ matrix.board }} ${{ matrix.make-options }}
+        rename -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v2
@@ -52,7 +65,10 @@ jobs:
         path: kernel*.img
 
     - name: Build (HDMI console)
-      run: make clean && make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
+      run: |
+        make clean
+        make -j BOARD=${{ matrix.board }} ${{ matrix.make-options }} HDMI_CONSOLE=1
+        rename -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v2
