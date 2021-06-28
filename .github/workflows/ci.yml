@@ -12,8 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [pi2, pi3-64, pi4-64]
+        board: [pi2, pi3-64]
         include:
+        - board: pi4-64
         - board: pi4-64
           variant: -emmc
           make-options: USE_EMBEDDED_MMC_CM4=1
