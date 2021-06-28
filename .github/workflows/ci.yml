@@ -56,7 +56,7 @@ jobs:
     - name: Build
       run: |
         make -j BOARD=${{ matrix.board }} ${{ matrix.make-options }}
-        rename -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
+        rename.ul -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v2
@@ -68,7 +68,7 @@ jobs:
       run: |
         make clean
         make -j BOARD=${{ matrix.board }} ${{ matrix.make-options }} HDMI_CONSOLE=1
-        rename -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
+        rename.ul -- .img ${{ matrix.kernel-suffix }}.img kernel*.img
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v2
