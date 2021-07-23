@@ -26,7 +26,7 @@ If you have a question:
 
 ## Hardware and software
 
-- **mt32-pi version:** _e.g. v0.9.1_
+- **mt32-pi version:** _e.g. v0.10.0_
 - **Raspberry Pi model:** _e.g. Raspberry Pi 3 Model B+_
 - **HATs:** _e.g. Pi-MIDI_
 - **USB devices:** _e.g. None_
@@ -50,9 +50,13 @@ _A clear and concise description of the behavior you expected._
 
 ## Configuration file
 
+<details>
+<summary>Click to expand</summary>
+
 ```ini
 Paste the contents of your mt32-pi.cfg here.
 ```
+</details>
 
 ## Videos/audio recordings
 
