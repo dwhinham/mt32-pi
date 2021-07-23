@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0e737e91..6226a35e 100644
+index d0293363..20dd8154 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -487,6 +487,7 @@ if ( ASTYLE )
@@ -10,7 +10,7 @@ index 0e737e91..6226a35e 100644
  if(NOT enable-pkgconfig)
  
      FIND_LIBRARY( GLIB_LIB NAMES glib glib-2.0 PATH GLIB_LIBRARY_DIR )
-@@ -645,6 +646,7 @@ else(NOT enable-pkgconfig)
+@@ -654,6 +655,7 @@ else(NOT enable-pkgconfig)
      endif ( enable-readline )
  
  endif(NOT enable-pkgconfig)
@@ -19,7 +19,7 @@ index 0e737e91..6226a35e 100644
  unset ( AUFILE_SUPPORT CACHE )
  if ( enable-aufile )
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index f10abf34..1d70f9fb 100644
+index e913cb21..e1ef5e43 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -203,23 +203,23 @@ set ( libfluidsynth_SOURCES
@@ -90,7 +90,7 @@ index 8b4d4f17..fc5ecef5 100644
  /**
   * Creates a new SoundFont loader.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
-index d9946317..0423fd4e 100644
+index fc0d35fc..3743f35f 100644
 --- a/src/synth/fluid_synth.c
 +++ b/src/synth/fluid_synth.c
 @@ -108,7 +108,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
@@ -145,7 +145,7 @@ index d9946317..0423fd4e 100644
  
  /**
   * Reload a SoundFont.  The SoundFont retains its ID and index on the SoundFont stack.
-@@ -7552,6 +7560,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
+@@ -7553,6 +7561,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
      FLUID_API_RETURN(result);
  }
  
@@ -153,7 +153,7 @@ index d9946317..0423fd4e 100644
  /**
   * Handle MIDI event from MIDI router, used as a callback function.
   * @param data FluidSynth instance
-@@ -7608,6 +7617,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
+@@ -7609,6 +7618,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
  
      return FLUID_FAILED;
  }
@@ -176,7 +176,7 @@ index 132a98dd..2557ea76 100644
      float gain;                        /**< master gain */
      fluid_channel_t **channel;         /**< the channels */
 diff --git a/src/utils/fluid_settings.c b/src/utils/fluid_settings.c
-index 2d9f7b10..d7b0e093 100644
+index dbee649b..ec3ab6e8 100644
 --- a/src/utils/fluid_settings.c
 +++ b/src/utils/fluid_settings.c
 @@ -330,11 +330,13 @@ fluid_settings_init(fluid_settings_t *settings)
@@ -194,7 +194,7 @@ index 2d9f7b10..d7b0e093 100644
  
  static int
 diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
-index ea468262..705eaf76 100644
+index e3c0ea4d..bf9321b6 100644
 --- a/src/utils/fluid_sys.c
 +++ b/src/utils/fluid_sys.c
 @@ -50,6 +50,7 @@
