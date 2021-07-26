@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to libmt32emu v2.5.2.
 - Update to FluidSynth v2.2.2.
+- The default value for `usb_serial_baud_rate` is now 38400 to reflect the most common use case (connecting to a vintage PC with SoftMPU).
 
 ## [0.10.0] - 2021-06-26
 
