@@ -28,7 +28,18 @@ CMIDIMonitor::CMIDIMonitor()
 	: m_PeakLevels{0.0f},
 	  m_PeakTimes{0}
 {
-	memset(m_State, 0, sizeof(m_State));
+	for (auto& Channel : m_State)
+	{
+		for (auto& Note : Channel.Notes)
+		{
+			Note.EnvelopePhase = TEnvelopePhase::Idle;
+			Note.nNoteOnTime = 0;
+			Note.nNoteOffTime = 0;
+			Note.nVelocity = 0;
+			Note.bDamperFlag = false;
+		}
+	}
+
 	ResetControllers(false);
 }
 
@@ -48,20 +59,27 @@ void CMIDIMonitor::OnShortMessage(u32 nMessage)
 		// Note off
 		case 0x80:
 			if (!NoteState.bDamperFlag)
+			{
+				NoteState.EnvelopePhase = TEnvelopePhase::NoteOff;
 				NoteState.nNoteOffTime = nTicks;
+			}
+
 			break;
 
 		// Note on
 		case 0x90:
 			if (nData2)
 			{
+				NoteState.EnvelopePhase = TEnvelopePhase::NoteOn;
 				NoteState.nNoteOnTime = nTicks;
-				NoteState.nNoteOffTime = 0;
 				NoteState.nVelocity = nData2;
 				NoteState.bDamperFlag = ChannelState.nDamper;
 			}
 			else if (!NoteState.bDamperFlag)
+			{
+				NoteState.EnvelopePhase = TEnvelopePhase::NoteOff;
 				NoteState.nNoteOffTime = nTicks;
+			}
 			break;
 
 		// Control change
@@ -88,8 +106,8 @@ void CMIDIMonitor::GetChannelLevels(unsigned int nTicks, float* pOutLevels, floa
 
 		for (size_t nNote = 0; nNote < NoteCount; ++nNote)
 		{
-			const TNoteState& NoteState = m_State[nChannel].Notes[nNote];
-			const float nEnvelope = bIsPercussionChannel ? ComputePercussionEnvelope(nTicks, NoteState) : ComputeEnvelope(nTicks, NoteState);
+			TNoteState& NoteState = m_State[nChannel].Notes[nNote];
+			const float nEnvelope = bIsPercussionChannel ? ComputePercussionEnvelope(NoteState) : ComputeEnvelope(NoteState);
 			const float nNoteVolume = nEnvelope * (NoteState.nVelocity / 127.0f) * (m_State[nChannel].nVolume / 127.0f) * (m_State[nChannel].nExpression / 127.0f);
 			nChannelVolume = Utility::Max(nChannelVolume, nNoteVolume);
 		}
@@ -126,8 +144,11 @@ void CMIDIMonitor::AllNotesOff()
 	{
 		for (auto& Note : Channel.Notes)
 		{
-			if (Note.nNoteOnTime > Note.nNoteOffTime)
+			if (Note.EnvelopePhase == TEnvelopePhase::NoteOn)
+			{
+				Note.EnvelopePhase = TEnvelopePhase::NoteOff;
 				Note.nNoteOffTime = nTicks;
+			}
 
 			Note.bDamperFlag = false;
 		}
@@ -183,6 +204,7 @@ void CMIDIMonitor::ProcessCC(u8 nChannel, u8 nCC, u8 nValue, unsigned int nTicks
 				{
 					if (Note.bDamperFlag)
 					{
+						Note.EnvelopePhase = TEnvelopePhase::NoteOff;
 						Note.nNoteOffTime = nTicks;
 						Note.bDamperFlag = false;
 					}
@@ -211,70 +233,82 @@ void CMIDIMonitor::ProcessCC(u8 nChannel, u8 nCC, u8 nValue, unsigned int nTicks
 	}
 }
 
-float CMIDIMonitor::ComputeEnvelope(unsigned int nTicks, const TNoteState& NoteState) const
+float CMIDIMonitor::ComputeEnvelope(TNoteState& NoteState) const
 {
-	if (NoteState.nNoteOnTime == 0)
-		return 0.0f;
-
-	nTicks = Utility::Max(nTicks, Utility::Max(NoteState.nNoteOnTime, NoteState.nNoteOffTime));
-
-	// Note is on
-	if (NoteState.nNoteOffTime == 0)
+	switch (NoteState.EnvelopePhase)
 	{
-		const float nNoteOnDurationMillis = Utility::TicksToMillis(nTicks - NoteState.nNoteOnTime);
-
-		// Attack phase
-		if (nNoteOnDurationMillis < AttackTimeMillis)
-			return nNoteOnDurationMillis / AttackTimeMillis;
-
-		// Decay phase
-		else if (nNoteOnDurationMillis < AttackTimeMillis + DecayTimeMillis)
+		// Note is on
+		case TEnvelopePhase::NoteOn:
 		{
-			const float nDecayDurationMillis = nNoteOnDurationMillis - AttackTimeMillis;
-			return 1.0f - (nDecayDurationMillis / DecayTimeMillis) * (1.0f - SustainLevel);
+			const unsigned int nTicks = CTimer::GetClockTicks();
+			const float nNoteOnDurationMillis = Utility::TicksToMillis(nTicks - NoteState.nNoteOnTime);
+
+			// Attack phase
+			if (nNoteOnDurationMillis < AttackTimeMillis)
+				return nNoteOnDurationMillis / AttackTimeMillis;
+
+			// Decay phase
+			else if (nNoteOnDurationMillis < AttackTimeMillis + DecayTimeMillis)
+			{
+				const float nDecayDurationMillis = nNoteOnDurationMillis - AttackTimeMillis;
+				return 1.0f - (nDecayDurationMillis / DecayTimeMillis) * (1.0f - SustainLevel);
+			}
+
+			// Sustain phase
+			return SustainLevel;
 		}
 
-		// Sustain phase
-		return SustainLevel;
-	}
+		// Note has been released
+		case TEnvelopePhase::NoteOff:
+		{
+			const float nGateDurationMillis = Utility::TicksToMillis(NoteState.nNoteOffTime - NoteState.nNoteOnTime);
+			float nVolume;
 
-	// Note has been released
-	else
-	{
-		const float nGateDurationMillis = Utility::TicksToMillis(NoteState.nNoteOffTime - NoteState.nNoteOnTime);	
-		float nVolume;
+			// Note off during attack phase
+			if (nGateDurationMillis < AttackTimeMillis)
+				nVolume = nGateDurationMillis / AttackTimeMillis;
 
-		// Note off during attack phase
-		if (nGateDurationMillis < AttackTimeMillis)
-			nVolume = nGateDurationMillis / AttackTimeMillis;
+			// Note off during decay phase
+			else if (nGateDurationMillis < AttackTimeMillis + DecayTimeMillis)
+				nVolume = 1.0f - ((nGateDurationMillis - AttackTimeMillis) / DecayTimeMillis) * (1.0f - SustainLevel);
 
-		// Note off during decay phase
-		else if (nGateDurationMillis < AttackTimeMillis + DecayTimeMillis)
-			nVolume = 1.0f - ((nGateDurationMillis - AttackTimeMillis) / DecayTimeMillis) * (1.0f - SustainLevel);
-	
-		// Note off during sustain phase
-		else
-			nVolume = SustainLevel;
+			// Note off during sustain phase
+			else
+				nVolume = SustainLevel;
 
-		const float nNoteOffDurationMillis = Utility::TicksToMillis(nTicks - NoteState.nNoteOffTime);
-		if (nNoteOffDurationMillis > ReleaseTimeMillis)
+			const unsigned int nTicks = CTimer::GetClockTicks();
+			const float nNoteOffDurationMillis = Utility::TicksToMillis(nTicks - NoteState.nNoteOffTime);
+
+			// Envelope is complete
+			if (nNoteOffDurationMillis > ReleaseTimeMillis)
+			{
+				NoteState.EnvelopePhase = TEnvelopePhase::Idle;
+				return 0.0f;
+			}
+
+			return nVolume - nNoteOffDurationMillis / ReleaseTimeMillis;
+		}
+
+		// Envelope has finished
+		default:
 			return 0.0f;
-
-		return nVolume - nNoteOffDurationMillis / ReleaseTimeMillis;
 	}
 }
 
-float CMIDIMonitor::ComputePercussionEnvelope(unsigned int nTicks, const TNoteState& NoteState) const
+float CMIDIMonitor::ComputePercussionEnvelope(TNoteState& NoteState) const
 {
-	if (NoteState.nNoteOnTime == 0)
+	if (NoteState.EnvelopePhase == TEnvelopePhase::Idle)
 		return 0.0f;
 
-	nTicks = Utility::Max(nTicks, NoteState.nNoteOnTime);
-
+	const unsigned int nTicks = CTimer::GetClockTicks();
 	const float nNoteOnDurationMillis = Utility::TicksToMillis(nTicks - NoteState.nNoteOnTime);
 
+	// Envelope is complete
 	if (nNoteOnDurationMillis > ReleaseTimeMillis)
+	{
+		NoteState.EnvelopePhase = TEnvelopePhase::Idle;
 		return 0.0f;
+	}
 
 	// No decay/sustain for percussion
 	return 1.0f - nNoteOnDurationMillis / ReleaseTimeMillis;

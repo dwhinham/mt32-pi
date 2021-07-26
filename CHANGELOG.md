@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to FluidSynth v2.2.2.
 - The default value for `usb_serial_baud_rate` is now 38400 to reflect the most common use case (connecting to a vintage PC with SoftMPU).
 
+### Fixed
+
+- The MIDI level meters could get stuck under certain circumstances (issue #142).
+- Sending a MIDI reset SysEx would cause the MIDI level meters to instantly zero rather than fall off gradually.
+
 ## [0.10.0] - 2021-06-26
 
 ### Added
