@@ -25,7 +25,7 @@
 
 #include <circle/types.h>
 
-enum class TManufacturerID : u8
+enum TManufacturerID : u8
 {
 	Roland               = 0x41,
 	Yamaha               = 0x43,
@@ -33,18 +33,18 @@ enum class TManufacturerID : u8
 	UniversalRealTime    = 0x7F,
 };
 
-enum class TDeviceID : u8
+enum TDeviceID : u8
 {
 	SoundCanvasDefault = 0x10, // The default device ID of Roland Sound Canvas modules
 	AllCall            = 0x7F,
 };
 
-enum class TUniversalSubID : u8
+enum TUniversalSubID : u8
 {
 	GeneralMIDI = 0x09,
 };
 
-enum class TGeneralMIDISubID : u8
+enum TGeneralMIDISubID : u8
 {
 	GeneralMIDIOn  = 0x01,
 	GeneralMIDIOff = 0x02,

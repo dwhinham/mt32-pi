@@ -1,5 +1,5 @@
 //
-// rolandsysex.h
+// yamahasysex.h
 //
 // mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
 // Copyright (C) 2020-2021 Dale Whinham <daleyo@gmail.com>
@@ -20,45 +20,34 @@
 // mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _rolandsysex_h
-#define _rolandsysex_h
+#ifndef _yamahasysex_h
+#define _yamahasysex_h
 
 #include "synth/sysex.h"
 
-enum TRolandModelID : u8
+enum TYamahaModelID : u8
 {
-	GS   = 0x42,
-	SC55 = 0x45
+	XG = 0x4C,
 };
 
-enum TRolandCommandID : u8
+enum TYamahaAddress : u32
 {
-	RQ1 = 0x11,
-	DT1 = 0x12,
+	XGSystemOn = 0x00007E,
+
+	DisplayLetter = 0x060000,
+	DisplayBitmap = 0x060000,
 };
 
-enum TRolandAddress : u32
+enum TYamahaAddressMask : u32
 {
-	SystemModeSet = 0x00007F,
-
-	GSReset          = 0x40007F,
-	UseForRhythmPart = 0x401015,
-
-	SC55DisplayText = 0x100000,
-	SC55DisplayDots = 0x100100,
+	DisplayLetterMask = 0xFFFF00,
 };
 
-enum TRolandAddressMask : u32
-{
-	PatchPart = 0xFFF0FF,
-};
-
-struct TRolandSysExHeader
+struct TYamahaSysExHeader
 {
 	TManufacturerID ManufacturerID;
 	TDeviceID DeviceID;
-	TRolandModelID ModelID;
-	TRolandCommandID CommandID;
+	TYamahaModelID ModelID;
 	u8 Address[3];
 };
 

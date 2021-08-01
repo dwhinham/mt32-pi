@@ -31,22 +31,12 @@ enum class TGMSubID : u8
 	GeneralMIDIOff = 0x02,
 };
 
-struct TGMModeOnSysExMessage
+struct TGMSysExHeader
 {
-	u8 nStartOfSysEx;
 	TManufacturerID ManufacturerID;
 	TDeviceID DeviceID;
 	TUniversalSubID SubID1;
 	TGMSubID SubID2;
-	u8 nEndOfExclusive;
-
-	bool IsValid() const
-	{
-		return	ManufacturerID == TManufacturerID::UniversalNonRealTime &&
-				DeviceID == TDeviceID::AllCall &&
-				SubID1 == TUniversalSubID::GeneralMIDI &&
-				SubID2 == TGMSubID::GeneralMIDIOn;
-	}
 }
 PACKED;
 

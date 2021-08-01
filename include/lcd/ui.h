@@ -52,7 +52,7 @@ public:
 	void ShowSystemMessage(const char* pMessage, bool bSpinner = false);
 	void ClearSpinnerMessage();
 	void DisplayImage(TImage Image);
-	void ShowSC55Text(const char* pMessage);
+	void ShowSC55Text(const u8* pMessage, size_t nSize, u8 nOffset);
 	void ShowSC55Dots(const u8* pData);
 	void EnterPowerSavingMode();
 	void ExitPowerSavingMode();

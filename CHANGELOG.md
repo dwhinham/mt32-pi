@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The MIDI level meters could get stuck under certain circumstances (issue #142).
 - Sending a MIDI reset SysEx would cause the MIDI level meters to instantly zero rather than fall off gradually.
+- Sending a Yamaha XG reset SysEx will now reset the MIDI level meters.
+- SC-55 text SysEx messages of length <32 were not being displayed.
 
 ## [0.10.0] - 2021-06-26
 

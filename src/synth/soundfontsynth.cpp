@@ -29,6 +29,7 @@
 #include "synth/gmsysex.h"
 #include "synth/rolandsysex.h"
 #include "synth/soundfontsynth.h"
+#include "synth/yamahasysex.h"
 #include "utility.h"
 #include "zoneallocator.h"
 
@@ -266,59 +267,9 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 
 void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 {
-	// GM Mode On
-	if (nSize == sizeof(TGMModeOnSysExMessage))
-	{
-		const auto& GMModeOnMessage = reinterpret_cast<const TGMModeOnSysExMessage&>(*pData);
-		if (GMModeOnMessage.IsValid())
-			ResetMIDIMonitor();
-	}
-
-	// Single data byte Roland message
-	else if (nSize == RolandSingleDataByteMessageSize)
-	{
-		const auto& GSResetMessage = reinterpret_cast<const TRolandGSResetSysExMessage&>(*pData);
-		const auto& SystemModeSetMessage = reinterpret_cast<const TRolandSystemModeSetSysExMessage&>(*pData);
-		const auto& UseForRhythmPartMessage = reinterpret_cast<const TRolandUseForRhythmPartSysExMessage&>(*pData);
-
-		// GS Reset/SC-88 Mode Set		
-		if (GSResetMessage.IsValid() || SystemModeSetMessage.IsValid())
-			ResetMIDIMonitor();
-
-		// Use For Rhythm Part
-		else if (UseForRhythmPartMessage.IsValid())
-		{
-			// TODO: If FluidSynth had an API to query the channel mode we wouldn't need to keep track of it
-			const u8 nChannel = (UseForRhythmPartMessage.GetAddress() >> 8) & 0x0F;
-			const u8 nMode    = *UseForRhythmPartMessage.GetData() ? 1 : 0;
-			m_nPercussionMask ^= (-nMode ^ m_nPercussionMask) & (1 << nChannel);
-		}
-	}
-
-	// TODO: XG Mode On reset for MIDI monitor
-
-	// SC-55 display message?
-	else if (nSize == sizeof(TSC55DisplayTextSysExMessage))
-	{
-		const auto& DisplayTextMessage = reinterpret_cast<const TSC55DisplayTextSysExMessage&>(*pData);
-		if (DisplayTextMessage.IsValid())
-		{
-			const char* pMessage = reinterpret_cast<const char*>(DisplayTextMessage.GetData());
-			if (m_pUI)
-				m_pUI->ShowSC55Text(pMessage);
-			return;
-		}
-	}
-	else if (nSize == sizeof(TSC55DisplayDotsSysExMessage))
-	{
-		const auto& DisplayDotsMessage = reinterpret_cast<const TSC55DisplayDotsSysExMessage&>(*pData);
-		if (DisplayDotsMessage.IsValid())
-		{
-			if (m_pUI)
-				m_pUI->ShowSC55Dots(DisplayDotsMessage.GetData());
-			return;
-		}
-	}
+	// Return early if it wasn't a GM Mode On/Off message and was consumed as a text/display dots message
+	if (!ParseGMSysEx(pData, nSize) && (ParseRolandSysEx(pData, nSize) || ParseYamahaSysEx(pData, nSize)))
+		return;
 
 	// No special handling; forward to FluidSynth SysEx parser, excluding leading 0xF0 and trailing 0xF7
 	m_Lock.Acquire();
@@ -521,3 +472,117 @@ void CSoundFontSynth::DumpFXSettings() const
 	);
 }
 #endif
+
+bool CSoundFontSynth::ParseGMSysEx(const u8* pData, size_t nSize)
+{
+	// Must be at least size of header plus Start/End of Exclusive bytes
+	if (nSize < sizeof(TGMSysExHeader) + 2)
+		return false;
+
+	const auto& Header = reinterpret_cast<const TGMSysExHeader&>(pData[1]);
+
+	if (Header.ManufacturerID == TManufacturerID::UniversalNonRealTime &&
+	    Header.DeviceID == TDeviceID::AllCall &&
+	    Header.SubID1 == TUniversalSubID::GeneralMIDI)
+	{
+		// GM Mode On/Off
+		if (Header.SubID2 == TGMSubID::GeneralMIDIOn || Header.SubID2 == TGMSubID::GeneralMIDIOff)
+		{
+			ResetMIDIMonitor();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
+{
+	// Must be at least size of header plus a data byte, a checksum byte, and Start/End of Exclusive bytes
+	if (nSize < sizeof(TRolandSysExHeader) + 4)
+		return false;
+
+	const auto& Header = reinterpret_cast<const TRolandSysExHeader&>(pData[1]);
+	const u32 nAddress = Header.Address[0] << 16 | Header.Address[1] << 8 | Header.Address[2];
+	const u8* pRolandData = pData + sizeof(TRolandSysExHeader) + 1;
+	const size_t nRolandDataSize = nSize - sizeof(TRolandSysExHeader) - 3;
+	const u8 nChecksum = pData[nSize - 2];
+
+	if (Header.ManufacturerID != TManufacturerID::Roland)
+		return false;
+
+	if (Utility::RolandChecksum(Header.Address, sizeof(Header.Address) + nRolandDataSize) != nChecksum)
+		return false;
+
+	// Single byte GS messages
+	if (Header.ModelID == TRolandModelID::GS && nRolandDataSize == 1)
+	{
+		if ((nAddress == TRolandAddress::GSReset || nAddress == TRolandAddress::SystemModeSet) && *pRolandData == 0)
+		{
+			// Reset MIDI monitor on GS reset
+			ResetMIDIMonitor();
+
+			// Don't consume; forward to FluidSynth
+			return false;
+		}
+		else if ((nAddress & TRolandAddressMask::PatchPart) == TRolandAddress::UseForRhythmPart)
+		{
+			// TODO: If FluidSynth had an API to query the channel mode we wouldn't need to keep track of it
+			const u8 nChannel = Header.Address[1] & 0x0F;
+			const u8 nMode    = *pRolandData ? 1 : 0;
+			m_nPercussionMask ^= (-nMode ^ m_nPercussionMask) & (1 << nChannel);
+
+			// Don't consume; forward to FluidSynth
+			return false;
+		}
+	}
+	else if (Header.ModelID == TRolandModelID::SC55)
+	{
+		if (nAddress == TRolandAddress::SC55DisplayText && nRolandDataSize <= 32)
+		{
+			if (m_pUI)
+				m_pUI->ShowSC55Text(pRolandData, nRolandDataSize, 0);
+
+			// Consume
+			return true;
+		}
+		else if (nAddress == TRolandAddress::SC55DisplayDots && nRolandDataSize == 64)
+		{
+			if (m_pUI)
+				m_pUI->ShowSC55Dots(pRolandData);
+
+			// Consume
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CSoundFontSynth::ParseYamahaSysEx(const u8* pData, size_t nSize)
+{
+	// Must be at least size of header plus a data byte and Start/End of Exclusive bytes
+	if (nSize < sizeof(TYamahaSysExHeader) + 3)
+		return false;
+
+	const auto& Header = reinterpret_cast<const TYamahaSysExHeader&>(pData[1]);
+	const u32 nAddress = Header.Address[0] << 16 | Header.Address[1] << 8 | Header.Address[2];
+	const u8* pYamahaData = pData + sizeof(TYamahaSysExHeader) + 1;
+
+	if (Header.ManufacturerID != TManufacturerID::Yamaha)
+		return false;
+
+	if (Header.ModelID == TYamahaModelID::XG)
+	{
+		if (nAddress == TYamahaAddress::XGSystemOn && *pYamahaData == 0)
+		{
+			// Reset MIDI monitor on XG reset
+			ResetMIDIMonitor();
+
+			// Don't consume; forward to FluidSynth
+			return false;
+		}
+	}
+
+	return false;
+}

@@ -173,11 +173,18 @@ void CUserInterface::DisplayImage(TImage Image)
 	m_nStateTime = nTicks;
 }
 
-void CUserInterface::ShowSC55Text(const char* pMessage)
+void CUserInterface::ShowSC55Text(const u8* pMessage, size_t nSize, u8 nOffset)
 {
+	if (nOffset + nSize > SC55TextBufferSize - 1)
+		return;
+
+	memset(m_SC55TextBuffer, ' ', nOffset);
+	memcpy(m_SC55TextBuffer + nOffset, pMessage, nSize);
+	m_SC55TextBuffer[nOffset + nSize] = '\0';
+
 	const unsigned nTicks = CTimer::GetClockTicks();
-	snprintf(m_SC55TextBuffer, sizeof(m_SC55TextBuffer), pMessage);
 	m_State = TState::DisplayingSC55Text;
+	m_nCurrentScrollOffset = 0;
 	m_nStateTime = nTicks;
 }
 

@@ -59,6 +59,9 @@ private:
 #ifndef NDEBUG
 	void DumpFXSettings() const;
 #endif
+	bool ParseGMSysEx(const u8* pData, size_t nSize);
+	bool ParseRolandSysEx(const u8* pData, size_t nSize);
+	bool ParseYamahaSysEx(const u8* pData, size_t nSize);
 
 	fluid_settings_t* m_pSettings;
 	fluid_synth_t* m_pSynth;
