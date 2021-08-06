@@ -49,10 +49,11 @@ constexpr float Sample24BitMax = (1 << 24 - 1) - 1;
 
 enum class TCustomSysExCommand : u8
 {
-	Reboot           = 0x00,
-	SwitchMT32ROMSet = 0x01,
-	SwitchSoundFont  = 0x02,
-	SwitchSynth      = 0x03,
+	Reboot                = 0x00,
+	SwitchMT32ROMSet      = 0x01,
+	SwitchSoundFont       = 0x02,
+	SwitchSynth           = 0x03,
+	SetMT32ReversedStereo = 0x04,
 };
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
@@ -371,6 +372,9 @@ bool CMT32Pi::InitMT32Synth()
 	// Set initial MT-32 channel assignment from config
 	if (m_pConfig->MT32EmuMIDIChannels == CMT32Synth::TMIDIChannels::Alternate)
 		m_pMT32Synth->SetMIDIChannels(m_pConfig->MT32EmuMIDIChannels);
+
+	// Set MT-32 reversed stereo option from config
+	m_pMT32Synth->SetReversedStereo(m_pConfig->MT32EmuReversedStereo);
 
 	m_pMT32Synth->SetUserInterface(&m_UserInterface);
 
@@ -720,6 +724,14 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		case TCustomSysExCommand::SwitchSynth:
 		{
 			SwitchSynth(static_cast<TSynth>(nParameter));
+			return true;
+		}
+
+		// Swap MT-32 stereo channels (F0 7D 04 xx F7)
+		case TCustomSysExCommand::SetMT32ReversedStereo:
+		{
+			if (m_pMT32Synth)
+				m_pMT32Synth->SetReversedStereo(nParameter);
 			return true;
 		}
 

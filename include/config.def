@@ -71,6 +71,7 @@ CFG(reverb_gain,		float,				MT32EmuReverbGain,			1.0f						)
 CFG(resampler_quality,		TMT32EmuResamplerQuality,	MT32EmuResamplerQuality,		TMT32EmuResamplerQuality::Good			)
 CFG(midi_channels,		TMT32EmuMIDIChannels,		MT32EmuMIDIChannels,			TMT32EmuMIDIChannels::Standard			)
 CFG(rom_set,			TMT32EmuROMSet,			MT32EmuROMSet,				TMT32EmuROMSet::MT32Old				)
+CFG(reversed_stereo,		bool,				MT32EmuReversedStereo,			false						)
 END_SECTION
 
 BEGIN_SECTION(fluidsynth)

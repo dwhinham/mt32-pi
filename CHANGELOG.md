@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ability to swap the MT-32 stereo channels in order to work around bugs in games that are not aware of the MT-32's reversed panpot value interpretation (new configuration file option and custom SysEx message).
+
 ## [0.10.1] - 2021-08-01
 
 ### Changed

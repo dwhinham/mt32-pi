@@ -65,6 +65,7 @@ public:
 	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) override;
 
 	void SetMIDIChannels(TMIDIChannels Channels);
+	void SetReversedStereo(bool bEnabled) { m_pSynth->setReversedStereoEnabled(bEnabled); }
 	bool SwitchROMSet(TMT32ROMSet ROMSet);
 	bool NextROMSet();
 	TMT32ROMSet GetROMSet() const;
