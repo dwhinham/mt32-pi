@@ -6,8 +6,8 @@
 
 - A work-in-progress baremetal MIDI synthesizer for the Raspberry Pi 3 or above, based on [Munt], [FluidSynth] and [Circle].
 - Turn your Raspberry Pi into a dedicated emulation of the [famous multi-timbre sound module][Roland MT-32] used by countless classic MS-DOS, PC-98 and Sharp X68000 games!
-- 🆕 Add your favorite [SoundFonts][SoundFont] to expand your synthesizer with [General MIDI], [Roland GS], or even [Yamaha XG] support for endless MIDI possibilities.
-- 🆕 Includes General MIDI and Roland GS support out of the box thanks to [GeneralUser GS] by S. Christian Collins.
+- Add your favorite [SoundFonts][SoundFont] to expand your synthesizer with [General MIDI], [Roland GS], or even [Yamaha XG] support for endless MIDI possibilities.
+- Includes General MIDI and Roland GS support out of the box thanks to [GeneralUser GS] by S. Christian Collins.
 - No operating system, no complex Linux audio configuration; just super-low latency audio.
 - Easy to configure and ready to play from cold-boot in a matter of seconds.
 - The perfect companion for your vintage PC or [MiSTer FPGA] setup.
@@ -20,19 +20,21 @@
 
 - Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model A+, B, and B+.
   * Pi 2 works, but only with concessions on playback quality.
-  * Pi 0 and 1 are unfortunately too slow, even with an overclock.
+  * Pi Zero and 1 are unfortunately too slow (even with an overclock) and unsupported.
 - PWM headphone jack audio.
   * Quality is known to be poor (aliasing/distortion on quieter sounds).
   * It is not currently known whether this can be improved or not.
 - [I²S Hi-Fi DAC support][I²S Hi-Fi DACs].
   * This is the recommended audio output method for the best quality audio.
-- MIDI input via [USB][USB MIDI interfaces] or [GPIO][GPIO MIDI interface] MIDI interfaces.
+- MIDI input via [USB][USB MIDI interfaces], [GPIO][GPIO MIDI interface] MIDI interfaces, or the [serial port].
 - [Configuration file] for selecting hardware options and fine tuning.
 - [LCD status screen support][LCD and OLED displays] (for MT-32 SysEx messages and status information).
 - Simple [physical control surface][control surface] using buttons and rotary encoder.
 - [MiSTer FPGA integration via user port][MiSTer FPGA user port connection].
 - Network MIDI support via [macOS native network MIDI][macOS network MIDI], [rtpMIDI] on Windows, or [rtpmidid] on Linux.
 - FTP access to files and auto-update is _planned_.
+- A user interface with menu system is _planned_.
+- More advanced MIDI routing is _planned_.
 
 ## ✨ Quick-start guide
 
@@ -63,6 +65,14 @@ Take a look at our [FAQ] page for answers to the most common questions about mt3
 If you need some help with mt32-pi and the wiki doesn't answer your questions, head over to the [discussions] area and feel free to start a topic.
 
 > ⚠ **Note**: Please don't use the Issues area to ask for help - Issues are intended for reproducible bug reports and feature requests. Thankyou!
+
+## ❤️ Contributing
+
+This project is generally quite stable and very usable, but still considered by its author to be in early stages of development.
+
+Hence, please **DO NOT** work on large features and open pull requests without prior discussion. There is a strong possibility that work-in-progress code for proposed features already exists, but may not yet be public, and your work will have to be rejected.
+
+Trivial changes to the code that fix issues are always welcome, as are improvements to documentation, and hardware/software compatibility reports.
 
 ## 🙌 Acknowledgments
 
@@ -101,6 +111,7 @@ If you need some help with mt32-pi and the wiki doesn't answer your questions, h
 [rtpMIDI]: https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html
 [rtpmidid]: https://github.com/davidmoreno/rtpmidid
 [SD card preparation]: https://github.com/dwhinham/mt32-pi/wiki/SD-card-preparation
+[Serial port]: https://github.com/dwhinham/mt32-pi/wiki/MIDI-via-RS-232-or-USB-to-serial
 [SoundFont synthesis]: https://github.com/dwhinham/mt32-pi/wiki/SoundFont-synthesis
 [SoundFont]: https://en.wikipedia.org/wiki/SoundFont
 [USB MIDI interfaces]: https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces
