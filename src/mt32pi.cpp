@@ -656,7 +656,8 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 void CMT32Pi::OnUnexpectedStatus()
 {
 	CMIDIParser::OnUnexpectedStatus();
-	LCDLog(TLCDLogType::Error, "Unexp. MIDI status!");
+	if (m_pConfig->SystemVerbose)
+		LCDLog(TLCDLogType::Warning, "Unexp. MIDI status!");
 }
 
 void CMT32Pi::OnSysExOverflow()
@@ -890,30 +891,30 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 		return 0;
 
 	// Error
-	if (nResult < 0)
+	if (nResult < 0 && m_pConfig->SystemVerbose)
 	{
-		const char* errorString;
+		const char* pErrorString;
 		switch (nResult)
 		{
 			case -SERIAL_ERROR_BREAK:
-				errorString = "UART break error!";
+				pErrorString = "UART break error!";
 				break;
 
 			case -SERIAL_ERROR_OVERRUN:
-				errorString = "UART overrun error!";
+				pErrorString = "UART overrun error!";
 				break;
 
 			case -SERIAL_ERROR_FRAMING:
-				errorString = "UART framing error!";
+				pErrorString = "UART framing error!";
 				break;
 
 			default:
-				errorString = "Unknown UART error!";
+				pErrorString = "Unknown UART error!";
 				break;
 		}
 
-		m_pLogger->Write(MT32PiName, LogWarning, errorString);
-		LCDLog(TLCDLogType::Error, errorString);
+		m_pLogger->Write(MT32PiName, LogWarning, pErrorString);
+		LCDLog(TLCDLogType::Warning, pErrorString);
 		return 0;
 	}
 
@@ -923,7 +924,7 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 		int nSendResult = m_pSerial->Write(pOutData, nResult);
 		if (nSendResult != nResult)
 		{
-			m_pLogger->Write(MT32PiName, LogWarning, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
+			m_pLogger->Write(MT32PiName, LogError, "received %d bytes, but only sent %d bytes", nResult, nSendResult);
 			LCDLog(TLCDLogType::Error, "UART TX error!");
 		}
 	}

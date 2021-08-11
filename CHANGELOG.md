@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ability to swap the MT-32 stereo channels in order to work around bugs in games that are not aware of the MT-32's reversed panpot value interpretation (new configuration file option and custom SysEx message).
 
+### Changed
+
+- MIDI and UART related warnings are now hidden unless verbose mode is enabled in the configuration file. This is a preventative measure against false bug reports stemming from buggy games/user equipment, and to improve aesthetics (real synthesizers tend to silently ignore harmless stray MIDI bytes).
+
 ## [0.10.1] - 2021-08-01
 
 ### Changed
