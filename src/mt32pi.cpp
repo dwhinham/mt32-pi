@@ -367,6 +367,7 @@ bool CMT32Pi::InitMT32Synth()
 		m_pLogger->Write(MT32PiName, LogWarning, "mt32emu init failed; no ROMs present?");
 		delete m_pMT32Synth;
 		m_pMT32Synth = nullptr;
+		return false;
 	}
 
 	// Set initial MT-32 channel assignment from config
@@ -378,7 +379,7 @@ bool CMT32Pi::InitMT32Synth()
 
 	m_pMT32Synth->SetUserInterface(&m_UserInterface);
 
-	return m_pMT32Synth != nullptr;
+	return true;
 }
 
 bool CMT32Pi::InitSoundFontSynth()
@@ -391,11 +392,12 @@ bool CMT32Pi::InitSoundFontSynth()
 		m_pLogger->Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");
 		delete m_pSoundFontSynth;
 		m_pSoundFontSynth = nullptr;
+		return false;
 	}
 
 	m_pSoundFontSynth->SetUserInterface(&m_UserInterface);
 
-	return m_pSoundFontSynth != nullptr;
+	return true;
 }
 
 void CMT32Pi::MainTask()

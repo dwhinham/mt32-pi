@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - MIDI and UART related warnings are now hidden unless verbose mode is enabled in the configuration file. This is a preventative measure against false bug reports stemming from buggy games/user equipment, and to improve aesthetics (real synthesizers tend to silently ignore harmless stray MIDI bytes).
 
+### Fixed
+
+- Guru Meditation that could occur if non-default mt32emu options were specified but the synth was unavailable due to missing ROMs.
+
 ## [0.10.1] - 2021-08-01
 
 ### Changed
