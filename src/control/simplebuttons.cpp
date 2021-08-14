@@ -29,9 +29,9 @@ constexpr u8 GPIOPinButton3 = 22;
 constexpr u8 GPIOPinButton4 = 23;
 
 constexpr u8 ButtonMask = 1 << static_cast<u8>(TButton::Button1) |
-						  1 << static_cast<u8>(TButton::Button2) |
-						  1 << static_cast<u8>(TButton::Button3) |
-						  1 << static_cast<u8>(TButton::Button4);
+			  1 << static_cast<u8>(TButton::Button2) |
+			  1 << static_cast<u8>(TButton::Button3) |
+			  1 << static_cast<u8>(TButton::Button4);
 
 CControlSimpleButtons::CControlSimpleButtons(TEventQueue& pEventQueue)
 	: CControl(pEventQueue),
@@ -48,9 +48,9 @@ void CControlSimpleButtons::ReadGPIOPins()
 	// Read current button state from GPIO pins
 	const u32 nGPIOState  = CGPIOPin::ReadAll();
 	const u8 nButtonState = (((nGPIOState >> GPIOPinButton1) & 1) << static_cast<u8>(TButton::Button1)) |
-							(((nGPIOState >> GPIOPinButton2) & 1) << static_cast<u8>(TButton::Button2)) |
-							(((nGPIOState >> GPIOPinButton3) & 1) << static_cast<u8>(TButton::Button3)) |
-							(((nGPIOState >> GPIOPinButton4) & 1) << static_cast<u8>(TButton::Button4));
+				(((nGPIOState >> GPIOPinButton2) & 1) << static_cast<u8>(TButton::Button2)) |
+				(((nGPIOState >> GPIOPinButton3) & 1) << static_cast<u8>(TButton::Button3)) |
+				(((nGPIOState >> GPIOPinButton4) & 1) << static_cast<u8>(TButton::Button4));
 
 	DebounceButtonState(nButtonState, ButtonMask);
 }

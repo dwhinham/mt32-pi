@@ -23,6 +23,7 @@
 #include <circle/timer.h>
 
 #include "control/rotaryencoder.h"
+#include "utility.h"
 
 // Based on encoder reading algorithm by Peter Dannegger: https://embdev.net/articles/Rotary_Encoders
 
@@ -96,8 +97,8 @@ s8 CRotaryEncoder::Read()
 	// Apply acceleration curve
 	if (nResult != 0)
 	{
-		const unsigned int nTicks = CTimer::Get()->GetClockTicks();
-		const unsigned int nDeltaMillis = (nTicks - m_nLastReadTime) / 1000;
+		const unsigned int nTicks = CTimer::GetClockTicks();
+		const unsigned int nDeltaMillis = Utility::TicksToMillis(nTicks - m_nLastReadTime);
 
 		if (nDeltaMillis < AccelThresholdMillis)
 			nResult *= RotaryAccelLookupTable[nDeltaMillis];

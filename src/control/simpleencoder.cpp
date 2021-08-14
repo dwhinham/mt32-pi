@@ -31,8 +31,8 @@ constexpr u8 GPIOPinEncoderCLK    = 22;
 constexpr u8 GPIOPinEncoderDAT    = 23;
 
 constexpr u8 ButtonMask = 1 << static_cast<u8>(TButton::Button1) |
-						  1 << static_cast<u8>(TButton::Button2) |
-						  1 << static_cast<u8>(TButton::EncoderButton);
+			  1 << static_cast<u8>(TButton::Button2) |
+			  1 << static_cast<u8>(TButton::EncoderButton);
 
 CControlSimpleEncoder::CControlSimpleEncoder(TEventQueue& pEventQueue, CRotaryEncoder::TEncoderType EncoderType, bool bEncoderReversed)
 	: CControl(pEventQueue),
@@ -64,8 +64,8 @@ void CControlSimpleEncoder::ReadGPIOPins()
 	// Read current button state from GPIO pins
 	const u32 nGPIOState  = CGPIOPin::ReadAll();
 	const u8 nButtonState = (((nGPIOState >> GPIOPinButton1) & 1) << static_cast<u8>(TButton::Button1)) |
-							(((nGPIOState >> GPIOPinButton2) & 1) << static_cast<u8>(TButton::Button2)) |
-							(((nGPIOState >> GPIOPinEncoderButton) & 1) << static_cast<u8>(TButton::EncoderButton));
+				(((nGPIOState >> GPIOPinButton2) & 1) << static_cast<u8>(TButton::Button2)) |
+				(((nGPIOState >> GPIOPinEncoderButton) & 1) << static_cast<u8>(TButton::EncoderButton));
 
 	DebounceButtonState(nButtonState, ButtonMask);
 

@@ -32,8 +32,8 @@ class CRotaryEncoder
 {
 public:
 	#define ENUM_ENCODERTYPE(ENUM) \
-		ENUM(Full, full)           \
-		ENUM(Half, half)           \
+		ENUM(Full, full)       \
+		ENUM(Half, half)       \
 		ENUM(Quarter, quarter)
 
 	CONFIG_ENUM(TEncoderType, ENUM_ENCODERTYPE);
