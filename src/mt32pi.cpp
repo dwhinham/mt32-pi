@@ -893,30 +893,34 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 		return 0;
 
 	// Error
-	if (nResult < 0 && m_pConfig->SystemVerbose)
+	if (nResult < 0)
 	{
-		const char* pErrorString;
-		switch (nResult)
+		if (m_pConfig->SystemVerbose)
 		{
-			case -SERIAL_ERROR_BREAK:
-				pErrorString = "UART break error!";
-				break;
+			const char* pErrorString;
+			switch (nResult)
+			{
+				case -SERIAL_ERROR_BREAK:
+					pErrorString = "UART break error!";
+					break;
 
-			case -SERIAL_ERROR_OVERRUN:
-				pErrorString = "UART overrun error!";
-				break;
+				case -SERIAL_ERROR_OVERRUN:
+					pErrorString = "UART overrun error!";
+					break;
 
-			case -SERIAL_ERROR_FRAMING:
-				pErrorString = "UART framing error!";
-				break;
+				case -SERIAL_ERROR_FRAMING:
+					pErrorString = "UART framing error!";
+					break;
 
-			default:
-				pErrorString = "Unknown UART error!";
-				break;
+				default:
+					pErrorString = "Unknown UART error!";
+					break;
+			}
+
+			m_pLogger->Write(MT32PiName, LogWarning, pErrorString);
+			LCDLog(TLCDLogType::Warning, pErrorString);
 		}
 
-		m_pLogger->Write(MT32PiName, LogWarning, pErrorString);
-		LCDLog(TLCDLogType::Warning, pErrorString);
 		return 0;
 	}
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Broken UART error handling since v0.10.2 which would result in erratic, false MIDI activity under some circumstances. Many thanks to WiteWulf and Alex Mitchell for the report!
+
 ## [0.10.2] - 2021-08-11
 
 ### Added
