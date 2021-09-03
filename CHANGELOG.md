@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3] - 2021-09-03
+
 ### Fixed
 
 - Broken UART error handling since v0.10.2 which would result in erratic, false MIDI activity under some circumstances. Many thanks to WiteWulf and Alex Mitchell for the report!
@@ -397,7 +399,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.10.2...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/dwhinham/mt32-pi/compare/v0.10.2..v0.10.3
 [0.10.2]: https://github.com/dwhinham/mt32-pi/compare/v0.10.1..v0.10.2
 [0.10.1]: https://github.com/dwhinham/mt32-pi/compare/v0.10.0..v0.10.1
 [0.10.0]: https://github.com/dwhinham/mt32-pi/compare/v0.9.1..v0.10.0
