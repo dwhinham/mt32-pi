@@ -825,12 +825,11 @@ void CMT32Pi::UpdateNetwork()
 	{
 		m_bNetworkReady = true;
 
-		const char* pNetDevName = CConfig::Get()->NetworkMode == CConfig::TNetworkMode::Ethernet ? "Ether" : "Wi-Fi";
 		CString IPString;
 		m_pNet->GetConfig()->GetIPAddress ()->Format(&IPString);
 
 		m_pLogger->Write(MT32PiName, LogNotice, "Network up and running at: %s", static_cast<const char *>(IPString));
-		LCDLog(TLCDLogType::Notice, "%s: %s", pNetDevName, static_cast<const char*>(IPString));
+		LCDLog(TLCDLogType::Notice, "%s: %s", GetNetworkDeviceShortName(), static_cast<const char*>(IPString));
 
 		if (m_pConfig->NetworkRTPMIDI)
 		{
@@ -849,7 +848,7 @@ void CMT32Pi::UpdateNetwork()
 	{
 		m_bNetworkReady = false;
 		m_pLogger->Write(MT32PiName, LogNotice, "Network disconnected.");
-		LCDLog(TLCDLogType::Notice, "WiFi disconnected!");
+		LCDLog(TLCDLogType::Notice, "%s disconnected!", GetNetworkDeviceShortName());
 
 		delete m_pAppleMIDIParticipant;
 	}

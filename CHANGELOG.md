@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- "WiFi disconnected!" would be shown on the LCD when Ethernet was disconnected.
+
 ### Changed
 
 - Update to libmt32emu v2.5.3.

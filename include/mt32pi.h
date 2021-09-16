@@ -130,6 +130,7 @@ private:
 	void DeferSwitchSoundFont(size_t nIndex);
 	void SetMasterVolume(s32 nVolume);
 
+	const char* GetNetworkDeviceShortName() const;
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pFormat...);
 
