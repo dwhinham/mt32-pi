@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d0293363..20dd8154 100644
+index 8b6994bc..261b9f2b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -487,6 +487,7 @@ if ( ASTYLE )
@@ -259,7 +259,7 @@ index e3c0ea4d..bf9321b6 100644
  #endif
 +#endif
 diff --git a/src/utils/fluid_sys.h b/src/utils/fluid_sys.h
-index 86a47f32..b20fd9db 100644
+index 635bcf6d..74ea06aa 100644
 --- a/src/utils/fluid_sys.h
 +++ b/src/utils/fluid_sys.h
 @@ -157,7 +157,12 @@ typedef gintptr  intptr_t;
@@ -293,7 +293,7 @@ index 86a47f32..b20fd9db 100644
  
  #if FLUID_IS_BIG_ENDIAN
  #define FLUID_FOURCC(_a, _b, _c, _d) \
-@@ -228,6 +240,7 @@ typedef int (*fluid_timer_callback_t)(void *data, unsigned int msec);
+@@ -231,6 +243,7 @@ typedef int (*fluid_timer_callback_t)(void *data, unsigned int msec);
  
  typedef struct _fluid_timer_t fluid_timer_t;
  
@@ -301,7 +301,7 @@ index 86a47f32..b20fd9db 100644
  fluid_timer_t *new_fluid_timer(int msec, fluid_timer_callback_t callback,
                                 void *data, int new_thread, int auto_destroy,
                                 int high_priority);
-@@ -241,9 +254,11 @@ long fluid_timer_get_interval(const fluid_timer_t * timer);
+@@ -244,9 +257,11 @@ long fluid_timer_get_interval(const fluid_timer_t * timer);
  // Macros to use for pre-processor if statements to test which Glib thread API we have (pre or post 2.32)
  #define NEW_GLIB_THREAD_API   GLIB_CHECK_VERSION(2,32,0)
  #define OLD_GLIB_THREAD_API  !GLIB_CHECK_VERSION(2,32,0)
@@ -313,7 +313,7 @@ index 86a47f32..b20fd9db 100644
  #if NEW_GLIB_THREAD_API
  
  /* glib 2.32 and newer */
-@@ -380,10 +395,12 @@ typedef GStaticPrivate fluid_private_t;
+@@ -383,10 +398,12 @@ typedef GStaticPrivate fluid_private_t;
  } while(0)
  
  #endif
@@ -326,7 +326,7 @@ index 86a47f32..b20fd9db 100644
  #define fluid_atomic_int_inc(_pi) g_atomic_int_inc(_pi)
  #define fluid_atomic_int_get(_pi) g_atomic_int_get(_pi)
  #define fluid_atomic_int_set(_pi, _val) g_atomic_int_set(_pi, _val)
-@@ -425,10 +442,62 @@ fluid_atomic_float_get(fluid_atomic_float_t *fptr)
+@@ -428,10 +445,62 @@ fluid_atomic_float_get(fluid_atomic_float_t *fptr)
      memcpy(&fval, &ival, 4);
      return fval;
  }
@@ -389,7 +389,7 @@ index 86a47f32..b20fd9db 100644
  /* other thread implementations might change this for their needs */
  typedef void *fluid_thread_return_t;
  /* static return value for thread functions which requires a return value */
-@@ -446,6 +515,9 @@ fluid_thread_t *new_fluid_thread(const char *name, fluid_thread_func_t func, voi
+@@ -449,6 +518,9 @@ fluid_thread_t *new_fluid_thread(const char *name, fluid_thread_func_t func, voi
  void delete_fluid_thread(fluid_thread_t *thread);
  void fluid_thread_self_set_prio(int prio_level);
  int fluid_thread_join(fluid_thread_t *thread);
@@ -399,7 +399,7 @@ index 86a47f32..b20fd9db 100644
  
  /* Dynamic Module Loading, currently only used by LADSPA subsystem */
  #ifdef LADSPA
-@@ -484,6 +556,7 @@ fluid_istream_t fluid_socket_get_istream(fluid_socket_t sock);
+@@ -487,6 +559,7 @@ fluid_istream_t fluid_socket_get_istream(fluid_socket_t sock);
  fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
  
  /* File access */
@@ -407,7 +407,7 @@ index 86a47f32..b20fd9db 100644
  #define fluid_stat(_filename, _statbuf)   g_stat((_filename), (_statbuf))
  #if !GLIB_CHECK_VERSION(2, 26, 0)
      /* GStatBuf has not been introduced yet, manually typedef to what they had at that time:
-@@ -502,6 +575,10 @@ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
+@@ -505,6 +578,10 @@ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
  #else
  typedef GStatBuf fluid_stat_buf_t;
  #endif
