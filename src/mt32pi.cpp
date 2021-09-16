@@ -423,17 +423,17 @@ void CMT32Pi::MainTask()
 		// Process events
 		ProcessEventQueue();
 
-		unsigned ticks = m_pTimer->GetTicks();
+		const unsigned int nTicks = m_pTimer->GetTicks();
 
 		// Update activity LED
-		if (m_bLEDOn && (ticks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
+		if (m_bLEDOn && (nTicks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
 		{
 			m_pActLED->Off();
 			m_bLEDOn = false;
 		}
 
 		// Check for active sensing timeout
-		if (m_bActiveSenseFlag && (ticks > m_nActiveSenseTime) && (ticks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimeoutMillis))
+		if (m_bActiveSenseFlag && (nTicks > m_nActiveSenseTime) && (nTicks - m_nActiveSenseTime) >= MSEC2HZ(ActiveSenseTimeoutMillis))
 		{
 			m_pCurrentSynth->AllSoundOff();
 			m_bActiveSenseFlag = false;
@@ -459,8 +459,8 @@ void CMT32Pi::MainTask()
 		{
 			// Delay switch if scrolling a long SoundFont name
 			if (m_UserInterface.IsScrolling())
-				m_nDeferredSoundFontSwitchTime = ticks;
-			else if ((ticks - m_nDeferredSoundFontSwitchTime) >= static_cast<unsigned int>(m_pConfig->ControlSwitchTimeout) * HZ)
+				m_nDeferredSoundFontSwitchTime = nTicks;
+			else if ((nTicks - m_nDeferredSoundFontSwitchTime) >= static_cast<unsigned int>(m_pConfig->ControlSwitchTimeout) * HZ)
 			{
 				SwitchSoundFont(m_nDeferredSoundFontSwitchIndex);
 				m_bDeferredSoundFontSwitchFlag = false;
@@ -925,7 +925,7 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 	}
 
 	// Replay received MIDI data out via the serial port ('software thru')
-	if (CConfig::Get()->MIDIGPIOThru)
+	if (m_pConfig->MIDIGPIOThru)
 	{
 		int nSendResult = m_pSerial->Write(pOutData, nResult);
 		if (nSendResult != nResult)
@@ -1167,10 +1167,10 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 // TODO: Generic configurable DAC init class
 bool CMT32Pi::InitPCM51xx(u8 nAddress)
 {
-	static const u8 initBytes[][2] =
+	static const u8 InitBytes[][2] =
 	{
 		// Set PLL reference clock to BCK (set SREF to 001b)
-		{ 0x0d, 0x10 },
+		{ 0x0D, 0x10 },
 
 		// Ignore clock halt detection (set IDCH to 1)
 		{ 0x25, 0x08 },
@@ -1179,9 +1179,9 @@ bool CMT32Pi::InitPCM51xx(u8 nAddress)
 		{ 0x41, 0x04 }
 	};
 
-	for (auto& command : initBytes)
+	for (auto& Command : InitBytes)
 	{
-		if (m_pI2CMaster->Write(nAddress, &command, sizeof(command)) != sizeof(command))
+		if (m_pI2CMaster->Write(nAddress, &Command, sizeof(Command)) != sizeof(Command))
 		{
 			m_pLogger->Write(MT32PiName, LogWarning, "I2C write error (DAC init sequence)");
 			return false;
@@ -1189,6 +1189,16 @@ bool CMT32Pi::InitPCM51xx(u8 nAddress)
 	}
 
 	return true;
+}
+
+const char* CMT32Pi::GetNetworkDeviceShortName() const
+{
+	switch (m_pConfig->NetworkMode)
+	{
+		case CConfig::TNetworkMode::Ethernet:	return "Ether";
+		case CConfig::TNetworkMode::WiFi:	return "WiFi";
+		default:				return "None";
+	}
 }
 
 void CMT32Pi::EventHandler(const TEvent& Event)
