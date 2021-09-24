@@ -54,6 +54,7 @@
 #include "lcd/ui.h"
 #include "midiparser.h"
 #include "net/applemidi.h"
+#include "net/ftpdaemon.h"
 #include "pisound.h"
 #include "power.h"
 #include "ringbuffer.h"
@@ -157,6 +158,7 @@ private:
 	CWPASupplicant m_WPASupplicant;
 	bool m_bNetworkReady;
 	CAppleMIDIParticipant* m_pAppleMIDIParticipant;
+	CFTPDaemon* m_pFTPDaemon;
 
 	CBcmRandomNumberGenerator m_Random;
 

@@ -82,6 +82,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_WPASupplicant(WLANConfigFile),
 	  m_bNetworkReady(false),
 	  m_pAppleMIDIParticipant(nullptr),
+	  m_pFTPDaemon(nullptr),
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
@@ -845,6 +846,19 @@ void CMT32Pi::UpdateNetwork()
 			else
 				m_pLogger->Write(MT32PiName, LogNotice, "AppleMIDI receiver initialized");
 		}
+
+		if (m_pConfig->NetworkFTPServer)
+		{
+			m_pFTPDaemon = new CFTPDaemon(m_pConfig->NetworkFTPUsername, m_pConfig->NetworkFTPPassword);
+			if (!m_pFTPDaemon->Initialize())
+			{
+				m_pLogger->Write(MT32PiName, LogError, "Failed to init FTP daemon");
+				delete m_pFTPDaemon;
+				m_pFTPDaemon = nullptr;
+			}
+			else
+				m_pLogger->Write(MT32PiName, LogNotice, "FTP daemon initialized");
+		}
 	}
 	else if (m_bNetworkReady && !bNetIsRunning)
 	{
@@ -854,6 +868,8 @@ void CMT32Pi::UpdateNetwork()
 
 		delete m_pAppleMIDIParticipant;
 		m_pAppleMIDIParticipant = nullptr;
+		delete m_pFTPDaemon;
+		m_pFTPDaemon = nullptr;
 	}
 
 	m_pNet->Process();
