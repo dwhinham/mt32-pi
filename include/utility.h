@@ -139,8 +139,8 @@ namespace Utility
 	namespace
 	{
 		// Quicksort partition function (private)
-		template<class T, size_t N>
-		size_t Partition(T(&Items)[N], Comparator::TComparator<T> Comparator, size_t nLow, size_t nHigh)
+		template<class T>
+		size_t Partition(T* Items, Comparator::TComparator<T> Comparator, size_t nLow, size_t nHigh)
 		{
 			const size_t nPivotIndex = (nHigh + nLow) / 2;
 			T* Pivot = &Items[nPivotIndex];
@@ -171,8 +171,8 @@ namespace Utility
 	}
 
 	// Sorts an array in-place using the Tony Hoare Quicksort algorithm
-	template <class T, size_t N>
-	void QSort(T(&Items)[N], Comparator::TComparator<T> Comparator = Comparator::LessThan<T>, size_t nLow = 0, size_t nHigh = N - 1)
+	template <class T>
+	void QSort(T* Items, Comparator::TComparator<T> Comparator, size_t nLow, size_t nHigh)
 	{
 		if (nLow < nHigh)
 		{
