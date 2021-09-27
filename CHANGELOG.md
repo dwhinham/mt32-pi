@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to libmt32emu v2.5.3.
 - Update to FluidSynth v2.2.3.
+- Custom memory allocator is now used system-wide, completely replacing the default Circle heap allocator.
 
 ## [0.10.3] - 2021-09-03
 

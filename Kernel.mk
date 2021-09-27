@@ -27,8 +27,7 @@ OBJS		:=	src/config.o \
 				src/rommanager.o \
 				src/soundfontmanager.o \
 				src/synth/mt32synth.o \
-				src/synth/soundfontsynth.o \
-				src/zoneallocator.o
+				src/synth/soundfontsynth.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
 				src/control/*.d src/control/*.o \

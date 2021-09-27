@@ -16,6 +16,7 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
 
 	# Apply patches
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-zone-allocator.patch
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-minimal-usb-drivers.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
@@ -31,6 +32,9 @@ endif
 
 	# Improve I/O throughput
 	echo "DEFINE += -DNO_BUSY_WAIT" >> $(CIRCLE_CONFIG)
+
+	# Zone allocator tags
+	echo "DEFINE += -DHEAP_ZONE_TAGS=FluidSynth" >> $(CIRCLE_CONFIG)
 
 #
 # Build circle-stdlib
@@ -118,6 +122,7 @@ clean:
 veryclean: clean
 	# Reverse patches
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-minimal-usb-drivers.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44-zone-allocator.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.2.3-circle.patch
 
 	# Clean circle-stdlib

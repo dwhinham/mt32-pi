@@ -22,6 +22,7 @@
 
 #include <fatfs/ff.h>
 #include <circle/logger.h>
+#include <circle/memory.h>
 #include <circle/timer.h>
 
 #include "config.h"
@@ -31,7 +32,6 @@
 #include "synth/soundfontsynth.h"
 #include "synth/yamahasysex.h"
 #include "utility.h"
-#include "zoneallocator.h"
 
 const char SoundFontSynthName[] = "soundfontsynth";
 const char SoundFontPath[] = "soundfonts";
@@ -41,17 +41,17 @@ extern "C"
 	// Replacements for fluid_sys.c functions
 	void* fluid_alloc(size_t len)
 	{
-		return CZoneAllocator::Get()->Alloc(len, TZoneTag::FluidSynth);
+		return CMemorySystem::HeapAllocate(len, HEAP_ANY, TZoneTag::FluidSynth);
 	}
 
 	void* fluid_realloc(void* ptr, size_t len)
 	{
-		return CZoneAllocator::Get()->Realloc(ptr, len, TZoneTag::FluidSynth);
+		return CMemorySystem::HeapReAllocate(ptr, len, TZoneTag::FluidSynth);
 	}
 
 	void fluid_free(void* ptr)
 	{
-		CZoneAllocator::Get()->Free(ptr);
+		CMemorySystem::HeapFree(ptr);
 	}
 
 	FILE* fluid_file_open(const char* path, const char** errMsg)

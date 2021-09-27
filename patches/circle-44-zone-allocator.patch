@@ -1,0 +1,734 @@
+diff --git a/include/circle/memory.h b/include/circle/memory.h
+index 6a2028c..a5ef1d7 100644
+--- a/include/circle/memory.h
++++ b/include/circle/memory.h
+@@ -26,10 +26,10 @@
+ 	#include <circle/translationtable64.h>
+ #endif
+
+-#include <circle/heapallocator.h>
+ #include <circle/pageallocator.h>
+ #include <circle/sysconfig.h>
+ #include <circle/types.h>
++#include <circle/zoneallocator.h>
+
+ class CMemorySystem
+ {
+@@ -61,7 +61,7 @@ public:
+ 	static CMemorySystem *Get (void);
+
+ public:
+-	static void *HeapAllocate (size_t nSize, int nType)
++	static void *HeapAllocate (size_t nSize, int nType, TZoneTag Tag = TZoneTag::Uncategorized)
+ #define HEAP_LOW	0		// memory below 1 GB
+ #define HEAP_HIGH	1		// memory above 1 GB
+ #define HEAP_ANY	2		// high memory (if available) or low memory (otherwise)
+@@ -72,36 +72,36 @@ public:
+
+ 		switch (nType)
+ 		{
+-		case HEAP_LOW:	return s_pThis->m_HeapLow.Allocate (nSize);
+-		case HEAP_HIGH: return s_pThis->m_HeapHigh.Allocate (nSize);
+-		case HEAP_ANY:	return   (pBlock = s_pThis->m_HeapHigh.Allocate (nSize)) != 0
++		case HEAP_LOW:	return s_pThis->m_HeapLow.Allocate (nSize, Tag);
++		case HEAP_HIGH: return s_pThis->m_HeapHigh.Allocate (nSize, Tag);
++		case HEAP_ANY:	return   (pBlock = s_pThis->m_HeapHigh.Allocate (nSize, Tag)) != 0
+ 				       ? pBlock
+-				       : s_pThis->m_HeapLow.Allocate (nSize);
++				       : s_pThis->m_HeapLow.Allocate (nSize, Tag);
+ 		default:	return 0;
+ 		}
+ #else
+ 		switch (nType)
+ 		{
+ 		case HEAP_LOW:
+-		case HEAP_ANY:	return s_pThis->m_HeapLow.Allocate (nSize);
++		case HEAP_ANY:	return s_pThis->m_HeapLow.Allocate (nSize, Tag);
+ 		default:	return 0;
+ 		}
+ #endif
+ 	}
+
+-	static void *HeapReAllocate (void *pBlock, size_t nSize)	// pBlock may be 0
++	static void *HeapReAllocate (void *pBlock, size_t nSize, TZoneTag Tag = TZoneTag::Uncategorized)	// pBlock may be 0
+ 	{
+ #if RASPPI >= 4
+ 		if ((uintptr) pBlock < MEM_HIGHMEM_START)
+ 		{
+-			return s_pThis->m_HeapLow.ReAllocate (pBlock, nSize);
++			return s_pThis->m_HeapLow.ReAllocate (pBlock, nSize, Tag);
+ 		}
+ 		else
+ 		{
+-			return s_pThis->m_HeapHigh.ReAllocate (pBlock, nSize);
++			return s_pThis->m_HeapHigh.ReAllocate (pBlock, nSize, Tag);
+ 		}
+ #else
+-		return s_pThis->m_HeapLow.ReAllocate (pBlock, nSize);
++		return s_pThis->m_HeapLow.ReAllocate (pBlock, nSize, Tag);
+ #endif
+ 	}
+
+@@ -147,7 +147,7 @@ public:
+
+ 	static void DumpStatus (void)
+ 	{
+-#ifdef HEAP_DEBUG
++#ifdef ZONE_ALLOCATOR_DEBUG
+ 		s_pThis->m_HeapLow.DumpStatus ();
+ #if RASPPI >= 4
+ 		s_pThis->m_HeapHigh.DumpStatus ();
+@@ -167,9 +167,9 @@ private:
+ 	size_t m_nMemSize;
+ 	size_t m_nMemSizeHigh;
+
+-	CHeapAllocator m_HeapLow;
++	CZoneAllocator m_HeapLow;
+ #if RASPPI >= 4
+-	CHeapAllocator m_HeapHigh;
++	CZoneAllocator m_HeapHigh;
+ #endif
+ 	CPageAllocator m_Pager;
+
+diff --git a/include/circle/sysconfig.h b/include/circle/sysconfig.h
+index 3bc4c2b..69cd8e0 100644
+--- a/include/circle/sysconfig.h
++++ b/include/circle/sysconfig.h
+@@ -81,6 +81,12 @@
+ #define HEAP_BLOCK_BUCKET_SIZES	0x40,0x400,0x1000,0x4000,0x10000,0x40000,0x80000
+ #endif
+
++// HEAP_ZONE_TAGS defines additional enumerations that can be used as tags
++// for the zone allocator. They must be supplied as a comma separated list.
++#ifndef HEAP_ZONE_TAGS
++#define HEAP_ZONE_TAGS
++#endif
++
+ ///////////////////////////////////////////////////////////////////////
+ //
+ // Raspberry Pi 1 and Zero
+diff --git a/include/circle/zoneallocator.h b/include/circle/zoneallocator.h
+new file mode 100644
+index 0000000..3451c5a
+--- /dev/null
++++ b/include/circle/zoneallocator.h
+@@ -0,0 +1,95 @@
++//
++// zoneallocator.h
++//
++// mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
++// Copyright (C) 2020-2021 Dale Whinham <daleyo@gmail.com>
++//
++// This file is part of mt32-pi.
++//
++// mt32-pi is free software: you can redistribute it and/or modify it under the
++// terms of the GNU General Public License as published by the Free Software
++// Foundation, either version 3 of the License, or (at your option) any later
++// version.
++//
++// mt32-pi is distributed in the hope that it will be useful, but WITHOUT ANY
++// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
++// details.
++//
++// You should have received a copy of the GNU General Public License along with
++// mt32-pi. If not, see <http://www.gnu.org/licenses/>.
++//
++
++#ifndef _zoneallocator_h
++#define _zoneallocator_h
++
++#include <circle/sysconfig.h>
++#include <circle/types.h>
++
++//#define ZONE_ALLOCATOR_DEBUG
++
++#define HEAP_BLOCK_ALIGN 32
++
++// Block allocation tags
++enum TZoneTag : u32
++{
++	Free = 0,
++	Uncategorized = 1,
++	Malloc = 2,
++	New = 3,
++	HEAP_ZONE_TAGS
++};
++
++class CZoneAllocator
++{
++public:
++	CZoneAllocator(const char* pHeapName = "heap");
++	~CZoneAllocator();
++
++	void Setup(uintptr nBase, size_t nSize, size_t nReserve);
++	size_t GetFreeSpace() const;
++
++	// Allocator interface
++	void* Allocate(size_t nSize, TZoneTag Tag = TZoneTag::Uncategorized);
++	void* ReAllocate(void* pPtr, size_t nSize, TZoneTag Tag = TZoneTag::Uncategorized);
++	void Free(void* pPtr);
++
++	void FreeTag(u32 nTag);
++	void Clear();
++
++#ifdef ZONE_ALLOCATOR_DEBUG
++	void DumpStatus() const;
++#endif
++
++private:
++	// Memory block header/linked list
++	struct TBlock
++	{
++		size_t nSize;      // 32bit: 4  bytes  |  64bit: 8  bytes
++		TBlock* pNext;     //        8  bytes  |         16 bytes
++		TBlock* pPrevious; //        12 bytes  |         24 bytes
++		TZoneTag Tag;      //        16 bytes  |         28 bytes
++		u32 nMagic;        //        20 bytes  |         32 bytes
++#if AARCH == 32
++		u8 Padding[12]; //        32 bytes  |
++#endif
++		u8 pData[0];
++	};
++
++	static inline u32& GetEndMagic(TBlock* pBlock)
++	{
++		return *reinterpret_cast<u32*>(reinterpret_cast<u8*>(pBlock) + pBlock->nSize - sizeof(BlockMagic));
++	}
++
++	// Constants
++	static constexpr u32 BlockMagic         = 0xDA1EDEAD;
++	static constexpr size_t MinFragmentSize = 16;
++
++	const char* m_pHeapName;
++	void* m_pHeap;
++	size_t m_nHeapSize;
++	TBlock m_MainBlock;
++	TBlock* m_pCurrentBlock;
++};
++
++#endif
+diff --git a/lib/Makefile b/lib/Makefile
+index aea1921..f9faded 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -28,7 +28,7 @@ OBJS	= actled.o alloc.o assert.o bcmframebuffer.o bcmmailbox.o \
+ 	  soundbasedevice.o spimaster.o spimasteraux.o spimasterdma.o spinlock.o \
+ 	  string.o sysinit.o time.o timer.o tracer.o usertimer.o util.o \
+ 	  util_fast.o virtualgpiopin.o chainboot.o macaddress.o netdevice.o \
+-	  new.o heapallocator.o pageallocator.o setjmp.o numberpool.o \
++	  new.o zoneallocator.o pageallocator.o setjmp.o numberpool.o \
+ 	  latencytester.o writebuffer.o 2dgraphics.o
+
+ OBJS32	= cache-v7.o exceptionhandler.o exceptionstub.o memory.o pagetable.o \
+diff --git a/lib/alloc.cpp b/lib/alloc.cpp
+index 96882bc..2cc8ed5 100644
+--- a/lib/alloc.cpp
++++ b/lib/alloc.cpp
+@@ -25,13 +25,13 @@
+
+ void *malloc (size_t nSize)
+ {
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC, TZoneTag::Malloc);
+ }
+
+ void *memalign (size_t nAlign, size_t nSize)
+ {
+ 	assert (nAlign <= HEAP_BLOCK_ALIGN);
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC, TZoneTag::Malloc);
+ }
+
+ void free (void *pBlock)
+@@ -48,7 +48,7 @@ void *calloc (size_t nBlocks, size_t nSize)
+ 	}
+ 	assert (nSize >= nBlocks);
+
+-	void *pNewBlock = CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC);
++	void *pNewBlock = CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_MALLOC, TZoneTag::Malloc);
+ 	if (pNewBlock != 0)
+ 	{
+ 		memset (pNewBlock, 0, nSize);
+@@ -59,7 +59,7 @@ void *calloc (size_t nBlocks, size_t nSize)
+
+ void *realloc (void *pBlock, size_t nSize)
+ {
+-	return CMemorySystem::HeapReAllocate (pBlock, nSize);
++	return CMemorySystem::HeapReAllocate (pBlock, nSize, TZoneTag::Malloc);
+ }
+
+ void *palloc (void)
+diff --git a/lib/new.cpp b/lib/new.cpp
+index dd256fe..b0e7fc3 100644
+--- a/lib/new.cpp
++++ b/lib/new.cpp
+@@ -22,12 +22,12 @@
+
+ void *operator new (size_t nSize, int nType)
+ {
+-	return CMemorySystem::HeapAllocate (nSize, nType);
++	return CMemorySystem::HeapAllocate (nSize, nType, TZoneTag::New);
+ }
+
+ void *operator new[] (size_t nSize, int nType)
+ {
+-	return CMemorySystem::HeapAllocate (nSize, nType);
++	return CMemorySystem::HeapAllocate (nSize, nType, TZoneTag::New);
+ }
+
+ #if STDLIB_SUPPORT != 3
+@@ -44,12 +44,12 @@ void *operator new[] (size_t nSize, void *pMem)
+
+ void *operator new (size_t nSize)
+ {
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW, TZoneTag::New);
+ }
+
+ void *operator new[] (size_t nSize)
+ {
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW, TZoneTag::New);
+ }
+
+ void operator delete (void *pBlock) noexcept
+@@ -79,13 +79,13 @@ void operator delete[] (void *pBlock, size_t nSize) noexcept
+ void *operator new (size_t nSize, std::align_val_t Align)
+ {
+ 	assert ((size_t) Align <= HEAP_BLOCK_ALIGN);
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW, TZoneTag::New);
+ }
+
+ void *operator new[] (size_t nSize, std::align_val_t Align)
+ {
+ 	assert ((size_t) Align <= HEAP_BLOCK_ALIGN);
+-	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW);
++	return CMemorySystem::HeapAllocate (nSize, HEAP_DEFAULT_NEW, TZoneTag::New);
+ }
+
+ void operator delete (void *pBlock, std::align_val_t Align) noexcept
+diff --git a/lib/zoneallocator.cpp b/lib/zoneallocator.cpp
+new file mode 100644
+index 0000000..9877592
+--- /dev/null
++++ b/lib/zoneallocator.cpp
+@@ -0,0 +1,417 @@
++//
++// zoneallocator.cpp
++//
++// mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
++// Copyright (C) 2020-2021 Dale Whinham <daleyo@gmail.com>
++//
++// This file is part of mt32-pi.
++//
++// mt32-pi is free software: you can redistribute it and/or modify it under the
++// terms of the GNU General Public License as published by the Free Software
++// Foundation, either version 3 of the License, or (at your option) any later
++// version.
++//
++// mt32-pi is distributed in the hope that it will be useful, but WITHOUT ANY
++// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
++// details.
++//
++// You should have received a copy of the GNU General Public License along with
++// mt32-pi. If not, see <http://www.gnu.org/licenses/>.
++//
++
++#include <circle/alloc.h>
++#include <circle/logger.h>
++#include <circle/memory.h>
++#include <circle/util.h>
++#include <circle/zoneallocator.h>
++
++#ifdef ZONE_ALLOCATOR_DEBUG
++#include <fatfs/ff.h>
++#include <cstdio>
++#endif
++
++const char ZoneAllocatorName[] = "zoneallocator";
++
++CZoneAllocator::CZoneAllocator(const char* pHeapName)
++	: m_pHeapName(pHeapName),
++	  m_pHeap(nullptr),
++	  m_nHeapSize(0),
++	  m_pCurrentBlock(nullptr)
++{
++}
++
++CZoneAllocator::~CZoneAllocator()
++{
++}
++
++void CZoneAllocator::Setup(uintptr nBase, size_t nSize, size_t nReserve)
++{
++	m_nHeapSize = nSize;
++	m_pHeap     = reinterpret_cast<u8*>(nBase);
++
++	// Initialize the heap with an empty block
++	Clear();
++}
++
++size_t CZoneAllocator::GetFreeSpace() const
++{
++	size_t nFreeSpace = 0;
++	TBlock* pBlock = m_MainBlock.pNext;
++
++	do
++	{
++		if (pBlock->Tag == TZoneTag::Free)
++			nFreeSpace += ((pBlock->nSize - sizeof(TBlock) - sizeof(BlockMagic) - 0x0F) & ~0x0F);
++		pBlock = pBlock->pNext;
++	} while (pBlock != &m_MainBlock);
++
++	return nFreeSpace;
++}
++
++void* CZoneAllocator::Allocate(size_t nSize, TZoneTag Tag)
++{
++	if (!nSize)
++		return nullptr;
++
++	if (Tag == TZoneTag::Free)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Zone allocation failed: tag value of 0 was used");
++		return nullptr;
++	}
++
++	// Account for size of block header and magic number at end of zone (for corruption detection), padded to 16 bytes
++	nSize = (nSize + sizeof(TBlock) + sizeof(BlockMagic) + 0x0F) & ~0x0F;
++
++	TBlock* pNextBlock      = m_pCurrentBlock;
++	TBlock* pCandidateBlock = m_pCurrentBlock;
++	TBlock* pStartBlock     = m_pCurrentBlock->pPrevious;
++
++	do
++	{
++		// We've been through the whole linked list and couldn't find a free block
++		if (pNextBlock == pStartBlock)
++		{
++			CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Zone allocation failed");
++			return nullptr;
++		}
++
++		// This block is in use; look at the next one
++		if (pNextBlock->Tag != TZoneTag::Free)
++			pCandidateBlock = pNextBlock->pNext;
++
++		pNextBlock = pNextBlock->pNext;
++	} while (pCandidateBlock->Tag || pCandidateBlock->nSize < nSize);
++
++	// Create a new block for any remaining free space
++	const size_t nRemaining = pCandidateBlock->nSize - nSize;
++	if (nRemaining > MinFragmentSize)
++	{
++		TBlock* pNewBlock    = reinterpret_cast<TBlock*>(reinterpret_cast<u8*>(pCandidateBlock) + nSize);
++		pNewBlock->nSize     = nRemaining;
++		pNewBlock->pNext     = pCandidateBlock->pNext;
++		pNewBlock->pPrevious = pCandidateBlock;
++		pNewBlock->Tag       = TZoneTag::Free;
++		pNewBlock->nMagic    = BlockMagic;
++#if AARCH == 32
++		memset(pNewBlock->Padding, 0xEB, sizeof(pNewBlock->Padding));
++#endif
++		// Set the next block's previous to look at the new block
++		pNewBlock->pNext->pPrevious = pNewBlock;
++
++		pCandidateBlock->nSize = nSize;
++		pCandidateBlock->pNext = pNewBlock;
++	}
++
++	// Mark block used
++	pCandidateBlock->Tag    = Tag;
++	pCandidateBlock->nMagic = BlockMagic;
++
++	// Mark end of memory with magic number
++	GetEndMagic(pCandidateBlock) = BlockMagic;
++
++	// Next allocation will start looking at this block
++	m_pCurrentBlock = pCandidateBlock->pNext;
++
++	return pCandidateBlock->pData;
++}
++
++void* CZoneAllocator::ReAllocate(void* pPtr, size_t nSize, TZoneTag Tag)
++{
++	// If passed a null pointer, perform a new allocation
++	if (!pPtr)
++		return Allocate(nSize, Tag);
++
++	if (!nSize)
++		return nullptr;
++
++	// Account for size of block header and magic number at end of zone (for corruption detection), padded to 16 bytes
++	const size_t nNewSize = (nSize + sizeof(TBlock) + sizeof(BlockMagic) + 0x0F) & ~0x0F;
++	TBlock* pBlock        = reinterpret_cast<TBlock*>(pPtr) - 1;
++
++	if (Tag == TZoneTag::Free)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Zone reallocation failed: tag value of 0 was used");
++		return nullptr;
++	}
++
++	if (pBlock->Tag == TZoneTag::Free)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Attempted to reallocate a freed block");
++		return nullptr;
++	}
++
++	// Expand block
++	if (nNewSize > pBlock->nSize)
++	{
++		const size_t nSizeDiff = nNewSize - pBlock->nSize;
++
++		// Expand in-place if next block is free and large enough
++		if (pBlock->pNext->Tag == TZoneTag::Free && pBlock->pNext->nSize >= nSizeDiff)
++		{
++			TBlock* pNewBlock = reinterpret_cast<TBlock*>(reinterpret_cast<u8*>(pBlock) + nNewSize);
++
++			pNewBlock->nSize            = pBlock->pNext->nSize - nSizeDiff;
++			pNewBlock->pNext            = pBlock->pNext->pNext;
++			pNewBlock->pNext->pPrevious = pNewBlock;
++			pNewBlock->pPrevious        = pBlock;
++			pNewBlock->Tag              = TZoneTag::Free;
++			pNewBlock->nMagic           = BlockMagic;
++#if AARCH == 32
++			memset(pNewBlock->Padding, 0xEB, sizeof(pNewBlock->Padding));
++#endif
++			GetEndMagic(pNewBlock) = BlockMagic;
++
++			// Next allocations search from this new merged free block
++			if (pBlock->pNext == m_pCurrentBlock)
++				m_pCurrentBlock = pNewBlock;
++
++			pBlock->nSize       = nNewSize;
++			pBlock->pNext       = pNewBlock;
++			pBlock->Tag         = Tag;
++			GetEndMagic(pBlock) = BlockMagic;
++
++			return pBlock + 1;
++		}
++
++		// Allocate a new block and move contents
++		else
++		{
++			const size_t nSrcSize = pBlock->nSize - sizeof(TBlock) - sizeof(BlockMagic);
++			void* pDest           = Allocate(nSize, Tag);
++
++			if (!pDest)
++			{
++				CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Zone reallocation failed");
++				return nullptr;
++			}
++
++			memcpy(pDest, pPtr, nSrcSize);
++			Free(pPtr);
++
++			return pDest;
++		}
++	}
++
++	// Shrink in-place
++	if (nNewSize < pBlock->nSize)
++	{
++		const size_t nRemain = pBlock->nSize - nNewSize;
++		if (nRemain > MinFragmentSize)
++		{
++			TBlock* pNewBlock = reinterpret_cast<TBlock*>(reinterpret_cast<u8*>(pBlock) + nNewSize);
++
++			if (pBlock->pNext->Tag == TZoneTag::Free)
++			{
++				// Merge free space with next block if it is also free
++				*pNewBlock = *pBlock->pNext;
++				pNewBlock->nSize += nRemain;
++			}
++			else
++			{
++				// Create a new block for any remaining free space
++				pNewBlock->nSize     = nRemain;
++				pNewBlock->pNext     = pBlock->pNext;
++				pNewBlock->pPrevious = pBlock;
++				pNewBlock->Tag       = TZoneTag::Free;
++				pNewBlock->nMagic    = BlockMagic;
++#if AARCH == 32
++				memset(pNewBlock->Padding, 0xEB, sizeof(pNewBlock->Padding));
++#endif
++				GetEndMagic(pNewBlock) = BlockMagic;
++			}
++
++			// Next allocations search from this new merged free block
++			if (pBlock->pNext == m_pCurrentBlock)
++				m_pCurrentBlock = pNewBlock;
++
++			// Set the next block's previous to look at the new block
++			pNewBlock->pNext->pPrevious = pNewBlock;
++
++			pBlock->pNext = pNewBlock;
++		}
++
++		pBlock->nSize = nNewSize;
++		pBlock->Tag   = Tag;
++
++		// Mark end of memory with magic number
++		GetEndMagic(pBlock) = BlockMagic;
++
++		return pBlock->pData;
++	}
++
++	// Size is the same, just update tag
++	pBlock->Tag = Tag;
++	return pPtr;
++}
++
++void CZoneAllocator::Free(void* pPtr)
++{
++	if (!pPtr)
++		return;
++
++	TBlock* pBlock = reinterpret_cast<TBlock*>(pPtr) - 1;
++
++	if (pBlock->Tag == TZoneTag::Free)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Attempted to free an already-freed block");
++		return;
++	}
++
++	if (pBlock->nMagic != BlockMagic)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Attempted to free a block with a bad magic number (heap corruption?)");
++		return;
++	}
++
++	// Mark this block as free
++	pBlock->Tag = TZoneTag::Free;
++
++	// Join with previous block if previous block is also free
++	TBlock* pAdjacentBlock = pBlock->pPrevious;
++	if (pAdjacentBlock->Tag == TZoneTag::Free)
++	{
++		pAdjacentBlock->nSize += pBlock->nSize;
++		pAdjacentBlock->pNext            = pBlock->pNext;
++		pAdjacentBlock->pNext->pPrevious = pAdjacentBlock;
++		// Next allocations search from this new merged free block
++		if (pBlock == m_pCurrentBlock)
++			m_pCurrentBlock = pAdjacentBlock;
++
++		pBlock = pAdjacentBlock;
++	}
++
++	// Join with next block if next block is also free
++	pAdjacentBlock = pBlock->pNext;
++	if (pAdjacentBlock->Tag == TZoneTag::Free)
++	{
++		pBlock->nSize += pAdjacentBlock->nSize;
++		pBlock->pNext            = pAdjacentBlock->pNext;
++		pBlock->pNext->pPrevious = pBlock;
++		if (pAdjacentBlock == m_pCurrentBlock)
++			m_pCurrentBlock = pBlock;
++	}
++}
++
++void CZoneAllocator::Clear()
++{
++	TBlock* pFirstBlock = static_cast<TBlock*>(m_pHeap);
++
++	// The main block is a special block which acts as an end marker for the linked list of blocks
++	m_MainBlock.nSize     = 0;
++	m_MainBlock.pNext     = pFirstBlock;
++	m_MainBlock.pPrevious = pFirstBlock;
++	m_MainBlock.Tag       = TZoneTag::Uncategorized;
++	m_MainBlock.nMagic    = 0;
++#if AARCH == 32
++	// 0xEB - "extra byte"; useful for memory view when debugging
++	memset(m_MainBlock.Padding, 0xEB, sizeof(m_MainBlock.Padding));
++#endif
++
++	pFirstBlock->nSize     = m_nHeapSize;
++	pFirstBlock->pNext     = &m_MainBlock;
++	pFirstBlock->pPrevious = &m_MainBlock;
++	pFirstBlock->Tag       = TZoneTag::Free;
++	pFirstBlock->nMagic    = BlockMagic;
++#if AARCH == 32
++	memset(pFirstBlock->Padding, 0xEB, sizeof(pFirstBlock->Padding));
++#endif
++
++	m_pCurrentBlock = pFirstBlock;
++}
++
++void CZoneAllocator::FreeTag(u32 Tag)
++{
++	if (Tag == TZoneTag::Free)
++	{
++		CLogger::Get()->WriteNoAlloc(ZoneAllocatorName, LogError, "Attempted to free an invalid tag");
++		return;
++	}
++
++	TBlock* pBlock = m_MainBlock.pNext;
++	TBlock* pNextBlock;
++
++	do
++	{
++		// Grab the next block before freeing this one
++		pNextBlock = pBlock->pNext;
++		if (pBlock->Tag == Tag)
++			Free(reinterpret_cast<u8*>(pBlock) + sizeof(TBlock));
++		pBlock = pNextBlock;
++	} while (pBlock != &m_MainBlock);
++}
++
++#ifdef ZONE_ALLOCATOR_DEBUG
++void CZoneAllocator::DumpStatus() const
++{
++	FIL File;
++	char Buffer[512];
++
++	snprintf(Buffer, sizeof(Buffer), "SD:memdump-%s.json", m_pHeapName);
++	if (f_open(&File, Buffer, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
++		return;
++
++	int nLen = snprintf(Buffer, sizeof(Buffer),
++		"{\n"
++			"\t\"name\": \"%s\",\n"
++			"\t\"base\": \"%p\",\n"
++			"\t\"size\": %ld,\n"
++			"\t\"blocks\":\n"
++			"\t[\n",
++		m_pHeapName,
++		m_pHeap,
++		m_nHeapSize
++	);
++
++	f_write(&File, Buffer, nLen, nullptr);
++
++	TBlock* pBlock = m_MainBlock.pNext;
++	do
++	{
++		// If the block is free, it doesn't need a valid tail magic
++		const bool bMagicOK = (pBlock->nMagic == BlockMagic) && (!pBlock->Tag || GetEndMagic(pBlock) == BlockMagic);
++		const bool bLastBlock = pBlock->pNext != &m_MainBlock;
++
++		nLen = snprintf(Buffer, sizeof(Buffer),
++			"\t\t{\n"
++				"\t\t\t\"address\": \"%p\",\n"
++				"\t\t\t\"tag\": %d,\n"
++				"\t\t\t\"size\": %ld,\n"
++				"\t\t\t\"magic_ok\": %s\n"
++			"\t\t}%s\n",
++			pBlock,
++			pBlock->Tag,
++			pBlock->nSize,
++			bMagicOK ? "true" : "false",
++			bLastBlock ? "" : ","
++		);
++
++		f_write(&File, Buffer, nLen, nullptr);
++		pBlock = pBlock->pNext;
++	} while (pBlock != &m_MainBlock);
++
++	nLen = snprintf(Buffer, sizeof(Buffer), "\t]\n}\n");
++	f_write(&File, Buffer, nLen, nullptr);
++	f_close(&File);
++}
++#endif
