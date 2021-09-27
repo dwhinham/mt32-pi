@@ -104,10 +104,6 @@ bool CKernel::Initialize(void)
 	if (!m_GPIOManager.Initialize())
 		return false;
 
-	// Init custom memory allocator
-	if (!m_Allocator.Initialize())
-		return false;
-
 	if (!m_MT32Pi.Initialize(bSerialMIDIAvailable))
 		return false;
 
