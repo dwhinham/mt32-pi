@@ -234,7 +234,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			LCDLog(TLCDLogType::Startup, "Init audio (I2S)");
 
 			// Pisound provides clock
-			const bool bSlave = m_pPisound != nullptr;
+			const bool bSlave = true;//m_pPisound != nullptr;
 			m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, m_pConfig->AudioSampleRate, m_pConfig->AudioChunkSize, bSlave);
 
 			if (m_pConfig->AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
