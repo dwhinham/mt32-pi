@@ -71,7 +71,7 @@ bool CSoundFontManager::ScanSoundFonts()
 	// Loop over each disk
 	for (auto pDisk : Disks)
 	{
-		DirectoryPath.Format("%s:/%s", pDisk, SoundFontDirectory);
+		DirectoryPath.Format("%s:%s", pDisk, SoundFontDirectory);
 		Result = f_findfirst(&Dir, &FileInfo, DirectoryPath, "*");
 
 		// Loop over each file in the directory

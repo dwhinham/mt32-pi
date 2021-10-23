@@ -37,8 +37,8 @@
 const char MT32PiName[] = MT32_PI_NAME;
 const char MT32PiFullName[] = MT32_PI_NAME " " MT32_PI_VERSION;
 
-const char WLANFirmwarePath[] = "SD:/firmware/";
-const char WLANConfigFile[]   = "SD:/wpa_supplicant.conf";
+const char WLANFirmwarePath[] = "SD:firmware/";
+const char WLANConfigFile[]   = "SD:wpa_supplicant.conf";
 
 constexpr u32 LCDUpdatePeriodMillis                = 16;
 constexpr u32 MisterUpdatePeriodMillis             = 50;
