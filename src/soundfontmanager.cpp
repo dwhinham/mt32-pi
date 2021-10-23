@@ -81,9 +81,8 @@ bool CSoundFontManager::ScanSoundFonts()
 			if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
 			{
 				// Assemble path
-				CString SoundFontPath(static_cast<const char*>(DirectoryPath));
-				SoundFontPath.Append("/");
-				SoundFontPath.Append(FileInfo.fname);
+				CString SoundFontPath;
+				SoundFontPath.Format("%s/%s", static_cast<const char*>(DirectoryPath), FileInfo.fname);
 
 				CheckSoundFont(SoundFontPath, FileInfo.fname);
 			}
@@ -92,7 +91,6 @@ bool CSoundFontManager::ScanSoundFonts()
 		}
 	}
 
-	// Sort into alphabetical order
 	if (m_nSoundFonts > 0)
 	{
 		// Sort into lexicographical order
