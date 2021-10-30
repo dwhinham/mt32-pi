@@ -209,6 +209,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 
 	// Queue size of just one chunk
 	unsigned int nQueueSize = m_pConfig->AudioChunkSize;
+	TSoundFormat Format = TSoundFormat::SoundFormatSigned24;
 
 	switch (m_pConfig->AudioOutputDevice)
 	{
@@ -236,6 +237,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			// Pisound provides clock
 			const bool bSlave = m_pPisound != nullptr;
 			m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, m_pConfig->AudioSampleRate, m_pConfig->AudioChunkSize, bSlave);
+			Format = TSoundFormat::SoundFormatSigned24_32;
 
 			if (m_pConfig->AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
 				InitPCM51xx(m_pConfig->AudioI2CDACAddress);
@@ -244,7 +246,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		}
 	}
 
-	m_pSound->SetWriteFormat(TSoundFormat::SoundFormatSigned24);
+	m_pSound->SetWriteFormat(Format);
 	if (!m_pSound->AllocateQueueFrames(nQueueSize))
 		m_pLogger->Write(MT32PiName, LogPanic, "Failed to allocate sound queue");
 
@@ -547,9 +549,9 @@ void CMT32Pi::AudioTask()
 
 	constexpr u8 nChannels = 2;
 
-	// FIXME: Circle's "fast path" for I2S 24-bit really expects 32-bit samples
+	// Circle's "fast path" for I2S 24-bit really expects 32-bit samples
 	const bool bI2S = m_pConfig->AudioOutputDevice == CConfig::TAudioOutputDevice::I2S;
-	const u8 nBytesPerSample = bI2S ? sizeof(s32) : 3;
+	const u8 nBytesPerSample = bI2S ? sizeof(s32) : (sizeof(s8) * 3);
 	const u8 nBytesPerFrame = 2 * nBytesPerSample;
 
 	const size_t nQueueSizeFrames = m_pSound->GetQueueSizeFrames();
