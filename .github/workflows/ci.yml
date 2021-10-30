@@ -3,7 +3,7 @@ name: mt32-pi CI
 on: [push, pull_request]
 
 env:
-  toolchain-version: 10.2-2020.11
+  toolchain-version: 10.3-2021.07
 
 jobs:
   build:
