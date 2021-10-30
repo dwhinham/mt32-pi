@@ -1,5 +1,20 @@
+diff --git a/include/circle/usb/usbdevicefactory.h b/include/circle/usb/usbdevicefactory.h
+index b0ca55f..5a3d2ae 100644
+--- a/include/circle/usb/usbdevicefactory.h
++++ b/include/circle/usb/usbdevicefactory.h
+@@ -38,8 +38,10 @@ public:
+ 	static CUSBFunction *GetDevice (CUSBFunction *pParent, CString *pName);
+ 
+ private:
++#if 0
+ 	// for "int3-0-0" devices
+ 	static CUSBFunction *GetGenericHIDDevice (CUSBFunction *pParent);
++#endif
+ 
+ 	static boolean FindDeviceID (CString *pName, const TUSBDeviceID *pIDTable);
+ };
 diff --git a/lib/usb/Makefile b/lib/usb/Makefile
-index 88c33b4..d297087 100644
+index 59a1fa7..2f4e334 100644
 --- a/lib/usb/Makefile
 +++ b/lib/usb/Makefile
 @@ -26,9 +26,7 @@ include $(CIRCLEHOME)/Rules.mk
@@ -11,13 +26,13 @@ index 88c33b4..d297087 100644
 -	  usbkeyboard.o usbmassdevice.o usbmidi.o usbmouse.o usbprinter.o usbrequest.o \
 +	  usbhiddevice.o usbhostcontroller.o usbkeyboard.o usbmassdevice.o usbmidi.o usbrequest.o \
  	  usbstandardhub.o usbstring.o usbserial.o usbserialch341.o usbserialcp2102.o \
- 	  usbserialpl2303.o usbserialft231x.o usbserialcdc.o
+ 	  usbserialpl2303.o usbserialft231x.o usbserialcdc.o usbtouchscreen.o
  
 diff --git a/lib/usb/usbdevicefactory.cpp b/lib/usb/usbdevicefactory.cpp
-index c67f36f..16388e1 100644
+index 7cc1a2f..2715670 100644
 --- a/lib/usb/usbdevicefactory.cpp
 +++ b/lib/usb/usbdevicefactory.cpp
-@@ -59,6 +59,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+@@ -62,6 +62,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	{
  		pResult = new CUSBBulkOnlyMassStorageDevice (pParent);
  	}
@@ -25,7 +40,7 @@ index c67f36f..16388e1 100644
  	else if (pName->Compare ("int3-1-1") == 0)
  	{
  		pResult = new CUSBKeyboardDevice (pParent);
-@@ -101,6 +102,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+@@ -104,6 +105,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	{
  		pResult = new CUSBPrinterDevice (pParent);
  	}
@@ -33,7 +48,7 @@ index c67f36f..16388e1 100644
  	else if (pName->Compare ("ven424-ec00") == 0)
  	{
  		pResult = new CSMSC951xDevice (pParent);
-@@ -109,11 +111,13 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+@@ -112,11 +114,13 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	{
  		pResult = new CLAN7800Device (pParent);
  	}
@@ -47,3 +62,19 @@ index c67f36f..16388e1 100644
  	else if (   pName->Compare ("int1-3-0") == 0
  		 || pName->Compare ("ven582-12a") == 0)		// Roland UM-ONE MIDI interface
  	{
+@@ -159,6 +163,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+ 	return pResult;
+ }
+ 
++#if 0
+ CUSBFunction *CUSBDeviceFactory::GetGenericHIDDevice (CUSBFunction *pParent)
+ {
+ 	// Must copy parent function here, because we consume the HID report descriptor,
+@@ -237,6 +242,7 @@ CUSBFunction *CUSBDeviceFactory::GetGenericHIDDevice (CUSBFunction *pParent)
+ 
+ 	return new CUSBGamePadStandardDevice (pParent);
+ }
++#endif
+ 
+ boolean CUSBDeviceFactory::FindDeviceID (CString *pName, const TUSBDeviceID *pIDTable)
+ {
