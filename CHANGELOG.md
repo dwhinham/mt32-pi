@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for the new Raspberry Pi Zero 2 W.
+  * You **must** update `config.txt`, otherwise the Zero 2 W will boot the 32-bit Raspberry Pi 2 kernel, which will result in lower performance.
+  * This model requires new boot firmware and Wi-Fi firmware - make sure you update `bootcode.bin`, `fixup*.dat`, `start*.elf`, and the contents of the `firmware` directory.
+
 ### Fixed
 
 - "WiFi disconnected!" would be shown on the LCD when Ethernet was disconnected.

@@ -13,7 +13,14 @@ disable_overscan=1
 # WARNING: Possible instability; use at your own risk! Use a heatsink!
 #avoid_warnings=2
 
-# Enable 64-bit mode (AArch64) for Pi 3 and 4
+[pi02]
+arm_64bit=1
+kernel=kernel8.img
+
+# Uncomment the following to overclock the Pi Zero 2 W to match the performance of the Pi 3B
+#arm_freq=1200
+#over_voltage=2
+
 [pi3]
 arm_64bit=1
 kernel=kernel8.img
