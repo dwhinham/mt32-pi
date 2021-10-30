@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - "WiFi disconnected!" would be shown on the LCD when Ethernet was disconnected.
+- The SoundFont loading "spinner" was broken since v0.10.0.
 
 ### Changed
 

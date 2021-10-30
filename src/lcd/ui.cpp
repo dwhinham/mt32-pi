@@ -94,8 +94,11 @@ void CUserInterface::Update(CLCD& LCD, CSynthBase& Synth, unsigned int nTicks)
 	// Spinner update
 	else if (m_State == TState::DisplayingSpinnerMessage && !m_bIsScrolling && nDeltaTicks >= Utility::MillisToTicks(SystemMessageSpinnerTimeMillis))
 	{
+		// TODO: API for getting width in pixels/characters for a string
+		const size_t nCharWidth = LCD.GetType() == CLCD::TType::Graphical ? 20 : LCD.Width();
+
 		m_nCurrentSpinnerChar = (m_nCurrentSpinnerChar + 1) % sizeof(SpinnerChars);
-		m_SystemMessageTextBuffer[SystemMessageTextBufferSize - 2] = SpinnerChars[m_nCurrentSpinnerChar];
+		m_SystemMessageTextBuffer[nCharWidth - 2] = SpinnerChars[m_nCurrentSpinnerChar];
 		m_nStateTime = nTicks;
 	}
 
