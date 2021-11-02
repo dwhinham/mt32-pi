@@ -14,7 +14,7 @@ jobs:
       matrix:
         board: [pi2, pi3-64, pi4-64]
     steps:
-    - uses: actions/checkout@v2.3.5
+    - uses: actions/checkout@v2.4.0
       with:
         submodules: recursive
 
@@ -68,7 +68,7 @@ jobs:
       wlan-home: external/circle-stdlib/libs/circle/addon/wlan
 
     steps:
-    - uses: actions/checkout@v2.3.5
+    - uses: actions/checkout@v2.4.0
       with:
         submodules: recursive
 
