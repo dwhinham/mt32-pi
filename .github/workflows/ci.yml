@@ -138,6 +138,9 @@ jobs:
         cp  ${{ env.wlan-home }}/firmware/LICENCE.broadcom_bcm43xx \
             ${{ env.wlan-home }}/firmware/brcmfmac43430-sdio.bin \
             ${{ env.wlan-home }}/firmware/brcmfmac43430-sdio.txt \
+            ${{ env.wlan-home }}/firmware/brcmfmac43436-sdio.bin \
+            ${{ env.wlan-home }}/firmware/brcmfmac43436-sdio.txt \
+            ${{ env.wlan-home }}/firmware/brcmfmac43436-sdio.clm_blob \
             ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.bin \
             ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.txt \
             ${{ env.wlan-home }}/firmware/brcmfmac43455-sdio.clm_blob \
