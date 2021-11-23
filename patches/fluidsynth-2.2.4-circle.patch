@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8b6994bc..261b9f2b 100644
+index e4ea71c6..b22a5a1d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -487,6 +487,7 @@ if ( ASTYLE )
+@@ -492,6 +492,7 @@ if ( ASTYLE )
      )
  endif(ASTYLE)
  
@@ -10,7 +10,7 @@ index 8b6994bc..261b9f2b 100644
  if(NOT enable-pkgconfig)
  
      FIND_LIBRARY( GLIB_LIB NAMES glib glib-2.0 PATH GLIB_LIBRARY_DIR )
-@@ -654,6 +655,7 @@ else(NOT enable-pkgconfig)
+@@ -688,6 +689,7 @@ else(NOT enable-pkgconfig)
      endif ( enable-readline )
  
  endif(NOT enable-pkgconfig)
@@ -19,7 +19,7 @@ index 8b6994bc..261b9f2b 100644
  unset ( AUFILE_SUPPORT CACHE )
  if ( enable-aufile )
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index e913cb21..e1ef5e43 100644
+index 4f3ef86a..63e52d13 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -203,23 +203,23 @@ set ( libfluidsynth_SOURCES
