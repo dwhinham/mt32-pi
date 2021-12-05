@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update ARM toolchains to 10.3-2021.07.
 - Update to libmt32emu v2.5.3.
 - Update to FluidSynth v2.2.4.
+- The default FluidSynth polyphony value has been reduced from 256 to 200 to account for the lower out-of-the-box performance of the Pi Zero 2 W.
+  * For the vast majority of use cases, this will have no noticable difference.
+  * If you prefer, a +200MHz overclock can be applied to the Zero 2 W match the performance of the Raspberry Pi 3B (1.2GHz), in which case you can use the original higher polyphony value of 256. Commented-out example of how to do this is now provided in `config.txt`.
+  * Heatsink/cooling recommended to ensure stability if you decide to do the above.
 
 ## [0.10.3] - 2021-09-03
 
