@@ -32,6 +32,9 @@ endif
 	# Improve I/O throughput
 	echo "DEFINE += -DNO_BUSY_WAIT" >> $(CIRCLE_CONFIG)
 
+	# Enable PWM audio output on GPIO 12/13 for the Pi Zero 2 W
+	echo "DEFINE += -DUSE_PWM_AUDIO_ON_ZERO" >> $(CIRCLE_CONFIG)
+
 #
 # Build circle-stdlib
 #
