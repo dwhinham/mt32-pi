@@ -311,6 +311,9 @@ void CSSD1306::DrawChar(char chChar, u8 nCursorX, u8 nCursorY, bool bInverted, b
 	if (chChar == '\xFF')
 		chChar = '\x80';
 
+	else if (chChar < ' ')
+		chChar = ' ';
+
 	for (u8 i = 0; i < 6; ++i)
 	{
 		u16 nFontColumn = FontDouble[static_cast<u8>(chChar - ' ')][i];

@@ -35,7 +35,7 @@ enum TYamahaAddress : u32
 	XGSystemOn = 0x00007E,
 
 	DisplayLetter = 0x060000,
-	DisplayBitmap = 0x060000,
+	DisplayBitmap = 0x070000,
 };
 
 enum TYamahaAddressMask : u32

@@ -503,7 +503,8 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 		return false;
 
 	const auto& Header = reinterpret_cast<const TRolandSysExHeader&>(pData[1]);
-	const u32 nAddress = Header.Address[0] << 16 | Header.Address[1] << 8 | Header.Address[2];
+	const u32 nAddressHiMed = Header.Address[0] << 16 | Header.Address[1] << 8;
+	const u8 nAddressLo = Header.Address[2];
 	const u8* pRolandData = pData + sizeof(TRolandSysExHeader) + 1;
 	const size_t nRolandDataSize = nSize - sizeof(TRolandSysExHeader) - 3;
 	const u8 nChecksum = pData[nSize - 2];
@@ -517,7 +518,7 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 	// Single byte GS messages
 	if (Header.ModelID == TRolandModelID::GS && nRolandDataSize == 1)
 	{
-		if ((nAddress == TRolandAddress::GSReset || nAddress == TRolandAddress::SystemModeSet) && *pRolandData == 0)
+		if ((nAddressHiMed == TRolandAddress::GSReset || nAddressHiMed == TRolandAddress::SystemModeSet) && *pRolandData == 0)
 		{
 			// Reset MIDI monitor on GS reset
 			ResetMIDIMonitor();
@@ -525,7 +526,7 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 			// Don't consume; forward to FluidSynth
 			return false;
 		}
-		else if ((nAddress & TRolandAddressMask::PatchPart) == TRolandAddress::UseForRhythmPart)
+		else if ((nAddressHiMed & TRolandAddressMask::PatchPart) == TRolandAddress::UseForRhythmPart)
 		{
 			// TODO: If FluidSynth had an API to query the channel mode we wouldn't need to keep track of it
 			const u8 nChannel = Header.Address[1] & 0x0F;
@@ -538,18 +539,18 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 	}
 	else if (Header.ModelID == TRolandModelID::SC55)
 	{
-		if (nAddress == TRolandAddress::SC55DisplayText && nRolandDataSize <= 32)
+		if (nAddressHiMed == TRolandAddress::SC55DisplayText)
 		{
 			if (m_pUI)
-				m_pUI->ShowSC55Text(pRolandData, nRolandDataSize, 0);
+				m_pUI->ShowSysExText(CUserInterface::TSysExDisplayMessage::Roland, pRolandData, nRolandDataSize, nAddressLo);
 
 			// Consume
 			return true;
 		}
-		else if (nAddress == TRolandAddress::SC55DisplayDots && nRolandDataSize == 64)
+		else if (nAddressHiMed == TRolandAddress::SC55DisplayDots)
 		{
 			if (m_pUI)
-				m_pUI->ShowSC55Dots(pRolandData);
+				m_pUI->ShowSysExBitmap(CUserInterface::TSysExDisplayMessage::Roland, pRolandData, nRolandDataSize);
 
 			// Consume
 			return true;
@@ -566,21 +567,39 @@ bool CSoundFontSynth::ParseYamahaSysEx(const u8* pData, size_t nSize)
 		return false;
 
 	const auto& Header = reinterpret_cast<const TYamahaSysExHeader&>(pData[1]);
-	const u32 nAddress = Header.Address[0] << 16 | Header.Address[1] << 8 | Header.Address[2];
+	const u32 nAddressHiMed = Header.Address[0] << 16 | Header.Address[1] << 8;
+	const u8 nAddressLo = Header.Address[2];
 	const u8* pYamahaData = pData + sizeof(TYamahaSysExHeader) + 1;
+	const size_t nYamahaDataSize = nSize - sizeof(TYamahaSysExHeader) - 2;
 
 	if (Header.ManufacturerID != TManufacturerID::Yamaha)
 		return false;
 
 	if (Header.ModelID == TYamahaModelID::XG)
 	{
-		if (nAddress == TYamahaAddress::XGSystemOn && *pYamahaData == 0)
+		if (nAddressHiMed == TYamahaAddress::XGSystemOn && *pYamahaData == 0)
 		{
 			// Reset MIDI monitor on XG reset
 			ResetMIDIMonitor();
 
 			// Don't consume; forward to FluidSynth
 			return false;
+		}
+		else if (nAddressHiMed == TYamahaAddress::DisplayLetter)
+		{
+			if (m_pUI)
+				m_pUI->ShowSysExText(CUserInterface::TSysExDisplayMessage::Yamaha, pYamahaData, nYamahaDataSize, nAddressLo);
+
+			// Consume
+			return true;
+		}
+		else if (nAddressHiMed == TYamahaAddress::DisplayBitmap)
+		{
+			if (m_pUI)
+				m_pUI->ShowSysExBitmap(CUserInterface::TSysExDisplayMessage::Yamaha, pYamahaData, nYamahaDataSize);
+
+			// Consume
+			return true;
 		}
 	}
 

@@ -33,16 +33,10 @@ class CSynthBase;
 class CUserInterface
 {
 public:
-	enum class TState
+	enum class TSysExDisplayMessage
 	{
-		None,
-		DisplayingMessage,
-		DisplayingSpinnerMessage,
-		DisplayingImage,
-		DisplayingSC55Text,
-		DisplayingSC55Dots,
-		EnteringPowerSavingMode,
-		InPowerSavingMode
+		Roland,
+		Yamaha,
 	};
 
 	CUserInterface();
@@ -52,8 +46,8 @@ public:
 	void ShowSystemMessage(const char* pMessage, bool bSpinner = false);
 	void ClearSpinnerMessage();
 	void DisplayImage(TImage Image);
-	void ShowSC55Text(const u8* pMessage, size_t nSize, u8 nOffset);
-	void ShowSC55Dots(const u8* pData);
+	void ShowSysExText(TSysExDisplayMessage Type, const u8* pMessage, size_t nSize, u8 nOffset);
+	void ShowSysExBitmap(TSysExDisplayMessage Type, const u8* pData, size_t nSize);
 	void EnterPowerSavingMode();
 	void ExitPowerSavingMode();
 
@@ -63,18 +57,29 @@ public:
 	static void DrawChannelLevels(CLCD& LCD, u8 nBarHeight, float* pChannelLevels, float* pPeakLevels, u8 nChannels, bool bDrawBarBases);
 
 private:
+	enum class TState
+	{
+		None,
+		DisplayingMessage,
+		DisplayingSpinnerMessage,
+		DisplayingImage,
+		DisplayingSysExText,
+		DisplayingSysExBitmap,
+		EnteringPowerSavingMode,
+		InPowerSavingMode
+	};
+
 	bool UpdateScroll(CLCD& LCD, unsigned int nTicks);
 	bool DrawSystemState(CLCD& LCD) const;
-	void DrawSC55Dots(CLCD& LCD, u8 nFirstRow, u8 nRows) const;
+	void DrawSysExText(CLCD& LCD, u8 nFirstRow) const;
+	void DrawSysExBitmap(CLCD& LCD, u8 nFirstRow, u8 nRows) const;
 
 	static void DrawChannelLevelsCharacter(CLCD& LCD, u8 nRows, u8 nBarOffsetX, u8 nBarYOffset, u8 nBarSpacing, const float* pChannelLevels, u8 nChannels, bool bDrawBarBases);
 	static void DrawChannelLevelsGraphical(CLCD& LCD, u8 nBarOffsetX, u8 nBarYOffset, u8 nBarWidth, u8 nBarHeight, u8 nBarSpacing, const float* pChannelLevels, const float* pPeakLevels, u8 nChannels, bool bDrawBarBases);
 
 	static constexpr size_t SystemMessageTextBufferSize = 256;
-	static constexpr size_t SC55TextBufferSize = 32 + 1;
-
-	// 64 bytes; each byte representing 5 pixels (see p78 of SC-55 manual)
-	static constexpr size_t SC55PixelBufferSize = 64;
+	static constexpr size_t SyxExTextBufferSize = 32 + 1;
+	static constexpr size_t SysExPixelBufferSize = 64;
 
 	static constexpr unsigned SystemMessageDisplayTimeMillis = 3000;
 	static constexpr unsigned SystemMessageSpinnerTimeMillis = 32;
@@ -88,8 +93,9 @@ private:
 	size_t m_nCurrentSpinnerChar;
 	TImage m_CurrentImage;
 	char m_SystemMessageTextBuffer[SystemMessageTextBufferSize];
-	char m_SC55TextBuffer[SC55TextBufferSize];
-	u8 m_SC55PixelBuffer[SC55PixelBufferSize];
+	TSysExDisplayMessage m_SysExDisplayMessageType;
+	char m_SysExTextBuffer[SyxExTextBufferSize];
+	u8 m_SysExPixelBuffer[SysExPixelBufferSize];
 };
 
 #endif

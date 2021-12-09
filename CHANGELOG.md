@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Experimental embedded FTP server for performing updates/config changes without replacing the SD card (new configuration file options).
   * This FTP server is a very basic implementation which DOES NOT feature any kind of transport layer security/encryption. Therefore, you should NOT enable this feature on a public network or expose the Raspberry Pi to the Internet.
   * The FTP server is disabled by default.
+- Support for Yamaha MU-series SysEx text messages, and bitmap messages when using a graphical display.
 
 ### Fixed
 
