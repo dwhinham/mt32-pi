@@ -828,7 +828,7 @@ void CMT32Pi::UpdateNetwork()
 		m_bNetworkReady = true;
 
 		CString IPString;
-		m_pNet->GetConfig()->GetIPAddress ()->Format(&IPString);
+		m_pNet->GetConfig()->GetIPAddress()->Format(&IPString);
 
 		m_pLogger->Write(MT32PiName, LogNotice, "Network up and running at: %s", static_cast<const char *>(IPString));
 		LCDLog(TLCDLogType::Notice, "%s: %s", GetNetworkDeviceShortName(), static_cast<const char*>(IPString));
@@ -853,6 +853,7 @@ void CMT32Pi::UpdateNetwork()
 		LCDLog(TLCDLogType::Notice, "%s disconnected!", GetNetworkDeviceShortName());
 
 		delete m_pAppleMIDIParticipant;
+		m_pAppleMIDIParticipant = nullptr;
 	}
 
 	m_pNet->Process();
@@ -1270,7 +1271,7 @@ void CMT32Pi::PanicHandler()
 
 	// Skip past timestamp and log source, kill color control characters
 	pMessageStart = strstr(pMessageStart, ": ") + 2;
-	char* pMessageEnd = strstr(pMessageStart, "\x1b[0m");
+	char* pMessageEnd = strstr(pMessageStart, "\x1B[0m");
 	*pMessageEnd = '\0';
 
 	const size_t nMessageLength = strlen(pMessageStart);
