@@ -1266,6 +1266,11 @@ void CMT32Pi::PanicHandler()
 	if (!s_pThis || !s_pThis->m_pLCD)
 		return;
 
+	// Kill UI task
+	s_pThis->m_bRunning = false;
+	while (!s_pThis->m_bUITaskDone)
+		;
+
 	const char* pGuru = "Guru Meditation:";
 	u8 nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pGuru);
 	s_pThis->m_pLCD->Clear(true);
