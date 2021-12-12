@@ -18,9 +18,9 @@
 
 <img title="mt32-pi running on the Raspberry Pi 3 A+ with the Arananet PI-MIDI HAT." width="280rem" align="right" src="images/mt32pi_pimidi.png">
 
-- Tested on Raspberry Pi 4 Model B and Raspberry Pi 3 Model A+, B, and B+.
+- Supports Raspberry Pi Zero 2 W, Raspberry Pi 3 Model A+, B, and B+, Raspberry Pi 4 Model B, and CM4 series.
   * Pi 2 works, but only with concessions on playback quality.
-  * Pi Zero and 1 are unfortunately too slow (even with an overclock) and unsupported.
+  * Pi Zero (original) and Pi 1 are unfortunately too slow (even with an overclock) and unsupported.
 - PWM headphone jack audio.
   * Quality is known to be poor (aliasing/distortion on quieter sounds).
   * It is not currently known whether this can be improved or not.
@@ -32,7 +32,7 @@
 - Simple [physical control surface][control surface] using buttons and rotary encoder.
 - [MiSTer FPGA integration via user port][MiSTer FPGA user port connection].
 - Network MIDI support via [macOS native network MIDI][macOS network MIDI], [rtpMIDI] on Windows, or [rtpmidid] on Linux.
-- FTP access to files and auto-update is _planned_.
+- [Embedded FTP server][FTP server] for remote access to files.
 - A user interface with menu system is _planned_.
 - More advanced MIDI routing is _planned_.
 
@@ -92,6 +92,7 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [Discussions]: https://github.com/dwhinham/mt32-pi/discussions
 [FAQ]: https://github.com/dwhinham/mt32-pi/wiki/FAQ
 [FluidSynth]: http://www.fluidsynth.org
+[FTP server]: https://github.com/dwhinham/mt32-pi/wiki/Embedded-FTP-server
 [General MIDI]: https://en.wikipedia.org/wiki/General_MIDI
 [GeneralUser GS]: http://schristiancollins.com/generaluser.php
 [GPIO MIDI interface]: https://github.com/dwhinham/mt32-pi/wiki/GPIO-MIDI-interface
