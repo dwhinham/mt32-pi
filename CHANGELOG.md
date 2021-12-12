@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2021-12-12
+
 ### Added
 
 - Support for the new Raspberry Pi Zero 2 W.
@@ -426,7 +428,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3...HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..HEAD
+[0.11.0]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3..v0.11.0
 [0.10.3]: https://github.com/dwhinham/mt32-pi/compare/v0.10.2..v0.10.3
 [0.10.2]: https://github.com/dwhinham/mt32-pi/compare/v0.10.1..v0.10.2
 [0.10.1]: https://github.com/dwhinham/mt32-pi/compare/v0.10.0..v0.10.1
