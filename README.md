@@ -39,9 +39,9 @@
 ## ✨ Quick-start guide
 
 1. Download the latest release from the [Releases] section.
+    * If you are **updating an old version**, read the [Updating mt32-pi] wiki page for the correct procedure.
 2. Extract contents to a blank [FAT32-formatted SD card][SD card preparation].
     * Read the [SD card preparation] wiki page for hints on formatting an SD card correctly (especially under Windows).
-    * If you are updating an old version, you can just replace the `kernel*.img` files. The other boot files will not change often; but keep an eye on the [changelog] just in case.
 3. For MT-32 support, add your MT-32 or CM-32L ROM images to the `roms` directory - you have to provide these for copyright reasons.
     * You will need at least one control ROM and one PCM ROM.
     * For information on using multiple ROM sets and switching between them, see the [MT-32 synthesis] wiki page.
@@ -115,5 +115,6 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [Serial port]: https://github.com/dwhinham/mt32-pi/wiki/MIDI-via-RS-232-or-USB-to-serial
 [SoundFont synthesis]: https://github.com/dwhinham/mt32-pi/wiki/SoundFont-synthesis
 [SoundFont]: https://en.wikipedia.org/wiki/SoundFont
+[Updating mt32-pi]: https://github.com/dwhinham/mt32-pi/wiki/Updating-mt32-pi
 [USB MIDI interfaces]: https://github.com/dwhinham/mt32-pi/wiki/USB-MIDI-interfaces
 [Yamaha XG]: https://en.wikipedia.org/wiki/Yamaha_XG
