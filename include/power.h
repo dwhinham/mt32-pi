@@ -2,7 +2,7 @@
 // power.h
 //
 // mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
-// Copyright (C) 2020-2021 Dale Whinham <daleyo@gmail.com>
+// Copyright (C) 2020-2022 Dale Whinham <daleyo@gmail.com>
 //
 // This file is part of mt32-pi.
 //
