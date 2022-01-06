@@ -78,6 +78,7 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 
 - Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
 - A huge thankyou to everyone who has donated via Ko-Fi, PayPal, or Amazon - your support means a lot! ❤️
+- Special thanks to [Edu Arana (Arananet)], [Porkchop Express (MiSTerAddons)], @djhardrich, [Nat (MiSTerFPGA.co.uk)], [Ricardo Saraiva (UltimateMiSTer.com)], [Serge Defever (Serdashop)], and @opjose who have all generously donated hardware to the project.
 - The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
 - The [FluidSynth] team for their excellent and easily-portable SoundFont synthesizer project.
 - [S. Christian Collins][GeneralUser GS] for the excellent GeneralUser GS SoundFont and for kindly giving permission to include it in the project.
@@ -90,6 +91,7 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [Configuration file]: https://github.com/dwhinham/mt32-pi/wiki/Configuration-file
 [Control surface]: https://github.com/dwhinham/mt32-pi/wiki/Control-surface
 [Discussions]: https://github.com/dwhinham/mt32-pi/discussions
+[Edu Arana (Arananet)]: https://www.arananet.net/pedidos
 [FAQ]: https://github.com/dwhinham/mt32-pi/wiki/FAQ
 [FluidSynth]: http://www.fluidsynth.org
 [FTP server]: https://github.com/dwhinham/mt32-pi/wiki/Embedded-FTP-server
@@ -106,12 +108,16 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [MT-32 synthesis]: https://github.com/dwhinham/mt32-pi/wiki/MT-32-synthesis
 [mt32-pi wiki]: https://github.com/dwhinham/mt32-pi/wiki
 [Munt]: https://github.com/munt/munt
+[Nat (MiSTerFPGA.co.uk)]: https://misterfpga.co.uk
+[Porkchop Express (MiSTerAddons)]: https://misteraddons.com
 [Releases]: https://github.com/dwhinham/mt32-pi/releases
+[Ricardo Saraiva (UltimateMiSTer.com)]: https://ultimatemister.com
 [Roland GS]: https://en.wikipedia.org/wiki/Roland_GS
 [Roland MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
 [rtpMIDI]: https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html
 [rtpmidid]: https://github.com/davidmoreno/rtpmidid
 [SD card preparation]: https://github.com/dwhinham/mt32-pi/wiki/SD-card-preparation
+[Serge Defever (Serdashop)]: http://serdashop.com
 [Serial port]: https://github.com/dwhinham/mt32-pi/wiki/MIDI-via-RS-232-or-USB-to-serial
 [SoundFont synthesis]: https://github.com/dwhinham/mt32-pi/wiki/SoundFont-synthesis
 [SoundFont]: https://en.wikipedia.org/wiki/SoundFont
