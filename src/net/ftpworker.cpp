@@ -307,6 +307,12 @@ bool CFTPWorker::SendStatus(TFTPStatus StatusCode, const char* pMessage)
 
 bool CFTPWorker::CheckLoggedIn()
 {
+#ifdef FTPDAEMON_DEBUG
+	CLogger* pLogger = CLogger::Get();
+	pLogger->Write(m_LogName, LogDebug, "Username compare: expected '%s', actual '%s'", static_cast<const char*>(m_pExpectedUser), static_cast<const char*>(m_User));
+	pLogger->Write(m_LogName, LogDebug, "Password compare: expected '%s', actual '%s'", static_cast<const char*>(m_pExpectedPassword),  static_cast<const char*>(m_Password));
+#endif
+
 	if (m_User.Compare(m_pExpectedUser) == 0 && m_Password.Compare(m_pExpectedPassword) == 0)
 		return true;
 
