@@ -86,7 +86,6 @@ const TFTPCommand CFTPWorker::Commands[] =
 	{ "PWD",	&CFTPWorker::PrintWorkingDirectory	},
 	{ "LIST",	&CFTPWorker::List			},
 	{ "NLST",	&CFTPWorker::ListFileNames		},
-	{ "RD",		&CFTPWorker::RemoveDirectory		},
 	{ "BYE",	&CFTPWorker::Bye			},
 	{ "QUIT",	&CFTPWorker::Bye			},
 	{ "NOOP",	&CFTPWorker::NoOp			},
@@ -978,11 +977,6 @@ bool CFTPWorker::ListFileNames(const char* pArgs)
 	delete pDataSocket;
 	SendStatus(TFTPStatus::TransferComplete, "Transfer complete.");
 	return true;
-}
-
-bool CFTPWorker::RemoveDirectory(const char* pArgs)
-{
-	return false;
 }
 
 bool CFTPWorker::Bye(const char* pArgs)

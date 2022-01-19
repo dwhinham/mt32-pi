@@ -110,7 +110,6 @@ private:
 	bool PrintWorkingDirectory(const char* pArgs);
 	bool List(const char* pArgs);
 	bool ListFileNames(const char* pArgs);
-	bool RemoveDirectory(const char* pArgs);
 	bool Bye(const char* pArgs);
 	bool NoOp(const char* pArgs);
 
