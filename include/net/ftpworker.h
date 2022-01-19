@@ -45,6 +45,7 @@ enum TFTPStatus
 
 	PasswordRequired	= 331,
 	AccountRequired		= 332,
+	PendingFurtherInfo	= 350,
 
 	ServiceNotAvailable	= 421,
 	DataConnectionFailed	= 425,
@@ -54,8 +55,10 @@ enum TFTPStatus
 	CommandUnrecognized	= 500,
 	SyntaxError		= 501,
 	CommandNotImplemented	= 502,
+	BadCommandSequence	= 503,
 	NotLoggedIn		= 530,
 	FileNotFound		= 550,
+	FileNameNotAllowed	= 553,
 };
 
 enum class TTransferMode
@@ -110,6 +113,8 @@ private:
 	bool PrintWorkingDirectory(const char* pArgs);
 	bool List(const char* pArgs);
 	bool ListFileNames(const char* pArgs);
+	bool RenameFrom(const char* pArgs);
+	bool RenameTo(const char* pArgs);
 	bool Bye(const char* pArgs);
 	bool NoOp(const char* pArgs);
 
@@ -135,6 +140,7 @@ private:
 	TDataType m_DataType;
 	TTransferMode m_TransferMode;
 	CString m_CurrentPath;
+	CString m_RenameFrom;
 
 	static void FatFsPathToFTPPath(const char* pInBuffer, char* pOutBuffer, size_t nSize);
 	static void FTPPathToFatFsPath(const char* pInBuffer, char* pOutBuffer, size_t nSize);

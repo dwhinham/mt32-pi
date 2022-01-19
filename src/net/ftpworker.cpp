@@ -86,6 +86,8 @@ const TFTPCommand CFTPWorker::Commands[] =
 	{ "PWD",	&CFTPWorker::PrintWorkingDirectory	},
 	{ "LIST",	&CFTPWorker::List			},
 	{ "NLST",	&CFTPWorker::ListFileNames		},
+	{ "RNFR",	&CFTPWorker::RenameFrom			},
+	{ "RNTO",	&CFTPWorker::RenameTo			},
 	{ "BYE",	&CFTPWorker::Bye			},
 	{ "QUIT",	&CFTPWorker::Bye			},
 	{ "NOOP",	&CFTPWorker::NoOp			},
@@ -134,7 +136,8 @@ CFTPWorker::CFTPWorker(CSocket* pControlSocket, const char* pExpectedUser, const
 	  m_Password(),
 	  m_DataType(TDataType::ASCII),
 	  m_TransferMode(TTransferMode::Active),
-	  m_CurrentPath()
+	  m_CurrentPath(),
+	  m_RenameFrom()
 {
 	++s_nInstanceCount;
 	m_LogName.Format("ftpd[%d]", s_nInstanceCount);
@@ -998,6 +1001,41 @@ bool CFTPWorker::ListFileNames(const char* pArgs)
 	delete pDataSocket;
 	SendStatus(TFTPStatus::TransferComplete, "Transfer complete.");
 	return true;
+}
+
+bool CFTPWorker::RenameFrom(const char* pArgs)
+{
+	if (!CheckLoggedIn())
+		return false;
+
+	m_RenameFrom = pArgs;
+	SendStatus(TFTPStatus::PendingFurtherInfo, "Requested file action pending further information.");
+
+	return false;
+}
+
+bool CFTPWorker::RenameTo(const char* pArgs)
+{
+	if (!CheckLoggedIn())
+		return false;
+
+	if (m_RenameFrom.GetLength() == 0)
+	{
+		SendStatus(TFTPStatus::BadCommandSequence, "Bad sequence of commands.");
+		return false;
+	}
+
+	CString SourcePath = RealPath(m_RenameFrom);
+	CString DestPath = RealPath(pArgs);
+
+	if (f_rename(SourcePath, DestPath) != FR_OK)
+		SendStatus(TFTPStatus::FileNameNotAllowed, "File name not allowed.");
+	else
+		SendStatus(TFTPStatus::FileActionOk, "File renamed.");
+
+	m_RenameFrom = "";
+
+	return false;
 }
 
 bool CFTPWorker::Bye(const char* pArgs)
