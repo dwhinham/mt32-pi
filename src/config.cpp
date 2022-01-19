@@ -89,8 +89,9 @@ bool CConfig::Initialize(const char* pPath)
 		return false;
 	}
 
+	// +1 byte for null terminator
 	const UINT nSize = f_size(&File);
-	char Buffer[nSize];
+	char Buffer[nSize + 1];
 	UINT nRead;
 
 	if (f_read(&File, Buffer, nSize, &nRead) != FR_OK)
@@ -99,6 +100,9 @@ bool CConfig::Initialize(const char* pPath)
 		f_close(&File);
 		return false;
 	}
+
+	// Ensure null-terminated
+	Buffer[nRead] = '\0';
 
 	const int nResult = ini_parse_string(Buffer, INIHandler, this);
 	if (nResult > 0)
@@ -161,6 +165,8 @@ int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, co
 {
 	CConfig* const pConfig = static_cast<CConfig*>(pUser);
 	size_t nFXProfileIndex;
+
+	//CLogger::Get()->Write(ConfigName, LogDebug, "'%s', '%s', '%s'", pSection, pName,  pValue);
 
 	// Automatically generate ParseOption() calls from macro definition file
 	#define BEGIN_SECTION(SECTION)       \
