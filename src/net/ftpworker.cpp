@@ -742,6 +742,9 @@ bool CFTPWorker::Store(const char* pArgs)
 
 bool CFTPWorker::Delete(const char* pArgs)
 {
+	if (!CheckLoggedIn())
+		return false;
+
 	CString Path = RealPath(pArgs);
 
 	if (f_unlink(Path) != FR_OK)
@@ -754,6 +757,9 @@ bool CFTPWorker::Delete(const char* pArgs)
 
 bool CFTPWorker::MakeDirectory(const char* pArgs)
 {
+	if (!CheckLoggedIn())
+		return false;
+
 	CString Path = RealPath(pArgs);
 
 	if (f_mkdir(Path) != FR_OK)
@@ -884,6 +890,9 @@ bool CFTPWorker::ChangeToParentDirectory(const char* pArgs)
 
 bool CFTPWorker::PrintWorkingDirectory(const char* pArgs)
 {
+	if (!CheckLoggedIn())
+		return false;
+
 	char Buffer[TextBufferSize];
 
 	const bool bAtRoot = m_CurrentPath.GetLength() == 0;
@@ -899,6 +908,9 @@ bool CFTPWorker::PrintWorkingDirectory(const char* pArgs)
 
 bool CFTPWorker::List(const char* pArgs)
 {
+	if (!CheckLoggedIn())
+		return false;
+
 	if (!SendStatus(TFTPStatus::FileStatusOk, "Command OK."))
 		return false;
 
@@ -948,6 +960,9 @@ bool CFTPWorker::List(const char* pArgs)
 
 bool CFTPWorker::ListFileNames(const char* pArgs)
 {
+	if (!CheckLoggedIn())
+		return false;
+
 	if (!SendStatus(TFTPStatus::FileStatusOk, "Command OK."))
 		return false;
 
