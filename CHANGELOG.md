@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A bug in the config file reader (unterminated string) could cause the last entry in the file to be read as a corrupted value if the file ended without a newline.
 - Some FTP commands could work without being logged in.
+- Some DAC accessories which make use of a hardware "mute" pin (e.g. Adafruit I²S Audio Bonnet) could be held in a muted state due to a conflict with the Blokas Pisound driver's probing routine (issue #233). The driver now resets these GPIO pins to the initial power-on state, which should fix this issue. Thanks to @htamas2 for the report!
 
 ## [0.11.0] - 2021-12-12
 

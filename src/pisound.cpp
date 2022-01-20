@@ -71,6 +71,17 @@ CPisound::CPisound(CSPIMaster* pSPIMaster, CGPIOManager* pGPIOManager, unsigned 
 {
 }
 
+CPisound::~CPisound()
+{
+	// Reset GPIO pins to default boot-up state
+	m_SPIReset.SetMode(TGPIOMode::GPIOModeInputPullDown);
+	m_DataAvailable.SetMode(TGPIOMode::GPIOModeInputPullDown);
+	m_ADCReset.SetMode(TGPIOMode::GPIOModeInputPullDown);
+	m_OversamplingRatio0.SetMode(TGPIOMode::GPIOModeInputPullDown);
+	m_OversamplingRatio1.SetMode(TGPIOMode::GPIOModeInputPullDown);
+	m_OversamplingRatio2.SetMode(TGPIOMode::GPIOModeInputPullDown);
+}
+
 bool CPisound::Initialize()
 {
 	assert(m_pSPIMaster != nullptr);

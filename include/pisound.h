@@ -34,6 +34,7 @@ public:
 	using TMIDIReceiveHandler = void (*)(const u8* pData, size_t nSize);
 
 	CPisound(CSPIMaster* pSPIMaster, CGPIOManager* pGPIOManager, unsigned nSamplerate);
+	~CPisound();
 
 	bool Initialize();
 	void RegisterMIDIReceiveHandler(TMIDIReceiveHandler pHandler) { m_pReceiveHandler = pHandler; }
