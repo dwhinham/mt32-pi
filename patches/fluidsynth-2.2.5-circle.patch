@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index e4ea71c6..b22a5a1d 100644
+index 93000f71..7bd17145 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -492,6 +492,7 @@ if ( ASTYLE )
@@ -19,7 +19,7 @@ index e4ea71c6..b22a5a1d 100644
  unset ( AUFILE_SUPPORT CACHE )
  if ( enable-aufile )
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 4f3ef86a..63e52d13 100644
+index 2803ca88..a8f2c482 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -203,23 +203,23 @@ set ( libfluidsynth_SOURCES
@@ -64,7 +64,7 @@ index 4f3ef86a..63e52d13 100644
  
  set ( public_HEADERS
 diff --git a/src/sfloader/fluid_sfont.c b/src/sfloader/fluid_sfont.c
-index 8b4d4f17..fc5ecef5 100644
+index 26dbac65..7ab9dc09 100644
 --- a/src/sfloader/fluid_sfont.c
 +++ b/src/sfloader/fluid_sfont.c
 @@ -22,6 +22,7 @@
@@ -90,7 +90,7 @@ index 8b4d4f17..fc5ecef5 100644
  /**
   * Creates a new SoundFont loader.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
-index fc0d35fc..3743f35f 100644
+index b6a8c3ee..7b083255 100644
 --- a/src/synth/fluid_synth.c
 +++ b/src/synth/fluid_synth.c
 @@ -108,7 +108,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
@@ -119,7 +119,7 @@ index fc0d35fc..3743f35f 100644
  
      if(synth->channel != NULL)
      {
-@@ -5431,14 +5435,17 @@ fluid_synth_sfont_unref(fluid_synth_t *synth, fluid_sfont_t *sfont)
+@@ -5437,14 +5441,17 @@ fluid_synth_sfont_unref(fluid_synth_t *synth, fluid_sfont_t *sfont)
          {
              FLUID_LOG(FLUID_DBG, "Unloaded SoundFont");
          } /* spin off a timer thread to unload the sfont later (SoundFont loader blocked unload) */
@@ -137,7 +137,7 @@ index fc0d35fc..3743f35f 100644
  /* Callback to continually attempt to unload a SoundFont,
   * only if a SoundFont loader blocked the unload operation */
  static int
-@@ -5456,6 +5463,7 @@ fluid_synth_sfunload_callback(void *data, unsigned int msec)
+@@ -5462,6 +5469,7 @@ fluid_synth_sfunload_callback(void *data, unsigned int msec)
          return TRUE;
      }
  }
@@ -145,7 +145,7 @@ index fc0d35fc..3743f35f 100644
  
  /**
   * Reload a SoundFont.  The SoundFont retains its ID and index on the SoundFont stack.
-@@ -7553,6 +7561,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
+@@ -7559,6 +7567,7 @@ fluid_synth_get_gen(fluid_synth_t *synth, int chan, int param)
      FLUID_API_RETURN(result);
  }
  
@@ -153,7 +153,7 @@ index fc0d35fc..3743f35f 100644
  /**
   * Handle MIDI event from MIDI router, used as a callback function.
   * @param data FluidSynth instance
-@@ -7609,6 +7618,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
+@@ -7615,6 +7624,7 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
  
      return FLUID_FAILED;
  }

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implemented RNFR/RNTO (file/directory renaming) in the FTP server.
 
+### Changed
+
+- Update to FluidSynth v2.2.5.
+
 ### Fixed
 
 - A bug in the config file reader (unterminated string) could cause the last entry in the file to be read as a corrupted value if the file ended without a newline.
