@@ -194,18 +194,21 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	LCDLog(TLCDLogType::Startup, "Init Network");
 	InitNetwork();
 
-	// Check for Blokas Pisound
-	m_pPisound = new CPisound(m_pSPIMaster, m_pGPIOManager, m_pConfig->AudioSampleRate);
-	if (m_pPisound->Initialize())
+	// Check for Blokas Pisound, but only when not using 4-bit HD44780 (GPIO pin conflict)
+	if (m_pConfig->LCDType != CConfig::TLCDType::HD44780FourBit)
 	{
-		m_pLogger->Write(MT32PiName, LogWarning, "Blokas Pisound detected");
-		m_pPisound->RegisterMIDIReceiveHandler(IRQMIDIReceiveHandler);
-		m_bSerialMIDIEnabled = false;
-	}
-	else
-	{
-		delete m_pPisound;
-		m_pPisound = nullptr;
+		m_pPisound = new CPisound(m_pSPIMaster, m_pGPIOManager, m_pConfig->AudioSampleRate);
+		if (m_pPisound->Initialize())
+		{
+			m_pLogger->Write(MT32PiName, LogWarning, "Blokas Pisound detected");
+			m_pPisound->RegisterMIDIReceiveHandler(IRQMIDIReceiveHandler);
+			m_bSerialMIDIEnabled = false;
+		}
+		else
+		{
+			delete m_pPisound;
+			m_pPisound = nullptr;
+		}
 	}
 
 	// Queue size of just one chunk
