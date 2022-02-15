@@ -335,6 +335,9 @@ void CSoundFontSynth::ReportStatus() const
 
 void CSoundFontSynth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
 {
+	if (CConfig::Get()->LCDQuiet)
+		return;
+
 	const u8 nBarHeight = LCD.Height();
 	float ChannelLevels[16], PeakLevels[16];
 	m_MIDIMonitor.GetChannelLevels(nTicks, ChannelLevels, PeakLevels, m_nPercussionMask);

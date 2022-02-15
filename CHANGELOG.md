@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Implemented RNFR/RNTO (file/directory renaming) in the FTP server.
+- Implemented "quiet mode" to only show system and MT-32 messages on the LCD (new configuration file option).
 
 ### Changed
 

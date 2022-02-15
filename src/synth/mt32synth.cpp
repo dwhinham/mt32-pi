@@ -150,6 +150,14 @@ void CMT32Synth::SetMasterVolume(u8 nVolume)
 {
 	const u8 SetVolumeSysEx[] = { 0x10, 0x00, 0x16, nVolume };
 	m_pSynth->writeSysex(0x10, SetVolumeSysEx, sizeof(SetVolumeSysEx));
+
+	// In quiet mode, we won't see the usual MT-32 part status line, so report volume changes as a system message
+	if (m_pUI && CConfig::Get()->LCDQuiet)
+	{
+		char Buffer[21];
+		snprintf(Buffer, sizeof(Buffer), "Volume: %d", nVolume);
+		m_pUI->ShowSystemMessage(Buffer);
+	}
 }
 
 size_t CMT32Synth::Render(s16* pOutBuffer, size_t nFrames)
@@ -225,12 +233,16 @@ void CMT32Synth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
 		nBarHeight = nHeight - 16;
 	}
 
-	if (m_LCDState == TLCDState::DisplayingPartStates)
-		UpdatePartStateText(bNarrowPartStateText);
+	if (!CConfig::Get()->LCDQuiet)
+	{
+		if (m_LCDState == TLCDState::DisplayingPartStates)
+			UpdatePartStateText(bNarrowPartStateText);
 
-	float PartLevels[9], PartPeaks[9];
-	GetPartLevels(nTicks, PartLevels, PartPeaks);
-	CUserInterface::DrawChannelLevels(LCD, nBarHeight, PartLevels, PartPeaks, 9, false);
+		float PartLevels[9], PartPeaks[9];
+		GetPartLevels(nTicks, PartLevels, PartPeaks);
+		CUserInterface::DrawChannelLevels(LCD, nBarHeight, PartLevels, PartPeaks, 9, false);
+	}
+
 	LCD.Print(m_LCDTextBuffer, 0, nStatusRow, true, false);
 }
 
@@ -375,6 +387,10 @@ bool CMT32Synth::onMIDIQueueOverflow()
 
 void CMT32Synth::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
 {
+	// Bail out if in quiet mode
+	if (CConfig::Get()->LCDQuiet)
+		return;
+
 	const unsigned nTicks = CTimer::GetClockTicks();
 
 	// Bail out if displaying an MT-32 message and it hasn't been on-screen long enough
