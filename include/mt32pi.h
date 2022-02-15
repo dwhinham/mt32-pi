@@ -129,7 +129,8 @@ private:
 	void NextMT32ROMSet();
 	void SwitchSoundFont(size_t nIndex);
 	void DeferSwitchSoundFont(size_t nIndex);
-	void SetMasterVolume(s32 nVolume);
+	void SetMasterVolume(u8 nVolume);
+	void IncrementMasterVolume(s8 nVolumeOffset);
 
 	const char* GetNetworkDeviceShortName() const;
 	void LEDOn();

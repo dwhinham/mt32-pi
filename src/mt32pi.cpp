@@ -1002,7 +1002,7 @@ void CMT32Pi::ProcessEventQueue()
 				break;
 
 			case TEventType::Encoder:
-				SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+				IncrementMasterVolume(Event.Encoder.nDelta);
 				break;
 		}
 	}
@@ -1059,11 +1059,11 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 	}
 	else if (Event.Button == TButton::Button3)
 	{
-		SetMasterVolume(m_nMasterVolume - 1);
+		IncrementMasterVolume(-1);
 	}
 	else if (Event.Button == TButton::Button4)
 	{
-		SetMasterVolume(m_nMasterVolume + 1);
+		IncrementMasterVolume(1);
 	}
 }
 
@@ -1138,17 +1138,20 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 	m_bDeferredSoundFontSwitchFlag  = true;
 }
 
-void CMT32Pi::SetMasterVolume(s32 nVolume)
+void CMT32Pi::SetMasterVolume(u8 nVolume)
 {
-	m_nMasterVolume = Utility::Clamp(nVolume, 0, 100);
+	m_nMasterVolume = Utility::Min(nVolume, static_cast<u8>(100));
 
 	if (m_pMT32Synth)
 		m_pMT32Synth->SetMasterVolume(m_nMasterVolume);
 	if (m_pSoundFontSynth)
 		m_pSoundFontSynth->SetMasterVolume(m_nMasterVolume);
+}
 
-	if (m_pCurrentSynth == m_pSoundFontSynth)
-		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
+void CMT32Pi::IncrementMasterVolume(s8 nVolumeOffset)
+{
+	const s32 nNewVolume = Utility::Clamp(static_cast<s32>(m_nMasterVolume) + nVolumeOffset, 0, 100);
+	SetMasterVolume(nNewVolume);
 }
 
 void CMT32Pi::LEDOn()

@@ -302,6 +302,13 @@ void CSoundFontSynth::SetMasterVolume(u8 nVolume)
 	m_Lock.Acquire();
 	fluid_synth_set_gain(m_pSynth, m_nCurrentGain);
 	m_Lock.Release();
+
+	if (m_pUI)
+	{
+		char Buffer[21];
+		snprintf(Buffer, sizeof(Buffer), "Volume: %d", nVolume);
+		m_pUI->ShowSystemMessage(Buffer);
+	}
 }
 
 size_t CSoundFontSynth::Render(float* pOutBuffer, size_t nFrames)
