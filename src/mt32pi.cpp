@@ -453,7 +453,9 @@ void CMT32Pi::MainTask()
 #ifdef MONITOR_TEMPERATURE
 		if (nTicks - m_nTempUpdateTime >= MSEC2HZ(5000))
 		{
-			m_pLogger->Write(MT32PiName, LogDebug, "Temperature: %dC", CCPUThrottle::Get()->GetTemperature());
+			const unsigned int nTemp = CCPUThrottle::Get()->GetTemperature();
+			m_pLogger->Write(MT32PiName, LogDebug, "Temperature: %dC", nTemp);
+			LCDLog(TLCDLogType::Notice, "Temp: %dC", nTemp);
 			m_nTempUpdateTime = nTicks;
 		}
 #endif
