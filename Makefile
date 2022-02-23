@@ -5,7 +5,7 @@
 include Config.mk
 
 .DEFAULT_GOAL=all
-.PHONY: circle-stdlib mt32emu fluidsynth all clean veryclean
+.PHONY: circle-stdlib mt32emu fluidsynth emusc all clean veryclean
 
 #
 # Functions to apply/reverse patches only if not completely applied/reversed already
@@ -31,7 +31,7 @@ REVERSE_PATCH=sh -c '																\
 #
 $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	@echo "Configuring for Raspberry Pi $(RASPBERRYPI) ($(BITS) bit)"
-	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
+	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)-
 
 # Apply patches
 	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
@@ -128,9 +128,43 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@touch $@
 
 #
+# Build EmuSC
+#
+emusc: $(EMUSCBUILDDIR)/.done
+
+$(EMUSCBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
+	@mkdir -p $(EMUSCBUILDDIR)
+	@cd $(EMUSCBUILDDIR) \
+	&& $(EMUSCHOME)/autogen.sh \
+	&& export CFLAGS="-Wl,--unresolved-symbols=ignore-all" \
+	&& export CXXFLAGS="$(CFLAGS_FOR_TARGET) -std=c++14 -Ofast" \
+	&& $(EMUSCHOME)/configure --host $(PREFIX) --prefix $$(realpath .) \
+	&& make install
+	@touch $@
+
+
+# EMUSCFILES:=config control_rom midi_input part pcm_rom synth
+# EMUSCOBJECTS:=$(addprefix $(EMUSCBUILDDIR)/,$(addsuffix .o,$(EMUSCFILES)))
+# EMUSCINCLUDES:=$(addprefix $(EMUSCBUILDDIR)/include/emusc/,$(addsuffix .h,$(EMUSCFILES)))
+
+# emusc: $(EMUSCBUILDDIR) $(EMUSCBUILDDIR)/include/emusc $(EMUSCINCLUDES) $(EMUSCBUILDDIR)/libemusc.a
+
+# $(EMUSCBUILDDIR) $(EMUSCBUILDDIR)/include/emusc:
+# 	@mkdir -p $@
+
+# $(EMUSCBUILDDIR)/include/emusc/%.h: $(EMUSCHOME)/src/%.h
+# 	cp $< $@
+
+# $(EMUSCBUILDDIR)/%.o: $(EMUSCHOME)/src/%.cc
+# 	$(PREFIX)-gcc $(CFLAGS_FOR_TARGET) -I $(EMUSCHOME)/src -c -o $@ $<
+
+# $(EMUSCBUILDDIR)/libemusc.a: $(EMUSCOBJECTS)
+# 	$(PREFIX)-ar rcs $@ $^
+
+#
 # Build kernel itself
 #
-all: circle-stdlib mt32emu fluidsynth
+all: circle-stdlib mt32emu fluidsynth emusc
 	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #

@@ -22,33 +22,33 @@ GC_SECTIONS?=1
 ifeq ($(BOARD), pi2)
 RASPBERRYPI=2
 BITS=32
-PREFIX=arm-none-eabi-
+PREFIX=arm-none-eabi
 KERNEL=kernel7
 else ifeq ($(BOARD), pi3)
 RASPBERRYPI=3
 BITS=32
-PREFIX=arm-none-eabi-
+PREFIX=arm-none-eabi
 KERNEL=kernel8-32
 else ifeq ($(BOARD), pi3-64)
 RASPBERRYPI=3
 BITS=64
-PREFIX=aarch64-none-elf-
+PREFIX=aarch64-none-elf
 KERNEL=kernel8
 else ifeq ($(BOARD), pi4)
 RASPBERRYPI=4
 BITS=32
-PREFIX=arm-none-eabi-
+PREFIX=arm-none-eabi
 KERNEL=kernel7l
 else ifeq ($(BOARD), pi4-64)
 RASPBERRYPI=4
 BITS=64
-PREFIX=aarch64-none-elf-
+PREFIX=aarch64-none-elf
 KERNEL=kernel8-rpi4
 else
 $(error Invalid board type "$(BOARD)"; please specify one of [ pi2 | pi3 | pi3-64 | pi4 | pi4-64 ])
 endif
 
-ifeq ($(PREFIX), arm-none-eabi-)
+ifeq ($(PREFIX), arm-none-eabi)
 CMAKE_TOOLCHAIN_FLAGS=-DARM_HOME=$(ARM_HOME) -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi.cmake
 else
 CMAKE_TOOLCHAIN_FLAGS=-DAARCH64_HOME=$(AARCH64_HOME) -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-none-elf.cmake
@@ -83,6 +83,10 @@ MT32EMULIB=$(MT32EMUBUILDDIR)/libmt32emu.a
 FLUIDSYNTHHOME=$(realpath external/fluidsynth)
 FLUIDSYNTHBUILDDIR=build-fluidsynth
 FLUIDSYNTHLIB=$(FLUIDSYNTHBUILDDIR)/src/libfluidsynth.a
+
+EMUSCHOME=$(realpath external/emusc/libemusc)
+EMUSCBUILDDIR=build-emusc
+EMUSCLIB=$(EMUSCBUILDDIR)/lib/libemusc.a
 
 INIHHOME=$(realpath external/inih)
 

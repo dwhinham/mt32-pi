@@ -30,6 +30,7 @@ OBJS		:=	src/config.o \
 				src/rommanager.o \
 				src/soundfontmanager.o \
 				src/synth/mt32synth.o \
+				src/synth/sc55synth.o \
 				src/synth/soundfontsynth.o
 
 EXTRACLEAN	+=	src/*.d src/*.o \
@@ -82,6 +83,9 @@ EXTRALIBS	+=	$(MT32EMULIB)
 INCLUDE		+=	-I $(FLUIDSYNTHBUILDDIR)/include \
 				-I $(FLUIDSYNTHHOME)/include
 EXTRALIBS	+=	$(FLUIDSYNTHLIB)
+
+INCLUDE		+=	-I $(EMUSCBUILDDIR)/include
+EXTRALIBS	+=	$(EMUSCLIB)
 
 #
 # Generate version string from git tag
