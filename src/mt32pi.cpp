@@ -392,7 +392,7 @@ bool CMT32Pi::InitSoundFontSynth()
 {
 	assert(m_pSoundFontSynth == nullptr);
 
-	m_pSoundFontSynth = new CSoundFontSynth(m_pConfig->AudioSampleRate, m_pConfig->FluidSynthGain, m_pConfig->FluidSynthPolyphony);
+	m_pSoundFontSynth = new CSoundFontSynth(m_pConfig->AudioSampleRate);
 	if (!m_pSoundFontSynth->Initialize())
 	{
 		m_pLogger->Write(MT32PiName, LogWarning, "FluidSynth init failed; no SoundFonts present?");

@@ -27,6 +27,8 @@
 
 struct TFXProfile
 {
+	TOptional<float> nGain;
+
 	TOptional<bool> bReverbActive;
 	TOptional<float> nReverbDamping;
 	TOptional<float> nReverbLevel;

@@ -76,8 +76,8 @@ END_SECTION
 
 BEGIN_SECTION(fluidsynth)
 CFG(soundfont,			int,				FluidSynthSoundFont,			0						)
-CFG(gain,			float,				FluidSynthGain,				0.2f						)
 CFG(polyphony,			int,				FluidSynthPolyphony,			200						)
+CFG(gain,			float,				FluidSynthDefaultGain,			0.2f						)
 CFG(reverb,			bool,				FluidSynthDefaultReverbActive,		true						)
 CFG(reverb_damping,		float,				FluidSynthDefaultReverbDamping,		0.0						)
 CFG(reverb_level,		float,				FluidSynthDefaultReverbLevel,		0.9						)

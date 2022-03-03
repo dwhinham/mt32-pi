@@ -129,16 +129,15 @@ extern "C"
 	}
 }
 
-CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate, float nGain, u32 nPolyphony)
+CSoundFontSynth::CSoundFontSynth(unsigned nSampleRate)
 	: CSynthBase(nSampleRate),
 
 	  m_pSettings(nullptr),
 	  m_pSynth(nullptr),
 
-	  m_nInitialGain(nGain),
-	  m_nCurrentGain(nGain),
+	  m_nVolume(100),
+	  m_nInitialGain(0.2f),
 
-	  m_nPolyphony(nPolyphony),
 	  m_nPercussionMask(1 << 9),
 	  m_nCurrentSoundFontIndex(0)
 {
@@ -298,9 +297,9 @@ void CSoundFontSynth::AllSoundOff()
 
 void CSoundFontSynth::SetMasterVolume(u8 nVolume)
 {
-	m_nCurrentGain = nVolume / 100.0f * m_nInitialGain;
+	m_nVolume = nVolume;
 	m_Lock.Acquire();
-	fluid_synth_set_gain(m_pSynth, m_nCurrentGain);
+	fluid_synth_set_gain(m_pSynth, m_nVolume / 100.0f * m_nInitialGain);
 	m_Lock.Release();
 }
 
@@ -393,8 +392,10 @@ bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile*
 		return false;
 	}
 
-	fluid_synth_set_gain(m_pSynth, m_nCurrentGain);
-	fluid_synth_set_polyphony(m_pSynth, m_nPolyphony);
+	fluid_synth_set_polyphony(m_pSynth, pConfig->FluidSynthPolyphony);
+
+	m_nInitialGain = pFXProfile->nGain.ValueOr(pConfig->FluidSynthDefaultGain);
+	fluid_synth_set_gain(m_pSynth, m_nVolume / 100.0f * m_nInitialGain);
 
 	// Use values from effects profile if set, otherwise use defaults
 	fluid_synth_reverb_on(m_pSynth, -1, pFXProfile->bReverbActive.ValueOr(pConfig->FluidSynthDefaultReverbActive));
@@ -442,8 +443,10 @@ void CSoundFontSynth::ResetMIDIMonitor()
 void CSoundFontSynth::DumpFXSettings() const
 {
 	CLogger* const pLogger = CLogger::Get();
-	double nReverbDamping, nReverbLevel, nReverbRoomSize, nReverbWidth, nChorusDepth, nChorusLevel, nChorusSpeed;
+	double nGain, nReverbDamping, nReverbLevel, nReverbRoomSize, nReverbWidth, nChorusDepth, nChorusLevel, nChorusSpeed;
 	int nChorusVoices;
+
+	nGain = fluid_synth_get_gain(m_pSynth);
 
 	assert(fluid_synth_get_reverb_group_damp(m_pSynth, -1, &nReverbDamping) == FLUID_OK);
 	assert(fluid_synth_get_reverb_group_level(m_pSynth, -1, &nReverbLevel) == FLUID_OK);
@@ -454,6 +457,8 @@ void CSoundFontSynth::DumpFXSettings() const
 	assert(fluid_synth_get_chorus_group_level(m_pSynth, -1, &nChorusLevel) == FLUID_OK);
 	assert(fluid_synth_get_chorus_group_nr(m_pSynth, -1, &nChorusVoices) == FLUID_OK);
 	assert(fluid_synth_get_chorus_group_speed(m_pSynth, -1, &nChorusSpeed) == FLUID_OK);
+
+	pLogger->Write(SoundFontSynthName, LogNotice, "Gain: %.2f", nGain);
 
 	pLogger->Write(SoundFontSynthName, LogNotice,
 		"Reverb: %.2f, %.2f, %.2f, %.2f",

@@ -145,6 +145,8 @@ bool CConfig::ParseFXProfileOption(const char* pString, const char* pValue, TFXP
 			return false;                                          \
 		}
 
+	MATCH("gain", float, nGain);
+
 	MATCH("reverb", bool, bReverbActive);
 	MATCH("reverb_damping", float, nReverbDamping);
 	MATCH("reverb_level", float, nReverbLevel);

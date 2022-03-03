@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * This update adds support for MT-32 ROM versions 2.06, 2.07 and CM-32LN ROM version 1.00 (CM-32LN is untested).
 - Update to FluidSynth v2.2.5.
 - MT-32 LCD emulation replaced with new libmt32emu v2.6+ display emulation.
+- FluidSynth's master volume gain is now an effects profile setting and can be overridden on a per-SoundFont basis (issue #248). Thanks to @c0d3h4x0r for the suggestion!
 
 ### Fixed
 
