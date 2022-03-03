@@ -33,7 +33,7 @@ CMIDIParser::CMIDIParser()
 {
 }
 
-void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
+void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize, bool bIgnoreNoteOns)
 {
 	// Process MIDI messages
 	// See: https://www.midi.org/specifications/item/table-1-summary-of-midi-message
@@ -71,7 +71,7 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize)
 				}
 
 				m_MessageBuffer[m_nMessageLength++] = nByte;
-				CheckCompleteShortMessage();
+				CheckCompleteShortMessage(bIgnoreNoteOns);
 				break;
 
 			// Expecting a SysEx data byte or EOX
@@ -167,7 +167,7 @@ void CMIDIParser::ParseStatusByte(u8 nByte)
 	}
 }
 
-bool CMIDIParser::CheckCompleteShortMessage()
+bool CMIDIParser::CheckCompleteShortMessage(bool bIgnoreNoteOns)
 {
 	const u8 nStatus = m_MessageBuffer[0];
 
@@ -176,7 +176,10 @@ bool CMIDIParser::CheckCompleteShortMessage()
 	if (m_nMessageLength == 3 ||
 		(m_nMessageLength == 2 && ((nStatus >= 0xC0 && nStatus <= 0xDF) || nStatus == 0xF1 || nStatus == 0xF3)))
 	{
-		OnShortMessage(PrepareShortMessage());
+		const bool bIsNoteOn = (nStatus & 0xF0) == 0x90;
+
+		if (!(bIsNoteOn && bIgnoreNoteOns))
+			OnShortMessage(PrepareShortMessage());
 
 		// Clear running status if System Common
 		ResetState(nStatus >= 0xF1 && nStatus <= 0xF7);

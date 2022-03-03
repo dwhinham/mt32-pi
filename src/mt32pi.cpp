@@ -906,6 +906,22 @@ void CMT32Pi::UpdateMIDI()
 	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
 }
 
+void CMT32Pi::PurgeMIDIBuffers()
+{
+	size_t nBytes;
+	u8 Buffer[MIDIRxBufferSize];
+
+	// Process MIDI messages from all devices/ring buffers, but ignore note-ons
+	while (m_bSerialMIDIEnabled && (nBytes = ReceiveSerialMIDI(Buffer, sizeof(Buffer))) > 0)
+		ParseMIDIBytes(Buffer, nBytes, true);
+
+	while (m_pUSBSerialDevice && (nBytes = m_pUSBSerialDevice->Read(Buffer, sizeof(Buffer))) > 0)
+		ParseMIDIBytes(Buffer, nBytes, true);
+
+	while ((nBytes = m_MIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer))) > 0)
+		ParseMIDIBytes(Buffer, nBytes, true);
+}
+
 size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 {
 	// Read serial MIDI data
@@ -1124,8 +1140,14 @@ void CMT32Pi::SwitchSoundFont(size_t nIndex)
 		return;
 
 	m_pLogger->Write(MT32PiName, LogNotice, "Switching to SoundFont %d", nIndex);
-	if (m_pSoundFontSynth->SwitchSoundFont(nIndex) && m_pCurrentSynth == m_pSoundFontSynth)
-		m_pSoundFontSynth->ReportStatus();
+	if (m_pSoundFontSynth->SwitchSoundFont(nIndex))
+	{
+		// Handle any MIDI data that has been queued up while busy
+		PurgeMIDIBuffers();
+
+		if (m_pCurrentSynth == m_pSoundFontSynth)
+			m_pSoundFontSynth->ReportStatus();
+	}
 }
 
 void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)

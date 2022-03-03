@@ -30,7 +30,7 @@ class CMIDIParser
 public:
 	CMIDIParser();
 
-	void ParseMIDIBytes(const u8* pData, size_t nSize);
+	void ParseMIDIBytes(const u8* pData, size_t nSize, bool bIgnoreNoteOns = false);
 
 protected:
 	virtual void OnShortMessage(u32 nMessage) = 0;
@@ -51,7 +51,7 @@ private:
 	static constexpr size_t SysExBufferSize = 1000;
 
 	void ParseStatusByte(u8 nByte);
-	bool CheckCompleteShortMessage();
+	bool CheckCompleteShortMessage(bool bIgnoreNoteOns = false);
 	u32 PrepareShortMessage() const;
 	void ResetState(bool bClearStatusByte);
 

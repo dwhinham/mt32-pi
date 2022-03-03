@@ -117,6 +117,7 @@ private:
 	void UpdateUSB(bool bStartup = false);
 	void UpdateNetwork();
 	void UpdateMIDI();
+	void PurgeMIDIBuffers();
 	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 
