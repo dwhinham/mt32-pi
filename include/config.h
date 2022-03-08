@@ -62,6 +62,7 @@ public:
 	using TMT32EmuROMSet           = TMT32ROMSet;
 
 	using TLCDRotation             = CSSD1306::TLCDRotation;
+	using TLCDMirror               = CSSD1306::TLCDMirror;
 
 	#define ENUM_LCDTYPE(ENUM)             \
 		ENUM(None, none)                   \
@@ -112,6 +113,7 @@ private:
 	static bool ParseOption(const char* pString, TControlScheme* pOut);
 	static bool ParseOption(const char* pString, TEncoderType* pOut);
 	static bool ParseOption(const char* pString, TLCDRotation* pOut);
+	static bool ParseOption(const char* pString, TLCDMirror* pOut);
 	static bool ParseOption(const char* pString, TNetworkMode* pOut);
 
 	static bool ParseFXProfileSection(const char* pSection, size_t* pOutFXProfileIndex);
