@@ -37,9 +37,14 @@ public:
 		ENUM(Normal, normal)       \
 		ENUM(Inverted, inverted)
 
-	CONFIG_ENUM(TLCDRotation, ENUM_LCDROTATION);
+	#define ENUM_LCDMIRROR(ENUM) \
+		ENUM(Normal, normal)       \
+		ENUM(Mirrored, mirrored)
 
-	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3C, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal);
+	CONFIG_ENUM(TLCDRotation, ENUM_LCDROTATION);
+	CONFIG_ENUM(TLCDMirror, ENUM_LCDMIRROR);
+
+	CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress = 0x3C, u8 nWidth = 128, u8 nHeight = 32, TLCDRotation Rotation = TLCDRotation::Normal, TLCDMirror Mirror = TLCDMirror::Normal);
 
 	// CLCD
 	virtual bool Initialize() override;
@@ -74,6 +79,7 @@ protected:
 	CI2CMaster* m_pI2CMaster;
 	u8 m_nAddress;
 	TLCDRotation m_Rotation;
+	TLCDMirror m_Mirror;
 
 	// Double framebuffers
 	TFrameBufferUpdatePacket m_FrameBuffers[2];

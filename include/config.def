@@ -96,6 +96,7 @@ CFG(width,			int,				LCDWidth,				20						)
 CFG(height,			int,				LCDHeight,				2						)
 CFG(i2c_lcd_address,		int,				LCDI2CLCDAddress,			0x3c,					true	)
 CFG(rotation,			TLCDRotation,			LCDRotation,				TLCDRotation::Normal				)
+CFG(mirror,			TLCDMirror,			LCDMirror,				TLCDMirror::Normal				)
 END_SECTION
 
 BEGIN_SECTION(network)

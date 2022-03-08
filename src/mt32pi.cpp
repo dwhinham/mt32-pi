@@ -147,7 +147,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			break;
 
 		case CConfig::TLCDType::SSD1306I2C:
-			m_pLCD = new CSSD1306(m_pI2CMaster, m_pConfig->LCDI2CLCDAddress, m_pConfig->LCDWidth, m_pConfig->LCDHeight, m_pConfig->LCDRotation);
+			m_pLCD = new CSSD1306(m_pI2CMaster, m_pConfig->LCDI2CLCDAddress, m_pConfig->LCDWidth, m_pConfig->LCDHeight, m_pConfig->LCDRotation, m_pConfig->LCDMirror);
 			break;
 
 		default:

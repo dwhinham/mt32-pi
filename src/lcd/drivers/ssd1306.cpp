@@ -149,11 +149,12 @@ constexpr auto MisterLogo = CSSD1306Image<128, 32>(MisterLogo128x32);
 // Drawing constants
 constexpr u8 BarSpacing = 2;
 
-CSSD1306::CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation)
+CSSD1306::CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation, TLCDMirror Mirror)
 	: CLCD(nWidth, nHeight),
 	  m_pI2CMaster(pI2CMaster),
 	  m_nAddress(nAddress),
 	  m_Rotation(Rotation),
+	  m_Mirror(Mirror),
 
 	  m_FrameBuffers{{0x40, {0}}, {0x40, {0}}},
 	  m_nCurrentFrameBuffer(0)
@@ -172,7 +173,12 @@ bool CSSD1306::Initialize()
 	const u8 nCOMPins         = m_nHeight == 32 ? 0x02 : 0x12;
 	const u8 nColumnAddrRange = m_nWidth - 1;
 	const u8 nPageAddrRange   = m_nHeight / 8 - 1;
-	const u8 nSegRemap        = m_Rotation == TLCDRotation::Inverted ? 0xA0 : 0xA1;
+	// https://www.buydisplay.com/download/ic/SSD1312_Datasheet.pdf Pg. 51 Section 2.1.19
+	//            normal    inverted
+	// normal     A1 C8       A0 C0
+	// mirrored   A0 C8       A1 C0
+	const u8 nSegRemap        = (m_Rotation == TLCDRotation::Inverted && m_Mirror == TLCDMirror::Normal) || 
+                              (m_Rotation == TLCDRotation::Normal   && m_Mirror == TLCDMirror::Mirrored) ? 0xA0 : 0xA1;	
 	const u8 nCOMScanDir      = m_Rotation == TLCDRotation::Inverted ? 0xC0 : 0xC8;
 
 	const u8 InitSequence[] =
