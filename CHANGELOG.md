@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Implemented RNFR/RNTO (file/directory renaming) in the FTP server.
+- Support for SSD1312 OLED displays via new horizontal mirroring configuration file option - thanks @nikitalita!
 
 ### Changed
 
