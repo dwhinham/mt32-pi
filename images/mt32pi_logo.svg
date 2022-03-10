@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="136.06" height="24.567" version="1.1" viewBox="0 0 27.213 4.9134" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
  <style>
-.primaryFill { fill: #eb2188; }
-.secondaryFill { fill: #210070; }
-.primaryStroke { stroke: #eb2188; }
-.secondaryStroke { stroke: #210070; }
-@media (prefers-color-scheme: dark) {
-    .primaryFill { fill: #c8ff00; }
-    .secondaryFill { fill: #eb2188; }
-    .primaryStroke { stroke: #c8ff00; }
-    .secondaryStroke { stroke: #eb2188; }
-}</style>
+.primaryFill { fill: #ffd700; }
+.secondaryFill { fill: #0057b7 ; }
+.primaryStroke { stroke: #ffd700; }
+.secondaryStroke { stroke: #0057b7 ; }
+</style>
  <title>mt32-pi logo</title>
  <metadata>
   <rdf:RDF>

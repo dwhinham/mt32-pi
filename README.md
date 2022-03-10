@@ -1,7 +1,11 @@
 [![mt32-pi CI](https://github.com/dwhinham/mt32-pi/workflows/mt32-pi%20CI/badge.svg)](https://github.com/dwhinham/mt32-pi/actions?query=workflow:"mt32-pi+CI")
 
 <h1 align="center">
-    <img width="90%" title="mt32-pi - Baremetal synthesizer system" src="images/mt32pi_logo.svg">
+    <a href="https://donation.dec.org.uk/ukraine-humanitarian-appeal">
+        <img width="90%" title="mt32-pi stands with Ukraine 🇺🇦" src="images/mt32pi_logo.svg">
+        <br />
+        🇺🇦 mt32-pi stands with Ukraine 🇺🇦
+    </a>
 </h1>
 
 - A work-in-progress baremetal MIDI synthesizer for the Raspberry Pi 3 or above, based on [Munt], [FluidSynth] and [Circle].
