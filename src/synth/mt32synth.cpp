@@ -55,10 +55,7 @@ CMT32Synth::CMT32Synth(unsigned nSampleRate, float nGain, float nReverbGain, TRe
 	  m_pControlROMImage(nullptr),
 	  m_pPCMROMImage(nullptr),
 
-	  m_LCDState(TLCDState::DisplayingPartStates),
-	  m_nLCDStateTime(0),
-	  m_LCDTextBuffer{'\0'},
-	  m_nPreviousMasterVolume(0)
+	  m_LCDTextBuffer{'\0'}
 {
 }
 
@@ -184,27 +181,7 @@ void CMT32Synth::ReportStatus() const
 
 void CMT32Synth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
 {
-	const u8 nMasterVolume = GetMasterVolume();
-	const unsigned int nDeltaTicks = nTicks - m_nLCDStateTime;
 	bool bNarrowPartStateText = false;
-
-	// Hide message if master volume changed and message has been displayed long enough
-	if (m_nPreviousMasterVolume != nMasterVolume)
-	{
-		if (m_LCDState != TLCDState::DisplayingMessage || nDeltaTicks >= Utility::MillisToTicks(LCDMessageDisplayTimeMillis))
-		{
-			m_nPreviousMasterVolume = nMasterVolume;
-			m_LCDState = TLCDState::DisplayingPartStates;
-			m_nLCDStateTime = nTicks;
-		}
-	}
-
-	// Timbre change timeout
-	if (m_LCDState == TLCDState::DisplayingTimbreName && nDeltaTicks >= Utility::MillisToTicks(LCDTimbreDisplayTimeMillis))
-	{
-		m_LCDState = TLCDState::DisplayingPartStates;
-		m_nLCDStateTime = nTicks;
-	}
 
 	const u8 nWidth = LCD.Width();
 	const u8 nHeight = LCD.Height();
@@ -225,12 +202,17 @@ void CMT32Synth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
 		nBarHeight = nHeight - 16;
 	}
 
-	if (m_LCDState == TLCDState::DisplayingPartStates)
-		UpdatePartStateText(bNarrowPartStateText);
-
 	float PartLevels[9], PartPeaks[9];
 	GetPartLevels(nTicks, PartLevels, PartPeaks);
 	CUserInterface::DrawChannelLevels(LCD, nBarHeight, PartLevels, PartPeaks, 9, false);
+
+	m_pSynth->getDisplayState(m_LCDTextBuffer, bNarrowPartStateText);
+
+	// Remap active part indicator character
+	for (size_t i = 0; i < Utility::ArraySize(m_LCDTextBuffer) - 1; ++i)
+		if (m_LCDTextBuffer[i] == 1)
+			m_LCDTextBuffer[i] = '\xFF';
+
 	LCD.Print(m_LCDTextBuffer, 0, nStatusRow, true, false);
 }
 
@@ -309,7 +291,8 @@ const char* CMT32Synth::GetControlROMName() const
 	size_t nOffset;
 
 	// Find version strings from ROMs
-	if (strstr(pShortName, "cm32l") || strstr(pShortName, "2_04"))
+	// FIXME: Missing offset for CM-32LN ROM
+	if (strstr(pShortName, "cm32l") || strstr(pShortName, "2_04") || strstr(pShortName, "2_06") || strstr(pShortName, "2_07"))
 		nOffset = ROMOffsetVersionStringNew;
 	else if (strstr(pShortName, "1_07") || strstr(pShortName, "bluer"))
 		nOffset = ROMOffsetVersionString1_07;
@@ -324,27 +307,6 @@ u8 CMT32Synth::GetMasterVolume() const
 	u8 nVolume;
 	m_pSynth->readMemory(MemoryAddressMasterVolume, 1, &nVolume);
 	return nVolume;
-}
-
-void CMT32Synth::UpdatePartStateText(bool bNarrow)
-{
-	const u32 nPartStates = m_pSynth->getPartStates();
-
-	// First 5 parts
-	for (u8 i = 0; i < 5; ++i)
-	{
-		const bool bState = (nPartStates >> i) & 1;
-		m_LCDTextBuffer[i * 2] = bState ? '\xFF' : ('1' + i);
-		m_LCDTextBuffer[i * 2 + 1] = ' ';
-	}
-
-	// Rhythm
-	const bool bState = (nPartStates >> 8) & 1;
-	m_LCDTextBuffer[10] = bState ? '\xFF' : 'R';
-	m_LCDTextBuffer[11] = ' ';
-
-	// Volume
-	snprintf(m_LCDTextBuffer + 12, sizeof(m_LCDTextBuffer), bNarrow ? "|%3d" : "|vol:%3d", GetMasterVolume());
 }
 
 void CMT32Synth::GetPartLevels(unsigned int nTicks, float PartLevels[9], float PartPeaks[9])
@@ -373,20 +335,6 @@ bool CMT32Synth::onMIDIQueueOverflow()
 	return false;
 }
 
-void CMT32Synth::onProgramChanged(MT32Emu::Bit8u nPartNum, const char* pSoundGroupName, const char* pPatchName)
-{
-	const unsigned nTicks = CTimer::GetClockTicks();
-
-	// Bail out if displaying an MT-32 message and it hasn't been on-screen long enough
-	if (m_LCDState == TLCDState::DisplayingMessage && (nTicks - m_nLCDStateTime) <= Utility::MillisToTicks(LCDMessageDisplayTimeMillis))
-		return;
-
-	snprintf(m_LCDTextBuffer, sizeof(m_LCDTextBuffer), "%d|%s%s", nPartNum + 1, pSoundGroupName, pPatchName);
-
-	m_LCDState = TLCDState::DisplayingTimbreName;
-	m_nLCDStateTime = nTicks;
-}
-
 void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 {
 	//CLogger::Get()->WriteV(MT32SynthName, LogDebug, pFmt, pList);
@@ -395,12 +343,6 @@ void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 void CMT32Synth::showLCDMessage(const char* pMessage)
 {
 	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
-	const unsigned nTicks = CTimer::GetClockTicks();
-
-	snprintf(m_LCDTextBuffer, sizeof(m_LCDTextBuffer), pMessage);
-
-	m_LCDState = TLCDState::DisplayingMessage;
-	m_nLCDStateTime = nTicks;
 }
 
 void CMT32Synth::onDeviceReset()
