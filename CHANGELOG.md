@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update to libmt32emu v2.6.1.
+  * This update adds support for MT-32 ROM versions 2.06, 2.07 and CM-32LN ROM version 1.00 (CM-32LN is untested).
 - Update to FluidSynth v2.2.5.
 
 ### Fixed
