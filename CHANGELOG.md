@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2022-03-10
+
 ### Added
 
 - Implemented RNFR/RNTO (file/directory renaming) in the FTP server.
@@ -448,7 +450,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..HEAD
+[0.11.1]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..v0.11.1
 [0.11.0]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3..v0.11.0
 [0.10.3]: https://github.com/dwhinham/mt32-pi/compare/v0.10.2..v0.10.3
 [0.10.2]: https://github.com/dwhinham/mt32-pi/compare/v0.10.1..v0.10.2
