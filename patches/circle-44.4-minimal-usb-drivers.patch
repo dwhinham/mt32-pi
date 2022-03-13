@@ -29,7 +29,7 @@ index 59a1fa7..2f4e334 100644
  	  usbserialpl2303.o usbserialft231x.o usbserialcdc.o usbtouchscreen.o
  
 diff --git a/lib/usb/usbdevicefactory.cpp b/lib/usb/usbdevicefactory.cpp
-index 432a3ec..8cfb35c 100644
+index 150ade3..8240548 100644
 --- a/lib/usb/usbdevicefactory.cpp
 +++ b/lib/usb/usbdevicefactory.cpp
 @@ -74,6 +74,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
@@ -39,8 +39,8 @@ index 432a3ec..8cfb35c 100644
 +#if 0
  	else if (pName->Compare ("int3-1-1") == 0)
  	{
- 		pResult = new CUSBKeyboardDevice (pParent);
-@@ -116,6 +117,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+ 		CString *pVendor = pParent->GetDevice ()->GetName (DeviceNameVendor);
+@@ -132,6 +133,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	{
  		pResult = new CUSBPrinterDevice (pParent);
  	}
@@ -48,7 +48,7 @@ index 432a3ec..8cfb35c 100644
  	else if (pName->Compare ("ven424-ec00") == 0)
  	{
  		pResult = new CSMSC951xDevice (pParent);
-@@ -124,11 +126,13 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+@@ -140,11 +142,13 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	{
  		pResult = new CLAN7800Device (pParent);
  	}
@@ -62,7 +62,7 @@ index 432a3ec..8cfb35c 100644
  	else if (   pName->Compare ("int1-3-0") == 0
  		 || pName->Compare ("ven582-12a") == 0)		// Roland UM-ONE MIDI interface
  	{
-@@ -171,6 +175,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
+@@ -187,6 +191,7 @@ CUSBFunction *CUSBDeviceFactory::GetDevice (CUSBFunction *pParent, CString *pNam
  	return pResult;
  }
  
@@ -70,7 +70,7 @@ index 432a3ec..8cfb35c 100644
  CUSBFunction *CUSBDeviceFactory::GetGenericHIDDevice (CUSBFunction *pParent)
  {
  	// Must copy parent function here, because we consume the HID report descriptor,
-@@ -249,6 +254,7 @@ CUSBFunction *CUSBDeviceFactory::GetGenericHIDDevice (CUSBFunction *pParent)
+@@ -265,6 +270,7 @@ CUSBFunction *CUSBDeviceFactory::GetGenericHIDDevice (CUSBFunction *pParent)
  
  	return new CUSBGamePadStandardDevice (pParent);
  }
