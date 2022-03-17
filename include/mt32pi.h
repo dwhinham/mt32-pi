@@ -47,6 +47,13 @@
 #include <wlan/bcm4343.h>
 #include <wlan/hostap/wpa_supplicant/wpasupplicant.h>
 
+extern "C"
+{
+	#include <lua.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
+}
+
 #include "config.h"
 #include "control/control.h"
 #include "control/mister.h"
@@ -55,6 +62,7 @@
 #include "midiparser.h"
 #include "net/applemidi.h"
 #include "net/ftpdaemon.h"
+#include "net/luarepl.h"
 #include "net/udpmidi.h"
 #include "pisound.h"
 #include "power.h"
@@ -163,6 +171,7 @@ private:
 	CAppleMIDIParticipant* m_pAppleMIDIParticipant;
 	CUDPMIDIReceiver* m_pUDPMIDIReceiver;
 	CFTPDaemon* m_pFTPDaemon;
+	CLuaREPL* m_pLuaREPL;
 
 	CBcmRandomNumberGenerator m_Random;
 
@@ -219,6 +228,15 @@ private:
 	// Event handling
 	TEventQueue m_EventQueue;
 
+	// Scripting engine
+	lua_State* m_pLuaState;
+
+	static int LuaPanicHandler(lua_State* pLuaState);
+	static int LuaLCDLog(lua_State* pLuaState);
+	static int LuaSetMasterVolume(lua_State* pLuaState);
+	static int LuaSendMIDIShortMessage(lua_State* pLuaState);
+	static int LuaSendMIDISysExMessage(lua_State* pLuaState);
+
 	static void EventHandler(const TEvent& Event);
 	static void USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext);
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
@@ -227,6 +245,7 @@ private:
 	static void PanicHandler();
 
 	static CMT32Pi* s_pThis;
+	static const struct luaL_Reg s_LuaLib[];
 };
 
 #endif

@@ -111,6 +111,7 @@ CFG(udp_midi,			bool,				NetworkUDPMIDI,				true						)
 CFG(ftp,			bool,				NetworkFTPServer,			true						)
 CFG(ftp_username,		CString,			NetworkFTPUsername,			"mt32-pi"					)
 CFG(ftp_password,		CString,			NetworkFTPPassword,			"mt32-pi"					)
+CFG(lua_repl,			bool,				NetworkLuaREPL,				true						)
 END_SECTION
 
 #undef BEGIN_SECTION

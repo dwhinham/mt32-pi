@@ -5,7 +5,7 @@
 include Config.mk
 
 .DEFAULT_GOAL=all
-.PHONY: submodules circle-stdlib mt32emu fluidsynth all clean veryclean
+.PHONY: submodules circle-stdlib mt32emu fluidsynth lua all clean veryclean
 
 #
 # Functions to apply/reverse patches only if not completely applied/reversed already
@@ -133,9 +133,24 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@touch $@
 
 #
+# Build Lua
+#
+lua: $(LUAHOME)/liblua.a
+
+$(LUAHOME)/liblua.a:
+	@${APPLY_PATCH} $(LUAHOME) patches/lua-5.4.4-circle.patch
+
+	@$(MAKE) -C $(LUAHOME) a \
+	CC="$(PREFIX)gcc" \
+	AR="$(PREFIX)ar rc" \
+	RANLIB="$(PREFIX)ranlib" \
+	CFLAGS="$(CFLAGS_FOR_TARGET) \$$(MYCFLAGS) -Wall -Werror -O3 -fno-stack-protector -fno-common" \
+	MYCFLAGS="\$$(LOCAL)"
+
+#
 # Build kernel itself
 #
-all: circle-stdlib mt32emu fluidsynth
+all: circle-stdlib mt32emu fluidsynth lua
 	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #
@@ -153,6 +168,7 @@ mrproper: clean
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-cp210x-remove-partnum-check.patch
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
 	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
+	@${REVERSE_PATCH} $(LUAHOME) patches/lua-5.4.4-circle.patch
 
 # Clean circle-stdlib
 	@if [ -f $(CIRCLE_STDLIB_CONFIG) ]; then $(MAKE) -C $(CIRCLESTDLIBHOME) mrproper; fi
@@ -163,3 +179,6 @@ mrproper: clean
 
 # Clean FluidSynth
 	@$(RM) -r $(FLUIDSYNTHBUILDDIR)
+
+	# Clean Lua
+	@$(MAKE) -C $(LUAHOME) clean

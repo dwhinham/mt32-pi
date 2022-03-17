@@ -1,0 +1,13 @@
+diff --git a/luaconf.h b/luaconf.h
+index d42d14b7..1cba5376 100644
+--- a/luaconf.h
++++ b/luaconf.h
+@@ -41,7 +41,7 @@
+ ** Define it if you want Lua to avoid the use of a few C99 features
+ ** or Windows-specific features on Windows.
+ */
+-/* #define LUA_USE_C89 */
++#define LUA_USE_C89
+ 
+ 
+ /*

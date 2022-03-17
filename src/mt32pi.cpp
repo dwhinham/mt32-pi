@@ -58,6 +58,15 @@ enum class TCustomSysExCommand : u8
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
+const struct luaL_Reg CMT32Pi::s_LuaLib[] =
+{
+	{ "LCDLog",			LuaLCDLog			},
+	{ "SetMasterVolume",		LuaSetMasterVolume		},
+	{ "SendMIDIShortMessage",	LuaSendMIDIShortMessage		},
+	{ "SendMIDISysExMessage",	LuaSendMIDISysExMessage		},
+	{ nullptr,			nullptr				},
+};
+
 CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
 	: CMultiCoreSupport(CMemorySystem::Get()),
 	  CMIDIParser(),
@@ -84,6 +93,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pAppleMIDIParticipant(nullptr),
 	  m_pUDPMIDIReceiver(nullptr),
 	  m_pFTPDaemon(nullptr),
+	  m_pLuaREPL(nullptr),
 
 	  m_pLCD(nullptr),
 	  m_nLCDUpdateTime(0),
@@ -119,7 +129,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_nMasterVolume(100),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
-	  m_pSoundFontSynth(nullptr)
+	  m_pSoundFontSynth(nullptr),
+
+	  m_pLuaState(nullptr)
 {
 	s_pThis = this;
 }
@@ -305,6 +317,24 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	CCPUThrottle::Get()->DumpStatus();
 	SetPowerSaveTimeout(m_pConfig->SystemPowerSaveTimeout);
 
+	// Init scripting engine
+	m_pLuaState = luaL_newstate();
+	luaL_openlibs(m_pLuaState);
+	lua_atpanic(m_pLuaState, LuaPanicHandler);
+
+	if (luaL_dofile(m_pLuaState, "SD:mt32-pi.lua") == LUA_OK)
+	{
+		luaL_newlib(m_pLuaState, s_LuaLib);
+		lua_setglobal(m_pLuaState, "mt32pi");
+		LOGNOTE("Loaded Lua script");
+	}
+	else
+	{
+		LOGNOTE("Lua script not loaded");
+		lua_close(m_pLuaState);
+		m_pLuaState = nullptr;
+	}
+
 	// Clear LCD
 	if (m_pLCD)
 		m_pLCD->Clear();
@@ -434,6 +464,18 @@ void CMT32Pi::MainTask()
 		ProcessEventQueue();
 
 		const unsigned int nTicks = m_pTimer->GetTicks();
+
+		// Run scripting engine tasks
+		if (m_pLuaState)
+		{
+			if (lua_getglobal(m_pLuaState, "OnUpdate") != LUA_TFUNCTION)
+				lua_pop(m_pLuaState, 1);
+			else
+			{
+				lua_pushinteger(m_pLuaState, Utility::TicksToMillis(CTimer::GetClockTicks()));
+				lua_pcall(m_pLuaState, 1, 0, 0);
+			}
+		}
 
 		// Update activity LED
 		if (m_bLEDOn && (nTicks - m_nLEDOnTime) >= MSEC2HZ(LEDTimeoutMillis))
@@ -652,6 +694,45 @@ void CMT32Pi::OnUnderVoltageDetected()
 
 void CMT32Pi::OnShortMessage(u32 nMessage)
 {
+	// Filter using scripting engine
+	if (m_pLuaState)
+	{
+		const int nStackSize = lua_gettop(m_pLuaState);
+
+		// Ensure function exists
+		if (lua_getglobal(m_pLuaState, "OnMIDIShortMessage") != LUA_TFUNCTION)
+			lua_pop(m_pLuaState, 1);
+		else
+		{
+			lua_pushinteger(m_pLuaState, nMessage & 0xFF);
+			lua_pushinteger(m_pLuaState, (nMessage >> 8) & 0xFF);
+			lua_pushinteger(m_pLuaState, (nMessage >> 16) & 0xFF);
+
+			if (lua_pcall(m_pLuaState, 3, LUA_MULTRET, 0) != LUA_OK)
+			{
+				const char* const pFormat =  "Lua error: %s";
+				const char* const pMessage = lua_tostring(m_pLuaState, -1);
+				lua_pop(m_pLuaState, 1);
+
+				LOGERR(pFormat, pMessage);
+				LCDLog(TLCDLogType::Error, pFormat, pMessage);
+				return;
+			}
+
+			const int nReturns = lua_gettop(m_pLuaState) - nStackSize;
+
+			// If function returned a MIDI message, update it
+			if (nReturns == 3)
+			{
+				nMessage = (luaL_checkinteger(m_pLuaState, -3) & 0xFF) |
+					((luaL_checkinteger(m_pLuaState, -2) & 0xFF) << 8) |
+					((luaL_checkinteger(m_pLuaState, -1) & 0xFF) << 16);
+			}
+
+			lua_pop(m_pLuaState, nReturns);
+		}
+	}
+
 	// Active sensing
 	if (nMessage == 0xFE)
 	{
@@ -671,6 +752,36 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 
 void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 {
+	// Filter using scripting engine
+	if (m_pLuaState)
+	{
+		// Ensure function exists
+		if (lua_getglobal(m_pLuaState, "OnMIDISysExMessage") != LUA_TFUNCTION)
+			lua_pop(m_pLuaState, 1);
+		else
+		{
+			lua_pushlstring(m_pLuaState, reinterpret_cast<const char*>(pData), nSize);
+
+			if (lua_pcall(m_pLuaState, 1, 1, 0) != LUA_OK)
+			{
+				const char* const pFormat =  "Lua error: %s";
+				const char* const pMessage = lua_tostring(m_pLuaState, -1);
+				lua_pop(m_pLuaState, 1);
+
+				LOGERR(pFormat, pMessage);
+				LCDLog(TLCDLogType::Error, pFormat, pMessage);
+				return;
+			}
+
+			// If function returned a SysEx message, update it
+			pData = reinterpret_cast<const u8*>(lua_tolstring(m_pLuaState, -1, &nSize));
+			lua_pop(m_pLuaState, 1);
+		}
+	}
+
+	if (!pData || !nSize)
+		return;
+
 	// Flash LED
 	LEDOn();
 
@@ -843,7 +954,7 @@ void CMT32Pi::UpdateUSB(bool bStartup)
 
 void CMT32Pi::UpdateNetwork()
 {
-	if (!m_pNet)
+	if (!m_pNet || !m_pNetDevice)
 		return;
 
 	bool bNetIsRunning = m_pNet->IsRunning();
@@ -900,13 +1011,25 @@ void CMT32Pi::UpdateNetwork()
 			else
 				LOGNOTE("FTP daemon initialized");
 		}
+
+		if (m_pConfig->NetworkLuaREPL && m_pLuaState)
+		{
+			m_pLuaREPL = new CLuaREPL(m_pLuaState);
+			if (!m_pLuaREPL->Initialize())
+			{
+				LOGERR("Failed to init Lua REPL");
+				delete m_pLuaREPL;
+				m_pLuaREPL = nullptr;
+			}
+			else
+				LOGERR("Lua REPL initialized");
+		}
 	}
 	else if (m_bNetworkReady && !bNetIsRunning)
 	{
 		m_bNetworkReady = false;
 		LOGNOTE("Network disconnected.");
 		LCDLog(TLCDLogType::Notice, "%s disconnected!", GetNetworkDeviceShortName());
-
 	}
 }
 
@@ -1188,7 +1311,7 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 	const char* pName = m_pSoundFontSynth->GetSoundFontManager().GetSoundFontName(nIndex);
 	LCDLog(TLCDLogType::Notice, "SF %ld: %s", nIndex, pName ? pName : "- N/A -");
 	m_nDeferredSoundFontSwitchIndex = nIndex;
-	m_nDeferredSoundFontSwitchTime  = CTimer::Get()->GetTicks();
+	m_nDeferredSoundFontSwitchTime  = m_pTimer->GetTicks();
 	m_bDeferredSoundFontSwitchFlag  = true;
 }
 
@@ -1291,20 +1414,52 @@ void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
 	}
 }
 
+int CMT32Pi::LuaPanicHandler(lua_State* pLuaState)
+{
+	LOGPANIC("Lua error: %s", lua_tostring(pLuaState, -1));
+	return 0;
+}
+
+int CMT32Pi::LuaLCDLog(lua_State* pLuaState)
+{
+	assert(pLuaState != nullptr);
+
+	const TLCDLogType Type = static_cast<TLCDLogType>(lua_tointeger(pLuaState, 1));
+	const char* pFormat = lua_tostring(pLuaState, 2);
+
+	s_pThis->LCDLog(Type, pFormat);
+
+	return 0;
+}
+
+int CMT32Pi::LuaSetMasterVolume(lua_State* pLuaState)
+{
+	const s32 nVolume = static_cast<s32>(luaL_checknumber(pLuaState, 1));
+	s_pThis->SetMasterVolume(nVolume);
+	return 0;
+}
+
+int CMT32Pi::LuaSendMIDIShortMessage(lua_State* pLuaState)
+{
+	const s32 nMessage = (luaL_checkinteger(pLuaState, -3) & 0xFF) |
+			     ((luaL_checkinteger(pLuaState, -2) & 0xFF) << 8) |
+			     ((luaL_checkinteger(pLuaState, -1) & 0xFF) << 16);
+	s_pThis->OnShortMessage(nMessage);
+	return 0;
+}
+
+int CMT32Pi::LuaSendMIDISysExMessage(lua_State* pLuaState)
+{
+	size_t nLength;
+	const u8* const pMessage = reinterpret_cast<const u8*>(lua_tolstring(pLuaState, -1, &nLength));
+	s_pThis->OnSysExMessage(pMessage, nLength);
+	return 0;
+}
+
 void CMT32Pi::PanicHandler()
 {
 	if (!s_pThis || !s_pThis->m_pLCD)
 		return;
-
-	// Kill UI task
-	s_pThis->m_bRunning = false;
-	while (!s_pThis->m_bUITaskDone)
-		;
-
-	const char* pGuru = "Guru Meditation:";
-	u8 nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pGuru);
-	s_pThis->m_pLCD->Clear(true);
-	s_pThis->m_pLCD->Print(pGuru, nOffsetX, 0, true, true);
 
 	char Buffer[LOGGER_BUFSIZE];
 	CLogger::Get()->Read(Buffer, sizeof(Buffer), false);
@@ -1324,6 +1479,16 @@ void CMT32Pi::PanicHandler()
 	pMessageStart = strstr(pMessageStart, ": ") + 2;
 	char* pMessageEnd = strstr(pMessageStart, "\x1B[0m");
 	*pMessageEnd = '\0';
+
+	// Kill other tasks
+	s_pThis->m_bRunning = false;
+	while (!s_pThis->m_bUITaskDone)
+		;
+
+	const char* pGuru = "Guru Meditation:";
+	u8 nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pGuru);
+	s_pThis->m_pLCD->Clear(true);
+	s_pThis->m_pLCD->Print(pGuru, nOffsetX, 0, true, true);
 
 	const size_t nMessageLength = strlen(pMessageStart);
 	size_t nCurrentScrollOffset = 0;
