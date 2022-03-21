@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Changed
 
 - Update to circle-stdlib v15.12/Circle Step 44.4.1.
+- Update to FluidSynth v2.2.6.
 
 ## [0.11.1] - 2022-03-10
 
