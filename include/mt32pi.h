@@ -55,6 +55,7 @@
 #include "midiparser.h"
 #include "net/applemidi.h"
 #include "net/ftpdaemon.h"
+#include "net/udpmidi.h"
 #include "pisound.h"
 #include "power.h"
 #include "ringbuffer.h"
@@ -65,7 +66,7 @@
 
 //#define MONITOR_TEMPERATURE
 
-class CMT32Pi : CMultiCoreSupport, CPower, CMIDIParser, CAppleMIDIHandler
+class CMT32Pi : CMultiCoreSupport, CPower, CMIDIParser, CAppleMIDIHandler, CUDPMIDIHandler
 {
 public:
 	CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
@@ -103,6 +104,9 @@ private:
 	virtual void OnAppleMIDIDataReceived(const u8* pData, size_t nSize) override { ParseMIDIBytes(pData, nSize); };
 	virtual void OnAppleMIDIConnect(const CIPAddress* pIPAddress, const char* pName) override;
 	virtual void OnAppleMIDIDisconnect(const CIPAddress* pIPAddress, const char* pName) override;
+
+	// CUDPMIDIHandler
+	virtual void OnUDPMIDIDataReceived(const u8* pData, size_t nSize) override { ParseMIDIBytes(pData, nSize); };
 
 	// Initialization
 	bool InitNetwork();
@@ -159,6 +163,7 @@ private:
 	CWPASupplicant m_WPASupplicant;
 	bool m_bNetworkReady;
 	CAppleMIDIParticipant* m_pAppleMIDIParticipant;
+	CUDPMIDIReceiver* m_pUDPMIDIReceiver;
 	CFTPDaemon* m_pFTPDaemon;
 
 	CBcmRandomNumberGenerator m_Random;

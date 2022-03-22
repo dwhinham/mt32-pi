@@ -82,6 +82,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_WPASupplicant(WLANConfigFile),
 	  m_bNetworkReady(false),
 	  m_pAppleMIDIParticipant(nullptr),
+	  m_pUDPMIDIReceiver(nullptr),
 	  m_pFTPDaemon(nullptr),
 
 	  m_pLCD(nullptr),
@@ -852,6 +853,19 @@ void CMT32Pi::UpdateNetwork()
 				m_pLogger->Write(MT32PiName, LogNotice, "AppleMIDI receiver initialized");
 		}
 
+		if (m_pConfig->NetworkUDPMIDI)
+		{
+			m_pUDPMIDIReceiver = new CUDPMIDIReceiver(this);
+			if (!m_pUDPMIDIReceiver->Initialize())
+			{
+				m_pLogger->Write(MT32PiName, LogError, "Failed to init UDP MIDI receiver");
+				delete m_pUDPMIDIReceiver;
+				m_pUDPMIDIReceiver = nullptr;
+			}
+			else
+				m_pLogger->Write(MT32PiName, LogNotice, "UDP MIDI receiver initialized");
+		}
+
 		if (m_pConfig->NetworkFTPServer)
 		{
 			m_pFTPDaemon = new CFTPDaemon(m_pConfig->NetworkFTPUsername, m_pConfig->NetworkFTPPassword);
@@ -873,6 +887,8 @@ void CMT32Pi::UpdateNetwork()
 
 		delete m_pAppleMIDIParticipant;
 		m_pAppleMIDIParticipant = nullptr;
+		delete m_pUDPMIDIReceiver;
+		m_pUDPMIDIReceiver = nullptr;
 		delete m_pFTPDaemon;
 		m_pFTPDaemon = nullptr;
 	}

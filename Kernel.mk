@@ -24,6 +24,7 @@ OBJS		:=	src/config.o \
 				src/net/applemidi.o \
 				src/net/ftpdaemon.o \
 				src/net/ftpworker.o \
+				src/net/udpmidi.o \
 				src/pisound.o \
 				src/power.o \
 				src/rommanager.o \
