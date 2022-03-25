@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2022-03-25
+
 ### Added
 
 - Support for network MIDI via raw UDP socket (new configuration file option). This is compatible with [MiSTer MidiLink](https://github.com/bbond007/MiSTer_MidiLink).
@@ -461,7 +463,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.2..HEAD
+[0.11.2]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..v0.11.2
 [0.11.1]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..v0.11.1
 [0.11.0]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3..v0.11.0
 [0.10.3]: https://github.com/dwhinham/mt32-pi/compare/v0.10.2..v0.10.3
