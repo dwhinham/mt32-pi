@@ -23,7 +23,11 @@
 from configparser import ConfigParser
 from datetime import datetime
 from ftplib import FTP, error_temp
-from packaging.version import Version
+try:
+	from packaging.version import Version
+except ImportError:
+	# Fall back on distutils for older Python
+	from distutils.version import StrictVersion as Version
 from pathlib import Path
 from pkg_resources import parse_version
 from sys import stderr
