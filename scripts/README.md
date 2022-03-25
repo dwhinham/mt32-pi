@@ -2,6 +2,8 @@
 
 ## [`mt32pi_installer.sh`]
 
+<a href="../images/mt32pi_installer.gif?raw=1"><img title="mt32pi_installer.sh in action." width="400rem" align="right" src="../images/mt32pi_installer.gif"></a>
+
 An interactive Bash script for performing a first-time installation of mt32-pi. Intended for use on MiSTer FPGA, but should be usable on any Linux PC. Simply attach an SD card reader to your machine and insert a microSD card, then run the script as root.
 
 ### Features
@@ -21,11 +23,14 @@ An interactive Bash script for performing a first-time installation of mt32-pi. 
 
 1. Download [`mt32pi_installer.sh`].
    - If you want to use it on MiSTer, copy it to the `/Scripts` directory on your SD card.
-2. Insert a microSD card into a USB card reader, and then connect it to your Linux PC or MiSTer.
-3. Run the script by typing `sudo ./mt32pi_installer.sh` at a shell prompt.
+2. Make the script executable by typing `chmod +x mt32pi_installer.sh` at a shell prompt.
+3. Insert a microSD card into a USB card reader, and then connect it to your Linux PC or MiSTer.
+4. Run the script by typing `sudo ./mt32pi_installer.sh` at a shell prompt.
    - On MiSTer, you should see `mt32pi_installer` in the Scripts menu - simply select it to run the script.
 
 ## [`mt32pi_updater.py`]
+
+<a href="../images/mt32pi_updater.gif?raw=1"><img title="mt32pi_updater.py in action." width="400rem" align="right" src="../images/mt32pi_updater.gif"></a>
 
 A non-interactive Python 3 script for automatically updating your mt32-pi via the embedded FTP server. Intended for use on MiSTer FPGA, but should be usable on any Linux PC.
 
@@ -48,8 +53,9 @@ A wrapper script ([`mt32pi_updater.sh`]) is provided so that it can be launched 
 
 1. Download [`mt32pi_updater.py`].
    - If you want to use it on MiSTer, download the [the wrapper script][`mt32pi_updater.sh`] too, and copy both scripts (`.py` and `.sh`) to the `/Scripts` directory on your SD card.
-2. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `MT32PI_FTP_HOST`, `MT32PI_FTP_USERNAME` and `MT32PI_FTP_PASSWORD` settings near the top of `mt32pi_updater.py` so that they match.
-3. Run the script by typing `./mt32pi_updater.py` at a shell prompt.
+2. Make the scripts executable by typing `chmod +x mt32pi_updater.{py,sh}` at a shell prompt.
+3. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `MT32PI_FTP_HOST`, `MT32PI_FTP_USERNAME` and `MT32PI_FTP_PASSWORD` settings near the top of `mt32pi_updater.py` so that they match.
+4. Run the script by typing `./mt32pi_updater.py` at a shell prompt.
    - On MiSTer, you should see `mt32pi_updater` in the Scripts menu - simply select it to run the script.
 
 [`mt32pi_installer.sh`]: mt32pi_installer.sh?raw=1
