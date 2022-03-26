@@ -395,6 +395,10 @@ function prepare_disk {
 	echo 100 | "${DIALOG[@]}" --gauge "Complete!" 6 70
 }
 
+function get_wifi_country_code {
+	"${DIALOG[@]}" --title "Network configuration" --menu "Please choose your country (to ensure the Wi-Fi radio complies with regulations and improve compatibility):" 30 80 10 "${COUNTRY_CODES[@]}" --output-fd 1
+}
+
 if [ "$EUID" -ne 0 ]; then
 	echo "This script must be run as root."
 	echo "Please try 'sudo $0'."
@@ -478,6 +482,12 @@ A Wi-Fi configuration file was detected at \Zb\Z4$MISTER_WPA_SUPPLICANT_CFG_PATH
 Would you like to use these settings for mt32-pi, too?
 EOF
 
+read -r -d '' MSG_WPA_SUPPLICANT_CFG_NO_COUNTRY <<EOF
+The MiSTer Wi-Fi settings file does not contain a country code, so it probably won't work on mt32-pi as-is.
+
+Please choose your country on the next screen. The country code will then be added to mt32-pi's Wi-Fi configuration.
+EOF
+
 if "${DIALOG[@]}" --title "Network configuration" --yesno "$MSG_NETWORK_CONFIG" 10 80; then
 	set_ini_option "$mt32_pi_config" network mode wifi
 	set_ini_option "$mt32_pi_config" network ftp on
@@ -485,9 +495,14 @@ if "${DIALOG[@]}" --title "Network configuration" --yesno "$MSG_NETWORK_CONFIG" 
 	if [ -f "$MISTER_WPA_SUPPLICANT_CFG_PATH" ] && \
 	   "${DIALOG[@]}" --title "Network configuration" --yesno "$MSG_WPA_SUPPLICANT_CFG_DETECTED" 7 90; then
 		cp "$MISTER_WPA_SUPPLICANT_CFG_PATH" "$wpa_supplicant"
+		if ! grep -qE "country\s*=\s*[A-Z]{2}" "$wpa_supplicant"; then
+			"${DIALOG[@]}" --title "Network configuration" --msgbox "$MSG_WPA_SUPPLICANT_CFG_NO_COUNTRY" 9 90
+			wifi_country_code=$(get_wifi_country_code)
+			sed -i "1s/^/country=$wifi_country_code\n\n/" "$wpa_supplicant"
+		fi
 		"${DIALOG[@]}" --title "Network configuration" --msgbox "Your Wi-Fi settings have been copied.\n\nWi-Fi and the embedded FTP server have been enabled." 7 60
 	else
-		wifi_country_code=$("${DIALOG[@]}" --title "Network configuration" --menu "Please choose your country (to ensure the Wi-Fi radio complies with regulations and improve compatibility):" 30 80 10 "${COUNTRY_CODES[@]}" --output-fd 1)
+		wifi_country_code=$(get_wifi_country_code)
 		if [ "$wifi_country_code" ]; then
 			wifi_ssid=$("${DIALOG[@]}" --title "Network configuration" --inputbox "Please enter your Wi-Fi access point name:" 8 50 --output-fd 1)
 			if [ "$wifi_ssid" ]; then
