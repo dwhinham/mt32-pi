@@ -325,7 +325,7 @@ read -r -d '' MT32PI_LOGO <<'EOF'
   /  /  /  /  /  /   /  /____  _______)  //  /______       /  /____/  //  .__
  /__/  /__/  /__/    \______//_________. /_________/      /   ______.  \____/
  \Z2/////////////////////////////////////////////////////// \Z5/  / \Z2//// /// // /
-                                                            \Z5```\Zn
+                                                         \Z5```\Zn
 EOF
 unset IFS
 
@@ -449,7 +449,7 @@ About to erase the contents of \Zb\Z4$disk\Zn.
 
         >>> \Z1\ZuTHIS IS YOUR LAST CHANCE TO ABORT\Zn <<<
 
-          Are you sure you want to continue?
+           Are you sure you want to continue?
 EOF
 
 "${DIALOG[@]}" --title "SD card partitioning and formatting" --yesno "$MSG_DISK_CONFIRMATION" 13 65 \
@@ -544,13 +544,13 @@ It's now safe to remove the SD card from your card reader and insert it into you
 \Z1\ZuNOTE:\Zn
 MT-32 mode will be unavailable until you add MT-32 ROM files to the \Zb\Z4roms\Zn directory on the SD card.
 
-            Thankyou for using mt32-pi! \Z5<3\Zn
+             Thankyou for using mt32-pi! \Z5<3\Zn
 
-          \Z1\Zuhttps://github.com/dwhinham/mt32-pi\Zn
+           \Z1\Zuhttps://github.com/dwhinham/mt32-pi\Zn
 
-       Please support open source developers!
+         Please support open source developers!
 EOF
 
-"${DIALOG[@]}" --title "Installation complete!" --msgbox "$MSG_COMPLETE" 16 58
+"${DIALOG[@]}" --title "Installation complete!" --msgbox "$MSG_COMPLETE" 16 60
 
 clear
