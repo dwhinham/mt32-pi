@@ -14,13 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for network MIDI via raw UDP socket (new configuration file option). This is compatible with [MiSTer MidiLink](https://github.com/bbond007/MiSTer_MidiLink).
 - New Bash/Python scripts for making the installation/update process easier, especially on MiSTer FPGA (see the [scripts directory](https://github.com/dwhinham/mt32-pi/tree/master/scripts) for download/information).
 
-## Changed
+### Changed
 
 - Update to circle-stdlib v15.12/Circle Step 44.4.1.
 - Update to FluidSynth v2.2.6.
 - Update to inih r54.
 
-## [0.11.1] - 2022-03-10
+### [0.11.1] - 2022-03-10
 
 ### Added
 
