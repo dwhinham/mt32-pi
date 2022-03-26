@@ -366,6 +366,10 @@ def show_release_notes(release_info):
 
 	print()
 
+def reboot():
+	with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+		sock.sendto(bytes.fromhex("F0 7D 00 F7"), (MT32PI_FTP_HOST, 1999))
+
 # -----------------------------------------------------------------------------
 # Entry point
 # -----------------------------------------------------------------------------
@@ -419,10 +423,13 @@ if __name__ == "__main__":
 		# Upload new version
 		install(install_dir) or exit(1)
 
+		# Reboot mt32-pi
+		reboot()
+
 		print("\nAll done.")
 		print(f"The settings from your old config file have been merged into the latest config template.")
 		print(f"A backup of your old config is available as {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry Pi's SD card.")
 		print(f"Your {COLOR_PURPLE}config.txt{COLOR_RESET} has been preserved.")
 		if old_wifi_config_exists:
 			print(f"Your {COLOR_PURPLE}wpa_supplicant.conf{COLOR_RESET} has been preserved.")
-		print(f"\n{COLOR_GREEN}Please power-cycle your mt32-pi.{COLOR_RESET}")
+		print(f"\n{COLOR_GREEN}Your mt32-pi should be automatically rebooting if UDP MIDI is enabled. Otherwise, please power-cycle your mt32-pi.{COLOR_RESET}")
