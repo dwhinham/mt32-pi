@@ -346,6 +346,7 @@ def show_release_notes(release_info):
 	text = release_info['body']
 
 	# Poor man's Markdown formatting
+	text = re.sub(r"\[(.+?)\]\(.+?\)", rf"{COLOR_PURPLE}\1{COLOR_RESET}", text, flags=re.MULTILINE)
 	text = re.sub(r"^#+\s*(.+)$", rf"{COLOR_GREEN}\1{COLOR_RESET}", text, flags=re.MULTILINE)
 	text = re.sub(r"^(\s*)-(.+)$", rf"\1{COLOR_PURPLE}-{COLOR_RESET}\2", text, flags=re.MULTILINE)
 	text = re.sub(r"^(\s*)\*(.+)$", rf"\1{COLOR_PURPLE}*{COLOR_RESET}\2", text, flags=re.MULTILINE)
