@@ -34,13 +34,17 @@
 - [Configuration file] for selecting hardware options and fine tuning.
 - [LCD status screen support][LCD and OLED displays] (for MT-32 SysEx messages and status information).
 - Simple [physical control surface][control surface] using buttons and rotary encoder.
-- [MiSTer FPGA integration via user port][MiSTer FPGA user port connection].
-- Network MIDI support via [macOS native network MIDI][macOS network MIDI], [rtpMIDI] on Windows, or [rtpmidid] on Linux.
+- [MiSTer FPGA integration via user port][MiSTer FPGA].
+- Network MIDI support via [RTP-MIDI] and [raw UDP socket].
 - [Embedded FTP server][FTP server] for remote access to files.
 - A user interface with menu system is _planned_.
 - More advanced MIDI routing is _planned_.
 
 ## ✨ Quick-start guide
+
+🆕 If you have a Linux computer or MiSTer FPGA device, you may wish to try the new interactive [mt32-pi installer script](scripts).
+
+Otherwise, for a manual installation:
 
 1. Download the latest release from the [Releases] section.
     * If you are **updating an old version**, read the [Updating mt32-pi] wiki page for the correct procedure.
@@ -105,10 +109,8 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [I²S Hi-Fi DACs]: https://github.com/dwhinham/mt32-pi/wiki/I%C2%B2S-DACs
 [inih]: https://github.com/benhoyt/inih
 [LCD and OLED displays]: https://github.com/dwhinham/mt32-pi/wiki/LCD-and-OLED-displays
-[macOS network MIDI]: https://support.apple.com/en-gb/guide/audio-midi-setup/ams1012/mac
-[MiSTer FPGA user port connection]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection
-[MiSTer FPGA]: https://github.com/MiSTer-devel/Main_MiSTer/wiki
-[MiSTer setup]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA-user-port-connection#setup
+[MiSTer FPGA]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA
+[MiSTer setup]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA%3A-Setup-and-usage
 [MT-32 synthesis]: https://github.com/dwhinham/mt32-pi/wiki/MT-32-synthesis
 [mt32-pi wiki]: https://github.com/dwhinham/mt32-pi/wiki
 [Munt]: https://github.com/munt/munt
@@ -118,8 +120,8 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [Ricardo Saraiva (UltimateMiSTer.com)]: https://ultimatemister.com
 [Roland GS]: https://en.wikipedia.org/wiki/Roland_GS
 [Roland MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
-[rtpMIDI]: https://www.tobias-erichsen.de/software/rtpmidi/rtpmidi-tutorial.html
-[rtpmidid]: https://github.com/davidmoreno/rtpmidid
+[RTP-MIDI]: https://github.com/dwhinham/mt32-pi/wiki/Networking%3A-RTP-MIDI-%28AppleMIDI%29
+[Raw UDP socket]: https://github.com/dwhinham/mt32-pi/wiki/Networking%3A-UDP-MIDI
 [SD card preparation]: https://github.com/dwhinham/mt32-pi/wiki/SD-card-preparation
 [Serge Defever (Serdashop)]: http://serdashop.com
 [Serial port]: https://github.com/dwhinham/mt32-pi/wiki/MIDI-via-RS-232-or-USB-to-serial
