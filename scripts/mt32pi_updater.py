@@ -220,8 +220,7 @@ def get_latest_release_info():
     try:
         print_status("Retrieving release info from GitHub...")
         with request.urlopen(GITHUB_API_URL) as response:
-            charset = response.info().get_param("charset") or "utf-8"
-            releases = json.loads(response.read().decode(charset))
+            releases = json.load(response)
         print_result("OK!", COLOR_GREEN)
     except:
         print_result("FAILED!", COLOR_RED)
