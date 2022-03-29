@@ -24,12 +24,11 @@ from configparser import ConfigParser
 from datetime import datetime
 from ftplib import FTP, error_temp
 try:
-	from packaging.version import Version
+	from packaging.version import parse as parse_version
 except ImportError:
-	# Fall back on distutils for older Python
-	from distutils.version import StrictVersion as Version
+	# Fall back on pkg_resources when packaging is unavailable
+	from pkg_resources import parse_version
 from pathlib import Path
-from pkg_resources import parse_version
 from sys import stderr
 from time import sleep
 from urllib import request
@@ -188,7 +187,7 @@ def get_latest_release_info():
 		return None
 
 	# Sort by version number in descending order
-	releases.sort(reverse=True, key=lambda release: Version(release['tag_name'][1:]))
+	releases.sort(reverse=True, key=lambda release: parse_version(release['tag_name']))
 	return releases[0]
 
 
