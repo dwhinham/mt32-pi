@@ -20,6 +20,12 @@
 # You should have received a copy of the GNU General Public License along with
 # mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 
+try:
+	# ANSI colors for Windows command prompt
+	from colorama import init
+	init()
+except ImportError:
+	pass
 from configparser import ConfigParser
 from datetime import datetime
 from ftplib import FTP, error_temp
