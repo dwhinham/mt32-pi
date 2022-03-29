@@ -127,6 +127,10 @@ def print_result(message, color=None, replace=False):
 	if color:
 		print(COLOR_RESET, end="", flush=True)
 
+def print_socket_error():
+	print(f"Couldn't connect to your mt32-pi - you did enable networking and the FTP server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?")
+	print(f"This tool requires that you are running mt32-pi {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above.")
+
 # -----------------------------------------------------------------------------
 # Download/upload functions
 # -----------------------------------------------------------------------------
@@ -137,16 +141,15 @@ def get_current_version():
 		with FTP(MT32PI_FTP_HOST, MT32PI_FTP_USERNAME, MT32PI_FTP_PASSWORD, timeout=CONNECTION_TIMEOUT_SECS) as ftp:
 			print_result("OK!", COLOR_GREEN)
 			result = re.search(r"mt32-pi (v[0-9]+.[0-9]+.[0-9]+)", ftp.getwelcome())
+			if not result:
+				print_result("FAILED!", COLOR_RED)
+				print("Failed to extract version number from FTP welcome message.")
+				return None
 			return result.group(1)
 
-	except socket.timeout:
+	except socket.error:
 		print_result("FAILED!", COLOR_RED)
-		print(f"Couldn't connect to your mt32-pi - you did enable networking and the FTP server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?")
-		return None
-
-	except:
-		print_result("FAILED!", COLOR_RED)
-		print("Failed to extract version number from FTP welcome message.")
+		print_socket_error()
 		return None
 
 def get_old_data(temp_dir):
@@ -168,9 +171,9 @@ def get_old_data(temp_dir):
 
 		return True
 
-	except socket.timeout:
+	except socket.error:
 		print_result("FAILED!", COLOR_RED)
-		print(f"Couldn't connect to your mt32-pi - you did enable networking and the FTP server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?")
+		print_connection_failed()
 		return False
 
 def get_latest_release_info():
@@ -338,7 +341,12 @@ def install(source_path):
 
 	except socket.timeout:
 		print_result("FAILED!", COLOR_RED)
-		print(f"Couldn't connect to your mt32-pi - you did enable networking and the FTP server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?")
+		print("Connection timed out. Please check your network connection and try again.")
+		return False
+
+	except socket.error:
+		print_result("FAILED!", COLOR_RED)
+		print_socket_error()
 		return False
 
 def show_release_notes(release_info):
