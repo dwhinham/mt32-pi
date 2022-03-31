@@ -20,11 +20,28 @@
 # You should have received a copy of the GNU General Public License along with
 # mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 
+# -----------------------------------------------------------------------------
+# Changelog
+# -----------------------------------------------------------------------------
+# 0.2.0 - 2022-03-31
+# - User settings moved to external config file (mt32pi_updater.cfg).
+# - Script now updates and relaunches itself.
+# - Improved error handling.
+# - FTP session kept open and re-used between steps.
+# - Progress now shown when downloading update package.
+# - Colorama used if present for Windows terminal colors.
+#
+# 0.1.0 - 2022-03-25
+# - Initial version.
+# -----------------------------------------------------------------------------
+
+import io
 import json
 import os
 import re
 import shutil
 import socket
+import sys
 import tempfile
 from configparser import ConfigParser
 from datetime import datetime
@@ -48,39 +65,35 @@ except ImportError:
     # Fall back on pkg_resources when packaging is unavailable
     from pkg_resources import parse_version
 
-# -----------------------------------------------------------------------------
-# User options
-# -----------------------------------------------------------------------------
+GITHUB_REPO = "dwhinham/mt32-pi"
+GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
+SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
+SCRIPT_VERSION = "0.2.0"
 
-# Your mt32-pi's hostname or IP address
-MT32PI_FTP_HOST = "mt32-pi"
+# Config keys
+K_SECTION = "updater"
+K_HOST = "host"
+K_FTP_USERNAME = "ftp_username"
+K_FTP_PASSWORD = "ftp_password"
+K_CONNECTION_TIMEOUT = "connection_timeout"
+K_IGNORE_LIST = "ignore_list"
+K_SELF_UPDATE = "self_update"
+K_FORCE_UPDATE = "force_update"
+K_SHOW_RELEASE_NOTES = "show_release_notes"
 
-# The FTP username/password as specified in mt32-pi.cfg
-MT32PI_FTP_USERNAME = "mt32-pi"
-MT32PI_FTP_PASSWORD = "mt32-pi"
-
-# List of paths within the update package to skip; trailing slash indicates
-# entire directory
-NO_UPDATE = [
-    "roms/",
-    "soundfonts/",
-]
-
-# Set this to True to skip the version check and update anyway
-FORCE_UPDATE = False
-
-# Set this to False to skip showing the release notes
-SHOW_RELEASE_NOTES = True
-
-# Try increasing this value if your network isn't very reliable
-CONNECTION_TIMEOUT_SECS = 5
-
-# -----------------------------------------------------------------------------
-# End of user options
-# -----------------------------------------------------------------------------
-
-GITHUB_API_URL = "https://api.github.com/repos/dwhinham/mt32-pi/releases"
-SCRIPT_VERSION = "0.1.0"
+# Default config values
+DEFAULT_CONFIG = {
+    K_SECTION: {
+        K_HOST: "mt32-pi",
+        K_FTP_USERNAME: "mt32-pi",
+        K_FTP_PASSWORD: "mt32-pi",
+        K_CONNECTION_TIMEOUT: 5,
+        K_SELF_UPDATE: True,
+        K_FORCE_UPDATE: False,
+        K_SHOW_RELEASE_NOTES: True,
+        K_IGNORE_LIST: "roms/, soundfonts/",
+    }
+}
 
 CLEAR_TERM = "\033c"
 COLOR_RED = "\033[31;1m"
@@ -112,14 +125,14 @@ MT32PI_LOGO = r"""
     f"update script v{SCRIPT_VERSION}, © Dale Whinham 2020-2022",
 )
 
+RESULT_COLUMN_WIDTH = 10
+ANSI_ESCAPE_REGEX = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
 OLD_FILE_NAMES = [
     "mt32-pi.cfg",  # mt32-pi main configuration file
     "config.txt",  # Raspberry Pi configuration file
     "wpa_supplicant.conf",  # Wi-Fi configuration file
 ]
-
-RESULT_COLUMN_WIDTH = 10
-ANSI_ESCAPE_REGEX = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 def print_status(message):
@@ -146,77 +159,105 @@ def print_result(message, color=None, replace=False):
 def print_socket_error():
     print(
         "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
-        f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?"
+        f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?",
+        file=stderr,
     )
     print(
-        "This tool requires that you are running mt32-pi"
-        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above."
+        "This script requires that you are running mt32-pi"
+        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above.",
+        file=stderr,
     )
+
+
+def print_socket_timeout():
+    print(
+        "Connection timed out. Please check your network connection and try again.",
+        file=stderr,
+    )
+
+
+def pause(seconds=10):
+    clear_length = 0
+    for i in range(0, seconds):
+        print("\r" + " " * clear_length + "\r", end="")
+        countdown = f"Continuing in {seconds - i}..."
+        clear_length = len(countdown)
+        print(countdown, end="", flush=True)
+        sleep(1)
+
+    print("\r" + " " * clear_length + "\r", end="", flush=True)
+
+
+def restart():
+    args = sys.argv[:]
+    args.insert(0, sys.executable)
+    if sys.platform == "win32":
+        args = [f'"{arg}"' for arg in args]
+
+    os.chdir(os.getcwd())
+    os.execv(sys.executable, args)
 
 
 # -----------------------------------------------------------------------------
 # Download/upload functions
 # -----------------------------------------------------------------------------
-def get_current_version():
-    print_status(
-        "Connecting to your mt32-pi's embedded FTP server at"
-        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
-    )
+def self_update():
+    print_status("Checking for script updates...")
 
     try:
-        with FTP(
-            MT32PI_FTP_HOST,
-            MT32PI_FTP_USERNAME,
-            MT32PI_FTP_PASSWORD,
-            timeout=CONNECTION_TIMEOUT_SECS,
-        ) as ftp:
-            print_result("OK!", COLOR_GREEN)
-            result = re.search(r"mt32-pi (v[0-9]+.[0-9]+.[0-9]+)", ftp.getwelcome())
-            if not result:
-                print_result("FAILED!", COLOR_RED)
-                print("Failed to extract version number from FTP welcome message.")
-                return None
-            return result.group(1)
+        with request.urlopen(SCRIPT_URL) as response:
+            # Download script from repo and compare version
+            new_script = response.read().decode(response.headers.get_content_charset())
+            for line in new_script.splitlines():
+                result = re.match(
+                    r"^SCRIPT_VERSION\s*=\s*\"([0-9]+.[0-9]+.[0-9]+)\"$", line
+                )
+                if result:
+                    print_result("OK!", COLOR_GREEN)
+                    if parse_version(result[1]) > parse_version(SCRIPT_VERSION):
+                        # Overwrite self with new version
+                        with open(__file__, "w") as old_script:
+                            old_script.write(new_script)
 
-    except socket.error:
+                        print("A new version of the script is available; respawning...")
+                        pause(3)
+                        restart()
+                    else:
+                        print("Script is up to date.\n")
+                        return
+
+            print_result("WARNING!", COLOR_YELLOW)
+            print(
+                "Unable to find version information in latest script from GitHub;"
+                " continuing anyway..."
+            )
+
+    except Exception:
         print_result("FAILED!", COLOR_RED)
-        print_socket_error()
+        print("Failed to retrieve latest updater script from GitHub.", file=stderr)
+
+
+def get_current_version(ftp):
+    result = re.search(r"mt32-pi (v[0-9]+.[0-9]+.[0-9]+)", ftp.getwelcome())
+    if not result:
+        print_result("FAILED!", COLOR_RED)
+        print("Failed to extract version number from FTP welcome message.")
         return None
+    return result.group(1)
 
 
-def get_old_data(temp_dir):
-    print_status(
-        "Connecting to your mt32-pi's embedded FTP server at"
-        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
-    )
+def get_old_data(ftp, temp_dir):
+    for file_name in OLD_FILE_NAMES:
+        with open(temp_dir / file_name, "wb") as file:
+            # TODO: Handle when file doesn't exist
+            print_status(f"Retrieving {COLOR_PURPLE}{file_name}{COLOR_RESET}...")
+            try:
+                ftp.retrbinary(f"RETR /SD/{file_name}", file.write)
+                print_result("DONE!", COLOR_GREEN)
+            except error_temp:
+                print_result("NOT FOUND!", COLOR_YELLOW)
 
-    try:
-        with FTP(
-            MT32PI_FTP_HOST,
-            MT32PI_FTP_USERNAME,
-            MT32PI_FTP_PASSWORD,
-            timeout=CONNECTION_TIMEOUT_SECS,
-        ) as ftp:
-            print_result("OK!", COLOR_GREEN)
-
-            for file_name in OLD_FILE_NAMES:
-                with open(temp_dir / file_name, "wb") as file:
-                    # TODO: Handle when file doesn't exist
-                    print_status(
-                        f"Retrieving {COLOR_PURPLE}{file_name}{COLOR_RESET}..."
-                    )
-                    try:
-                        ftp.retrbinary(f"RETR /SD/{file_name}", file.write)
-                        print_result("DONE!", COLOR_GREEN)
-                    except error_temp:
-                        print_result("NOT FOUND!", COLOR_YELLOW)
-
-        return True
-
-    except socket.error:
-        print_result("FAILED!", COLOR_RED)
-        print_socket_error()
-        return False
+    return True
 
 
 def get_latest_release_info():
@@ -243,13 +284,44 @@ def download_and_extract_release(release_info, destination_path):
     path = Path(destination_path) / file_name
 
     print_status(f"Downloading {COLOR_PURPLE}{file_name}{COLOR_RESET}...")
-    with request.urlopen(url) as response, open(path, "wb") as out_file:
-        shutil.copyfileobj(response, out_file)
-        print_result("OK!", COLOR_GREEN)
 
-    print_status(f"Unpacking {COLOR_PURPLE}{file_name}{COLOR_RESET}...")
-    shutil.unpack_archive(path, Path(destination_path) / "install")
-    print_result("OK!", COLOR_GREEN)
+    try:
+        with request.urlopen(url) as response, open(path, "wb") as out_file:
+            length = response.getheader("content-length")
+            block_size = 1024 * 1024
+
+            if length:
+                length = int(length)
+                block_size = 8192
+
+            buffer = io.BytesIO()
+            done = 0
+            while True:
+                block = response.read(block_size)
+                if not block:
+                    break
+
+                buffer.write(block)
+                done += len(block)
+                if length:
+                    print_result(
+                        f"[{(done / length * 100):>6.2f}%]",
+                        replace=True,
+                    )
+
+            buffer.seek(0)
+            shutil.copyfileobj(buffer, out_file)
+            print_result("OK!", COLOR_GREEN)
+
+        print_status(f"Unpacking {COLOR_PURPLE}{file_name}{COLOR_RESET}...")
+        shutil.unpack_archive(path, Path(destination_path) / "install")
+        print_result("OK!", COLOR_GREEN)
+        return True
+
+    except Exception as err:
+        print_result("FAILED!", COLOR_RED)
+        print(err)
+        return False
 
 
 # -----------------------------------------------------------------------------
@@ -356,69 +428,45 @@ def merge_configs(old_config_path, new_config_path):
         return False
 
 
-def install(source_path):
-    print_status(
-        "Connecting to your mt32-pi's embedded FTP server at"
-        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
-    )
+def install(ftp, source_path, config):
+    ignore_list = [
+        path.strip() for path in config.get(K_SECTION, K_IGNORE_LIST).split(",")
+    ]
 
-    filter_dirs = [dir[:-1] for dir in NO_UPDATE if dir.endswith("/")]
-    filter_files = [file for file in NO_UPDATE if not file.endswith("/")]
+    filter_dirs = [path[:-1] for path in ignore_list if path.endswith("/")]
+    filter_files = [path for path in ignore_list if not path.endswith("/")]
 
-    try:
-        with FTP(MT32PI_FTP_HOST, MT32PI_FTP_USERNAME, MT32PI_FTP_PASSWORD) as ftp:
-            print_result("OK!", COLOR_GREEN)
-            # ftp.set_debuglevel(2)
+    for (dir_path, dir_names, filenames) in os.walk(source_path):
+        remote_dir = Path(dir_path.replace(str(source_path), "").lstrip("/"))
 
-            for (dir_path, dir_names, filenames) in os.walk(source_path):
-                remote_dir = Path(dir_path.replace(str(source_path), "").lstrip("/"))
+        for file_name in filenames:
+            local_file_path = Path(dir_path) / file_name
+            remote_file_path = remote_dir / file_name
+            print_status(f"Uploading {COLOR_PURPLE}{remote_file_path}{COLOR_RESET}...")
 
-                for file_name in filenames:
-                    local_file_path = Path(dir_path) / file_name
-                    remote_file_path = remote_dir / file_name
-                    print_status(
-                        f"Uploading {COLOR_PURPLE}{remote_file_path}{COLOR_RESET}..."
+            if str(remote_dir) in filter_dirs or str(remote_file_path) in filter_files:
+                print_result("SKIPPED!", COLOR_YELLOW)
+                continue
+
+            with open(local_file_path, "rb") as file:
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+
+                transferred = 0
+
+                def callback(bytes):
+                    nonlocal transferred
+                    transferred += len(bytes)
+                    print_result(
+                        f"[{(transferred / file_size * 100):>6.2f}%]",
+                        replace=True,
                     )
 
-                    if (
-                        str(remote_dir) in filter_dirs
-                        or str(remote_file_path) in filter_files
-                    ):
-                        print_result("SKIPPED!", COLOR_YELLOW)
-                        continue
+                ftp.storbinary(f"STOR /SD/{remote_file_path}", file, callback=callback)
+                print_result("DONE!", COLOR_GREEN)
 
-                    with open(local_file_path, "rb") as file:
-                        file.seek(0, os.SEEK_END)
-                        file_size = file.tell()
-                        file.seek(0)
-
-                        transferred = 0
-
-                        def callback(bytes):
-                            nonlocal transferred
-                            transferred += len(bytes)
-                            print_result(
-                                f"[{(transferred / file_size * 100):>6.2f}%]",
-                                replace=True,
-                            )
-
-                        ftp.storbinary(
-                            f"STOR /SD/{remote_file_path}", file, callback=callback
-                        )
-                        print_result("DONE!", COLOR_GREEN)
-        return True
-
-    except socket.timeout:
-        print_result("FAILED!", COLOR_RED)
-        print(
-            "Connection timed out. Please check your network connection and try again."
-        )
-        return False
-
-    except socket.error:
-        print_result("FAILED!", COLOR_RED)
-        print_socket_error()
-        return False
+    return True
 
 
 def show_release_notes(release_info):
@@ -455,17 +503,12 @@ def show_release_notes(release_info):
     print(f"{COLOR_GREEN}{release_header}\n{underline}{COLOR_RESET}\n")
 
     print(text)
-
-    for i in range(0, 10):
-        print(f"\rContinuing in {10 - i}... ", end="", flush=True)
-        sleep(1)
-
-    print()
+    pause()
 
 
-def reboot():
+def reboot(host):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.sendto(bytes.fromhex("F0 7D 00 F7"), (MT32PI_FTP_HOST, 1999))
+        sock.sendto(bytes.fromhex("F0 7D 00 F7"), (host, 1999))
 
 
 # -----------------------------------------------------------------------------
@@ -475,81 +518,121 @@ if __name__ == "__main__":
     print(CLEAR_TERM, end="")
     print(MT32PI_LOGO)
 
+    # Load config defaults
+    config = ConfigParser()
+    config.read_dict(DEFAULT_CONFIG)
+
+    # Load config file if available
+    config_path = Path(__file__).with_suffix(".cfg").name
+    config.read(config_path)
+
+    if config.getboolean(K_SECTION, K_SELF_UPDATE):
+        self_update()
+
     # Create temporary directory and get the latest release
     with tempfile.TemporaryDirectory() as temp_dir_name:
         temp_dir = Path(temp_dir_name)
+        host = config.get(K_SECTION, K_HOST)
 
-        current_version = get_current_version() or exit(1)
-        release_info = get_latest_release_info() or exit(1)
-        latest_version = release_info["tag_name"]
-
-        print()
-        print(
-            "The currently-installed version is:"
-            f" {COLOR_GREEN}{current_version}{COLOR_RESET}"
+        print_status(
+            "Connecting to your mt32-pi's embedded FTP server at"
+            f" '{COLOR_PURPLE}{host}{COLOR_RESET}'..."
         )
-        print(
-            "The latest release is:             "
-            f" {COLOR_GREEN}{latest_version}{COLOR_RESET}"
-        )
-        print()
+        try:
+            with FTP(
+                host,
+                config.get(K_SECTION, K_FTP_USERNAME),
+                config.get(K_SECTION, K_FTP_PASSWORD),
+                timeout=config.getfloat(K_SECTION, K_CONNECTION_TIMEOUT),
+            ) as ftp:
+                print_result("OK!", COLOR_GREEN)
+                # ftp.set_debuglevel(2)
 
-        if not FORCE_UPDATE and parse_version(current_version) >= parse_version(
-            latest_version
-        ):
-            print("Your mt32-pi is up to date.")
-            exit(0)
+                current_version = get_current_version(ftp) or exit(1)
+                release_info = get_latest_release_info() or exit(1)
+                latest_version = release_info["tag_name"]
 
-        if SHOW_RELEASE_NOTES:
-            show_release_notes(release_info)
+                print()
+                print(
+                    "The currently-installed version is:"
+                    f" {COLOR_GREEN}{current_version}{COLOR_RESET}"
+                )
+                print(
+                    "The latest release is:             "
+                    f" {COLOR_GREEN}{latest_version}{COLOR_RESET}"
+                )
+                print()
 
-        download_and_extract_release(release_info, temp_dir)
+                force_update = config.getboolean(K_SECTION, K_FORCE_UPDATE)
+                if not force_update and parse_version(current_version) >= parse_version(
+                    latest_version
+                ):
+                    print("Your mt32-pi is up to date.")
+                    exit(0)
 
-        # Fetch old configs
-        get_old_data(temp_dir) or exit(1)
+                if config.getboolean(K_SECTION, K_SHOW_RELEASE_NOTES):
+                    show_release_notes(release_info)
 
-        install_dir = temp_dir / "install"
-        old_config_path = install_dir / "mt32-pi.cfg.bak"
-        new_config_path = install_dir / "mt32-pi.cfg"
+                download_and_extract_release(release_info, temp_dir) or exit(1)
 
-        # Create backup of old config and merge with new
-        shutil.move(temp_dir / "mt32-pi.cfg", old_config_path)
-        merge_configs(old_config_path, new_config_path) or exit(1)
+                # Fetch old configs
+                get_old_data(ftp, temp_dir) or exit(1)
 
-        # Move new Wi-Fi/boot configs aside in case the user needs to adapt them
-        shutil.move(install_dir / "config.txt", install_dir / "config.txt.new")
-        shutil.move(temp_dir / "config.txt", install_dir)
+                install_dir = temp_dir / "install"
+                old_config_path = install_dir / "mt32-pi.cfg.bak"
+                new_config_path = install_dir / "mt32-pi.cfg"
 
-        old_wifi_config_path = temp_dir / "wpa_supplicant.conf"
-        old_wifi_config_exists = old_wifi_config_path.exists()
-        if old_wifi_config_exists:
-            shutil.move(
-                install_dir / "wpa_supplicant.conf",
-                install_dir / "wpa_supplicant.conf.new",
-            )
-            shutil.move(old_wifi_config_path, install_dir)
+                # Create backup of old config and merge with new
+                shutil.move(temp_dir / "mt32-pi.cfg", old_config_path)
+                merge_configs(old_config_path, new_config_path) or exit(1)
 
-        # Upload new version
-        install(install_dir) or exit(1)
+                # Move new Wi-Fi/boot configs aside in case the user needs to adapt them
+                shutil.move(install_dir / "config.txt", install_dir / "config.txt.new")
+                shutil.move(temp_dir / "config.txt", install_dir)
+
+                old_wifi_config_path = temp_dir / "wpa_supplicant.conf"
+                old_wifi_config_exists = old_wifi_config_path.exists()
+                if old_wifi_config_exists:
+                    shutil.move(
+                        install_dir / "wpa_supplicant.conf",
+                        install_dir / "wpa_supplicant.conf.new",
+                    )
+                    shutil.move(old_wifi_config_path, install_dir)
+
+                # Upload new version
+                install(ftp, install_dir, config) or exit(1)
+
+        except socket.timeout:
+            print_result("FAILED!", COLOR_RED)
+            print_socket_timeout()
+            exit(1)
+
+        except socket.error:
+            print_result("FAILED!", COLOR_RED)
+            print_socket_error()
+            exit(1)
 
         # Reboot mt32-pi
-        reboot()
+        reboot(host)
 
-        print("\nAll done.")
+        print("\nAll done!\n")
         print(
-            "The settings from your old config file have been merged into the latest"
-            " config template."
+            f"{COLOR_PURPLE}-{COLOR_RESET} The settings from your old config file have"
+            " been merged into the latest config template."
         )
         print(
-            "A backup of your old config is available as"
+            f"{COLOR_PURPLE}-{COLOR_RESET} A backup of your old config is available as"
             f" {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry"
             " Pi's SD card."
         )
-        print(f"Your {COLOR_PURPLE}config.txt{COLOR_RESET} has been preserved.")
+        print(
+            f"{COLOR_PURPLE}-{COLOR_RESET} Your"
+            f" {COLOR_PURPLE}config.txt{COLOR_RESET} has been preserved."
+        )
         if old_wifi_config_exists:
             print(
-                f"Your {COLOR_PURPLE}wpa_supplicant.conf{COLOR_RESET} has been"
-                " preserved."
+                f"{COLOR_PURPLE}-{COLOR_RESET} Your"
+                f" {COLOR_PURPLE}wpa_supplicant.conf{COLOR_RESET} has been preserved."
             )
         print(
             f"\n{COLOR_GREEN}Your mt32-pi should be automatically rebooting if UDP MIDI"
