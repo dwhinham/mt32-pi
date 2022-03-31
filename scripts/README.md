@@ -38,6 +38,7 @@ A wrapper script ([`mt32pi_updater.sh`]) is provided so that it can be launched 
 
 ### Features
 
+- Self-updating.
 - Connects to your mt32-pi via FTP and compares the installed version with the latest version available on GitHub.
 - Exits early if your mt32-pi is up-to-date.
 - Shows the release notes for a few seconds before updating.
@@ -51,13 +52,14 @@ A wrapper script ([`mt32pi_updater.sh`]) is provided so that it can be launched 
 
 ### Usage
 
-1. Download [`mt32pi_updater.py`].
-   - If you want to use it on MiSTer, download the [the wrapper script][`mt32pi_updater.sh`] too, and copy both scripts (`.py` and `.sh`) to the `/Scripts` directory on your SD card.
-2. Make the scripts executable by typing `chmod +x mt32pi_updater.{py,sh}` at a shell prompt.
-3. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `MT32PI_FTP_HOST`, `MT32PI_FTP_USERNAME` and `MT32PI_FTP_PASSWORD` settings near the top of `mt32pi_updater.py` so that they match.
+1. Download [`mt32pi_updater.py`] and [`mt32pi_updater.cfg`].
+   - If you want to use it on MiSTer, download the [the wrapper script][`mt32pi_updater.sh`] too, and copy both scripts (`.py` and `.sh`) and the `.cfg` file to the `/Scripts` directory on your SD card.
+2. Make the script(s) executable by typing `chmod +x mt32pi_updater.{py,sh}` at a shell prompt.
+3. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `host`, `ftp_username` and `ftp_password` settings inside `mt32pi_updater.cfg` so that they match.
 4. Run the script by typing `./mt32pi_updater.py` at a shell prompt.
    - On MiSTer, you should see `mt32pi_updater` in the Scripts menu - simply select it to run the script.
 
 [`mt32pi_installer.sh`]: mt32pi_installer.sh?raw=1
 [`mt32pi_updater.py`]: mt32pi_updater.py?raw=1
+[`mt32pi_updater.cfg`]: mt32pi_updater.cfg?raw=1
 [`mt32pi_updater.sh`]: mt32pi_updater.sh?raw=1
