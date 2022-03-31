@@ -4,8 +4,35 @@ on: [push, pull_request]
 
 env:
   toolchain-version: 10.3-2021.07
+  python-version: 3.6
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - uses: psf/black@stable
+        with:
+          options: --check --diff --experimental-string-processing
+          src: scripts
+
+      - uses: isort/isort-action@master
+        with:
+            sortPaths: scripts
+
+      - uses: py-actions/flake8@v2
+        with:
+          path: scripts
+
+      - uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: scripts
+
   build:
     runs-on: ubuntu-latest
     name: build-${{ matrix.board }}
