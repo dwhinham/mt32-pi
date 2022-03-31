@@ -90,7 +90,7 @@ COLOR_PURPLE = "\033[35;1m"
 COLOR_BRIGHT_WHITE = "\033[97;1m"
 COLOR_RESET = "\033[0m"
 
-MT32PI_LOGO = """\
+MT32PI_LOGO = r"""
   {}{}
                                    ________    _______                      __
                           __      /_____   `. /____   `.                   /__`
@@ -145,10 +145,12 @@ def print_result(message, color=None, replace=False):
 
 def print_socket_error():
     print(
-        f"Couldn't connect to your mt32-pi - you did enable networking and the FTP server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?"
+        "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
+        f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?"
     )
     print(
-        f"This tool requires that you are running mt32-pi {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above."
+        "This tool requires that you are running mt32-pi"
+        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above."
     )
 
 
@@ -157,7 +159,8 @@ def print_socket_error():
 # -----------------------------------------------------------------------------
 def get_current_version():
     print_status(
-        f"Connecting to your mt32-pi's embedded FTP server at '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
+        "Connecting to your mt32-pi's embedded FTP server at"
+        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
     )
 
     try:
@@ -183,7 +186,8 @@ def get_current_version():
 
 def get_old_data(temp_dir):
     print_status(
-        f"Connecting to your mt32-pi's embedded FTP server at '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
+        "Connecting to your mt32-pi's embedded FTP server at"
+        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
     )
 
     try:
@@ -211,7 +215,7 @@ def get_old_data(temp_dir):
 
     except socket.error:
         print_result("FAILED!", COLOR_RED)
-        print_connection_failed()
+        print_socket_error()
         return False
 
 
@@ -222,7 +226,7 @@ def get_latest_release_info():
         with request.urlopen(GITHUB_API_URL) as response:
             releases = json.load(response)
         print_result("OK!", COLOR_GREEN)
-    except:
+    except Exception:
         print_result("FAILED!", COLOR_RED)
         print("Failed to retrieve release info from GitHub.", file=stderr)
         return None
@@ -259,7 +263,7 @@ def find_section(lines, section):
 
 
 def is_a_section(line):
-    return re.match(r"^\[.+\]$", line.strip()) != None
+    return re.match(r"^\[.+\]$", line.strip()) is not None
 
 
 def append_new_section(config_lines, section):
@@ -323,7 +327,12 @@ def merge_configs(old_config_path, new_config_path):
     try:
         config_old = ConfigParser()
         config_old.read(old_config_path)
-        # print({ section: dict(config_old.items(section)) for section in config_old.sections() })
+        # print(
+        #     {
+        #         section: dict(config_old.items(section))
+        #         for section in config_old.sections()
+        #     }
+        # )
 
         new_config_lines = []
         with open(install_dir / "mt32-pi.cfg", "r") as in_file:
@@ -342,14 +351,15 @@ def merge_configs(old_config_path, new_config_path):
         print_result("OK!", COLOR_GREEN)
         return True
 
-    except:
+    except Exception:
         print_result("FAILED!", COLOR_RED)
         return False
 
 
 def install(source_path):
     print_status(
-        f"Connecting to your mt32-pi's embedded FTP server at '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
+        "Connecting to your mt32-pi's embedded FTP server at"
+        f" '{COLOR_PURPLE}{MT32PI_FTP_HOST}{COLOR_RESET}'..."
     )
 
     filter_dirs = [dir[:-1] for dir in NO_UPDATE if dir.endswith("/")]
@@ -462,11 +472,11 @@ def reboot():
 # Entry point
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
-    print(CLEAR_TERM)
+    print(CLEAR_TERM, end="")
     print(MT32PI_LOGO)
 
     # Create temporary directory and get the latest release
-    with tempfile.TemporaryDirectory(dir=".") as temp_dir_name:
+    with tempfile.TemporaryDirectory() as temp_dir_name:
         temp_dir = Path(temp_dir_name)
 
         current_version = get_current_version() or exit(1)
@@ -475,10 +485,12 @@ if __name__ == "__main__":
 
         print()
         print(
-            f"The currently-installed version is: {COLOR_GREEN}{current_version}{COLOR_RESET}"
+            "The currently-installed version is:"
+            f" {COLOR_GREEN}{current_version}{COLOR_RESET}"
         )
         print(
-            f"The latest release is:              {COLOR_GREEN}{latest_version}{COLOR_RESET}"
+            "The latest release is:             "
+            f" {COLOR_GREEN}{latest_version}{COLOR_RESET}"
         )
         print()
 
@@ -504,7 +516,7 @@ if __name__ == "__main__":
         shutil.move(temp_dir / "mt32-pi.cfg", old_config_path)
         merge_configs(old_config_path, new_config_path) or exit(1)
 
-        # Move the new Wi-Fi/boot configs aside as *.new files in case the user needs to adapt them
+        # Move new Wi-Fi/boot configs aside in case the user needs to adapt them
         shutil.move(install_dir / "config.txt", install_dir / "config.txt.new")
         shutil.move(temp_dir / "config.txt", install_dir)
 
@@ -525,16 +537,21 @@ if __name__ == "__main__":
 
         print("\nAll done.")
         print(
-            f"The settings from your old config file have been merged into the latest config template."
+            "The settings from your old config file have been merged into the latest"
+            " config template."
         )
         print(
-            f"A backup of your old config is available as {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry Pi's SD card."
+            "A backup of your old config is available as"
+            f" {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry"
+            " Pi's SD card."
         )
         print(f"Your {COLOR_PURPLE}config.txt{COLOR_RESET} has been preserved.")
         if old_wifi_config_exists:
             print(
-                f"Your {COLOR_PURPLE}wpa_supplicant.conf{COLOR_RESET} has been preserved."
+                f"Your {COLOR_PURPLE}wpa_supplicant.conf{COLOR_RESET} has been"
+                " preserved."
             )
         print(
-            f"\n{COLOR_GREEN}Your mt32-pi should be automatically rebooting if UDP MIDI is enabled. Otherwise, please power-cycle your mt32-pi.{COLOR_RESET}"
+            f"\n{COLOR_GREEN}Your mt32-pi should be automatically rebooting if UDP MIDI"
+            f" is enabled. Otherwise, please power-cycle your mt32-pi.{COLOR_RESET}"
         )
