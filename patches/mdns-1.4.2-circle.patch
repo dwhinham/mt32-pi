@@ -1,0 +1,553 @@
+diff --git a/mdns.h b/mdns.h
+index 4b3b03d..96c76ec 100644
+--- a/mdns.h
++++ b/mdns.h
+@@ -24,6 +24,10 @@
+ #include <Winsock2.h>
+ #include <Ws2tcpip.h>
+ #define strncasecmp _strnicmp
++#elif defined(__circle__)
++#include <circle/net/ipaddress.h>
++#include <circle/net/socket.h>
++#include <circle/util.h>
+ #else
+ #include <unistd.h>
+ #include <sys/socket.h>
+@@ -74,11 +78,46 @@ enum mdns_entry_type {
+ 
+ enum mdns_class { MDNS_CLASS_IN = 1, MDNS_CLASS_ANY = 255 };
+ 
++#ifdef __circle__
++#define htons(VALUE) __builtin_bswap16(VALUE)
++#define htonl(VALUE) __builtin_bswap32(VALUE)
++#define ntohs(VALUE) __builtin_bswap16(VALUE)
++#define ntohl(VALUE) __builtin_bswap32(VALUE)
++
++#define AF_INET 2
++typedef CSocket* mdns_socket_t;
++
++typedef u32 in_addr_t;
++typedef u8 sa_family_t;
++typedef u16 in_port_t;
++
++struct in_addr
++{
++	in_addr_t s_addr;
++};
++
++struct sockaddr_in
++{
++	sa_family_t		sin_family;
++	in_port_t		sin_port;
++	struct in_addr		sin_addr;
++};
++
++struct sockaddr {
++	sa_family_t		sa_family;
++	char			sa_data[14];
++};
++
++typedef size_t socklen_t;
++#else
++typedef int mdns_socket_t;
++#endif
++
+ typedef enum mdns_record_type mdns_record_type_t;
+ typedef enum mdns_entry_type mdns_entry_type_t;
+ typedef enum mdns_class mdns_class_t;
+ 
+-typedef int (*mdns_record_callback_fn)(int sock, const struct sockaddr* from, size_t addrlen,
++typedef int (*mdns_record_callback_fn)(mdns_socket_t sock, const struct sockaddr* from, size_t addrlen,
+                                        mdns_entry_type_t entry, uint16_t query_id, uint16_t rtype,
+                                        uint16_t rclass, uint32_t ttl, const void* data, size_t size,
+                                        size_t name_offset, size_t name_length, size_t record_offset,
+@@ -136,9 +175,11 @@ struct mdns_record_a_t {
+ 	struct sockaddr_in addr;
+ };
+ 
++#ifndef __circle__
+ struct mdns_record_aaaa_t {
+ 	struct sockaddr_in6 addr;
+ };
++#endif
+ 
+ struct mdns_record_txt_t {
+ 	mdns_string_t key;
+@@ -152,7 +193,9 @@ struct mdns_record_t {
+ 		mdns_record_ptr_t ptr;
+ 		mdns_record_srv_t srv;
+ 		mdns_record_a_t a;
++#ifndef __circle__
+ 		mdns_record_aaaa_t aaaa;
++#endif
+ 		mdns_record_txt_t txt;
+ 	} data;
+ 	uint16_t rclass;
+@@ -176,12 +219,13 @@ struct mdns_query_t {
+ 
+ // mDNS/DNS-SD public API
+ 
++#ifndef __circle__
+ //! Open and setup a IPv4 socket for mDNS/DNS-SD. To bind the socket to a specific interface, pass
+ //! in the appropriate socket address in saddr, otherwise pass a null pointer for INADDR_ANY. To
+ //! send one-shot discovery requests and queries pass a null pointer or set 0 as port to assign a
+ //! random user level ephemeral port. To run discovery service listening for incoming discoveries
+ //! and queries, you must set MDNS_PORT as port.
+-static inline int
++static inline mdns_socket_t
+ mdns_socket_open_ipv4(const struct sockaddr_in* saddr);
+ 
+ //! Setup an already opened IPv4 socket for mDNS/DNS-SD. To bind the socket to a specific interface,
+@@ -190,14 +234,14 @@ mdns_socket_open_ipv4(const struct sockaddr_in* saddr);
+ //! random user level ephemeral port. To run discovery service listening for incoming discoveries
+ //! and queries, you must set MDNS_PORT as port.
+ static inline int
+-mdns_socket_setup_ipv4(int sock, const struct sockaddr_in* saddr);
++mdns_socket_setup_ipv4(mdns_socket_t sock, const struct sockaddr_in* saddr);
+ 
+ //! Open and setup a IPv6 socket for mDNS/DNS-SD. To bind the socket to a specific interface, pass
+ //! in the appropriate socket address in saddr, otherwise pass a null pointer for in6addr_any. To
+ //! send one-shot discovery requests and queries pass a null pointer or set 0 as port to assign a
+ //! random user level ephemeral port. To run discovery service listening for incoming discoveries
+ //! and queries, you must set MDNS_PORT as port.
+-static inline int
++static inline mdns_socket_t
+ mdns_socket_open_ipv6(const struct sockaddr_in6* saddr);
+ 
+ //! Setup an already opened IPv6 socket for mDNS/DNS-SD. To bind the socket to a specific interface,
+@@ -206,30 +250,31 @@ mdns_socket_open_ipv6(const struct sockaddr_in6* saddr);
+ //! random user level ephemeral port. To run discovery service listening for incoming discoveries
+ //! and queries, you must set MDNS_PORT as port.
+ static inline int
+-mdns_socket_setup_ipv6(int sock, const struct sockaddr_in6* saddr);
++mdns_socket_setup_ipv6(mdns_socket_t sock, const struct sockaddr_in6* saddr);
+ 
+ //! Close a socket opened with mdns_socket_open_ipv4 and mdns_socket_open_ipv6.
+ static inline void
+-mdns_socket_close(int sock);
++mdns_socket_close(mdns_socket_t sock);
++#endif
+ 
+ //! Listen for incoming multicast DNS-SD and mDNS query requests. The socket should have been opened
+ //! on port MDNS_PORT using one of the mdns open or setup socket functions. Buffer must be 32 bit
+ //! aligned. Parsing is stopped when callback function returns non-zero. Returns the number of
+ //! queries parsed.
+ static inline size_t
+-mdns_socket_listen(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_socket_listen(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                    void* user_data);
+ 
+ //! Send a multicast DNS-SD reqeuest on the given socket to discover available services. Returns 0
+ //! on success, or <0 if error.
+ static inline int
+-mdns_discovery_send(int sock);
++mdns_discovery_send(mdns_socket_t sock);
+ 
+ //! Recieve unicast responses to a DNS-SD sent with mdns_discovery_send. Any data will be piped to
+ //! the given callback for parsing. Buffer must be 32 bit aligned. Parsing is stopped when callback
+ //! function returns non-zero. Returns the number of responses parsed.
+ static inline size_t
+-mdns_discovery_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_discovery_recv(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                     void* user_data);
+ 
+ //! Send a multicast mDNS query on the given socket for the given service name. The supplied buffer
+@@ -239,7 +284,7 @@ mdns_discovery_recv(int sock, void* buffer, size_t capacity, mdns_record_callbac
+ //! ephemeral port, or a multicast response if the socket is bound to mDNS port 5353. Returns the
+ //! used query ID, or <0 if error.
+ static inline int
+-mdns_query_send(int sock, mdns_record_type_t type, const char* name, size_t length, void* buffer,
++mdns_query_send(mdns_socket_t sock, mdns_record_type_t type, const char* name, size_t length, void* buffer,
+                 size_t capacity, uint16_t query_id);
+ 
+ //! Send a multicast mDNS query on the given socket for the given service names. The supplied buffer
+@@ -251,7 +296,7 @@ mdns_query_send(int sock, mdns_record_type_t type, const char* name, size_t leng
+ //! unicast response if the socket is bound to an ephemeral port, or a multicast response if the
+ //! socket is bound to mDNS port 5353. Returns the used query ID, or <0 if error.
+ static inline int
+-mdns_multiquery_send(int sock, const mdns_query_t* query, size_t count, void* buffer,
++mdns_multiquery_send(mdns_socket_t sock, const mdns_query_t* query, size_t count, void* buffer,
+                      size_t capacity, uint16_t query_id);
+ 
+ //! Receive unicast responses to a mDNS query sent with mdns_discovery_recv, optionally filtering
+@@ -260,7 +305,7 @@ mdns_multiquery_send(int sock, const mdns_query_t* query, size_t count, void* bu
+ //! given callback for parsing. Buffer must be 32 bit aligned. Parsing is stopped when callback
+ //! function returns non-zero. Returns the number of responses parsed.
+ static inline size_t
+-mdns_query_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_query_recv(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                 void* user_data, int query_id);
+ 
+ //! Send a variable unicast mDNS query answer to any question with variable number of records to the
+@@ -269,7 +314,7 @@ mdns_query_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn
+ //! Buffer must be 32 bit aligned. The record type and name should match the data from the query
+ //! recieved. Returns 0 if success, or <0 if error.
+ static inline int
+-mdns_query_answer_unicast(int sock, const void* address, size_t address_size, void* buffer,
++mdns_query_answer_unicast(mdns_socket_t sock, const void* address, size_t address_size, void* buffer,
+                           size_t capacity, uint16_t query_id, mdns_record_type_t record_type,
+                           const char* name, size_t name_length, mdns_record_t answer,
+                           const mdns_record_t* authority, size_t authority_count,
+@@ -280,7 +325,7 @@ mdns_query_answer_unicast(int sock, const void* address, size_t address_size, vo
+ //! if the answer should be sent unicast (bit set) or multicast (bit not set). Buffer must be 32 bit
+ //! aligned. Returns 0 if success, or <0 if error.
+ static inline int
+-mdns_query_answer_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_query_answer_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                             const mdns_record_t* authority, size_t authority_count,
+                             const mdns_record_t* additional, size_t additional_count);
+ 
+@@ -288,14 +333,14 @@ mdns_query_answer_multicast(int sock, void* buffer, size_t capacity, mdns_record
+ //! records.Buffer must be 32 bit aligned. Returns 0 if success, or <0 if error. Use this on service
+ //! startup to announce your instance to the local network.
+ static inline int
+-mdns_announce_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_announce_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                         const mdns_record_t* authority, size_t authority_count,
+                         const mdns_record_t* additional, size_t additional_count);
+ 
+ //! Send a variable multicast mDNS announcement. Use this on service end for removing the resource
+ //! from the local network. The records must be identical to the according announcement.
+ static inline int
+-mdns_goodbye_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_goodbye_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                        const mdns_record_t* authority, size_t authority_count,
+                        const mdns_record_t* additional, size_t additional_count);
+ 
+@@ -316,10 +361,12 @@ static inline struct sockaddr_in*
+ mdns_record_parse_a(const void* buffer, size_t size, size_t offset, size_t length,
+                     struct sockaddr_in* addr);
+ 
++#ifndef __circle__
+ //! Parse an AAAA record, returns the IPv6 address in the record
+ static inline struct sockaddr_in6*
+ mdns_record_parse_aaaa(const void* buffer, size_t size, size_t offset, size_t length,
+                        struct sockaddr_in6* addr);
++#endif
+ 
+ //! Parse a TXT record, returns the number of key=value records parsed and stores the key-value
+ //! pairs in the supplied buffer
+@@ -383,9 +430,10 @@ mdns_htonl(void* data, uint32_t val) {
+ 	return MDNS_POINTER_OFFSET(data, sizeof(uint32_t));
+ }
+ 
+-static inline int
++#ifndef __circle__
++static inline mdns_socket_t
+ mdns_socket_open_ipv4(const struct sockaddr_in* saddr) {
+-	int sock = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
++	mdns_socket_t sock = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+ 	if (sock < 0)
+ 		return -1;
+ 	if (mdns_socket_setup_ipv4(sock, saddr)) {
+@@ -396,7 +444,7 @@ mdns_socket_open_ipv4(const struct sockaddr_in* saddr) {
+ }
+ 
+ static inline int
+-mdns_socket_setup_ipv4(int sock, const struct sockaddr_in* saddr) {
++mdns_socket_setup_ipv4(mdns_socket_t sock, const struct sockaddr_in* saddr) {
+ 	unsigned char ttl = 1;
+ 	unsigned char loopback = 1;
+ 	unsigned int reuseaddr = 1;
+@@ -447,9 +495,9 @@ mdns_socket_setup_ipv4(int sock, const struct sockaddr_in* saddr) {
+ 	return 0;
+ }
+ 
+-static inline int
++static inline mdns_socket_t
+ mdns_socket_open_ipv6(const struct sockaddr_in6* saddr) {
+-	int sock = (int)socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
++	mdns_socket_t sock = (int)socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+ 	if (sock < 0)
+ 		return -1;
+ 	if (mdns_socket_setup_ipv6(sock, saddr)) {
+@@ -460,7 +508,7 @@ mdns_socket_open_ipv6(const struct sockaddr_in6* saddr) {
+ }
+ 
+ static inline int
+-mdns_socket_setup_ipv6(int sock, const struct sockaddr_in6* saddr) {
++mdns_socket_setup_ipv6(mdns_socket_t sock, const struct sockaddr_in6* saddr) {
+ 	int hops = 1;
+ 	unsigned int loopback = 1;
+ 	unsigned int reuseaddr = 1;
+@@ -512,13 +560,14 @@ mdns_socket_setup_ipv6(int sock, const struct sockaddr_in6* saddr) {
+ }
+ 
+ static inline void
+-mdns_socket_close(int sock) {
++mdns_socket_close(mdns_socket_t sock) {
+ #ifdef _WIN32
+ 	closesocket(sock);
+ #else
+ 	close(sock);
+ #endif
+ }
++#endif
+ 
+ static inline int
+ mdns_is_string_ref(uint8_t val) {
+@@ -773,7 +822,7 @@ mdns_string_make(void* buffer, size_t capacity, void* data, const char* name, si
+ }
+ 
+ static inline size_t
+-mdns_records_parse(int sock, const struct sockaddr* from, size_t addrlen, const void* buffer,
++mdns_records_parse(mdns_socket_t sock, const struct sockaddr* from, size_t addrlen, const void* buffer,
+                    size_t size, size_t* offset, mdns_entry_type_t type, uint16_t query_id,
+                    size_t records, mdns_record_callback_fn callback, void* user_data) {
+ 	size_t parsed = 0;
+@@ -807,16 +856,30 @@ mdns_records_parse(int sock, const struct sockaddr* from, size_t addrlen, const
+ }
+ 
+ static inline int
+-mdns_unicast_send(int sock, const void* address, size_t address_size, const void* buffer,
++mdns_unicast_send(mdns_socket_t sock, const void* address, size_t address_size, const void* buffer,
+                   size_t size) {
++#ifdef __circle__
++	const sockaddr_in* addr = (const struct sockaddr_in*)address;
++	CIPAddress ipaddr(addr->sin_addr.s_addr);
++	u16 port = addr->sin_port;
++
++	if (sock->SendTo(buffer, size, 0, ipaddr, port) < 0)
++		return -1;
++#else
+ 	if (sendto(sock, (const char*)buffer, (mdns_size_t)size, 0, (const struct sockaddr*)address,
+ 	           (socklen_t)address_size) < 0)
+ 		return -1;
++#endif
+ 	return 0;
+ }
+ 
+ static inline int
+-mdns_multicast_send(int sock, const void* buffer, size_t size) {
++mdns_multicast_send(mdns_socket_t sock, const void* buffer, size_t size) {
++#ifdef __circle__
++	CIPAddress ipaddr(htonl((((uint32_t)224U) << 24U) | ((uint32_t)251U)));
++	if (sock->SendTo(buffer, size, 0, ipaddr, MDNS_PORT) < 0)
++		return -1;
++#else
+ 	struct sockaddr_storage addr_storage;
+ 	struct sockaddr_in addr;
+ 	struct sockaddr_in6 addr6;
+@@ -850,6 +913,7 @@ mdns_multicast_send(int sock, const void* buffer, size_t size) {
+ 
+ 	if (sendto(sock, (const char*)buffer, (mdns_size_t)size, 0, saddr, saddrlen) < 0)
+ 		return -1;
++#endif
+ 	return 0;
+ }
+ 
+@@ -871,13 +935,28 @@ static const uint8_t mdns_services_query[] = {
+     0x80, MDNS_CLASS_IN};
+ 
+ static inline int
+-mdns_discovery_send(int sock) {
++mdns_discovery_send(mdns_socket_t sock) {
+ 	return mdns_multicast_send(sock, mdns_services_query, sizeof(mdns_services_query));
+ }
+ 
+ static inline size_t
+-mdns_discovery_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_discovery_recv(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                     void* user_data) {
++#ifdef __circle__
++	struct sockaddr_in addr;
++	struct sockaddr* saddr = (struct sockaddr*)&addr;
++	socklen_t addrlen = sizeof(addr);
++
++	CIPAddress ipaddr;
++	u16 port;
++	mdns_ssize_t ret = sock->ReceiveFrom(buffer, capacity, 0, &ipaddr, &port);
++	if (ret <= 0)
++		return 0;
++
++	addr.sin_family = AF_INET;
++	addr.sin_port = port;
++	addr.sin_addr.s_addr = (u32)ipaddr;
++#else
+ 	struct sockaddr_in6 addr;
+ 	struct sockaddr* saddr = (struct sockaddr*)&addr;
+ 	socklen_t addrlen = sizeof(addr);
+@@ -888,6 +967,7 @@ mdns_discovery_recv(int sock, void* buffer, size_t capacity, mdns_record_callbac
+ 	mdns_ssize_t ret = recvfrom(sock, (char*)buffer, (mdns_size_t)capacity, 0, saddr, &addrlen);
+ 	if (ret <= 0)
+ 		return 0;
++#endif
+ 
+ 	size_t data_size = (size_t)ret;
+ 	size_t records = 0;
+@@ -980,8 +1060,23 @@ mdns_discovery_recv(int sock, void* buffer, size_t capacity, mdns_record_callbac
+ }
+ 
+ static inline size_t
+-mdns_socket_listen(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_socket_listen(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                    void* user_data) {
++#ifdef __circle__
++	struct sockaddr_in addr;
++	struct sockaddr* saddr = (struct sockaddr*)&addr;
++	socklen_t addrlen = sizeof(addr);
++
++	CIPAddress ipaddr;
++	u16 port;
++	mdns_ssize_t ret = sock->ReceiveFrom(buffer, capacity, 0, &ipaddr, &port);
++	if (ret <= 0)
++		return 0;
++
++	addr.sin_family = AF_INET;
++	addr.sin_port = port;
++	addr.sin_addr.s_addr = (u32)ipaddr;
++#else
+ 	struct sockaddr_in6 addr;
+ 	struct sockaddr* saddr = (struct sockaddr*)&addr;
+ 	socklen_t addrlen = sizeof(addr);
+@@ -992,6 +1087,7 @@ mdns_socket_listen(int sock, void* buffer, size_t capacity, mdns_record_callback
+ 	mdns_ssize_t ret = recvfrom(sock, (char*)buffer, (mdns_size_t)capacity, 0, saddr, &addrlen);
+ 	if (ret <= 0)
+ 		return 0;
++#endif
+ 
+ 	size_t data_size = (size_t)ret;
+ 	const uint16_t* data = (const uint16_t*)buffer;
+@@ -1061,7 +1157,7 @@ mdns_socket_listen(int sock, void* buffer, size_t capacity, mdns_record_callback
+ }
+ 
+ static inline int
+-mdns_query_send(int sock, mdns_record_type_t type, const char* name, size_t length, void* buffer,
++mdns_query_send(mdns_socket_t sock, mdns_record_type_t type, const char* name, size_t length, void* buffer,
+                 size_t capacity, uint16_t query_id) {
+ 	mdns_query_t query;
+ 	query.type = type;
+@@ -1071,11 +1167,15 @@ mdns_query_send(int sock, mdns_record_type_t type, const char* name, size_t leng
+ }
+ 
+ static inline int
+-mdns_multiquery_send(int sock, const mdns_query_t* query, size_t count, void* buffer, size_t capacity,
++mdns_multiquery_send(mdns_socket_t sock, const mdns_query_t* query, size_t count, void* buffer, size_t capacity,
+                      uint16_t query_id) {
+ 	if (!count || (capacity < (sizeof(struct mdns_header_t) + (6 * count))))
+ 		return -1;
+ 
++#ifdef __circle__
++	// Only multicast response supported
++	uint16_t rclass = MDNS_CLASS_IN;
++#else
+ 	// Ask for a unicast response since it's a one-shot query
+ 	uint16_t rclass = MDNS_CLASS_IN | MDNS_UNICAST_RESPONSE;
+ 
+@@ -1090,6 +1190,7 @@ mdns_multiquery_send(int sock, const mdns_query_t* query, size_t count, void* bu
+ 		         (ntohs(((struct sockaddr_in6*)saddr)->sin6_port) == MDNS_PORT))
+ 			rclass &= ~MDNS_UNICAST_RESPONSE;
+ 	}
++#endif
+ 
+ 	struct mdns_header_t* header = (struct mdns_header_t*)buffer;
+ 	// Query ID
+@@ -1122,8 +1223,23 @@ mdns_multiquery_send(int sock, const mdns_query_t* query, size_t count, void* bu
+ }
+ 
+ static inline size_t
+-mdns_query_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
++mdns_query_recv(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_callback_fn callback,
+                 void* user_data, int only_query_id) {
++#ifdef __circle__
++	struct sockaddr_in addr;
++	struct sockaddr* saddr = (struct sockaddr*)&addr;
++	socklen_t addrlen = sizeof(addr);
++
++	CIPAddress ipaddr;
++	u16 port;
++	mdns_ssize_t ret = sock->ReceiveFrom(buffer, capacity, 0, &ipaddr, &port);
++	if (ret <= 0)
++		return 0;
++
++	addr.sin_family = AF_INET;
++	addr.sin_port = port;
++	addr.sin_addr.s_addr = (u32)ipaddr;
++#else
+ 	struct sockaddr_in6 addr;
+ 	struct sockaddr* saddr = (struct sockaddr*)&addr;
+ 	socklen_t addrlen = sizeof(addr);
+@@ -1134,6 +1250,7 @@ mdns_query_recv(int sock, void* buffer, size_t capacity, mdns_record_callback_fn
+ 	mdns_ssize_t ret = recvfrom(sock, (char*)buffer, (mdns_size_t)capacity, 0, saddr, &addrlen);
+ 	if (ret <= 0)
+ 		return 0;
++#endif
+ 
+ 	size_t data_size = (size_t)ret;
+ 	const uint16_t* data = (const uint16_t*)buffer;
+@@ -1264,12 +1381,14 @@ mdns_answer_add_record(void* buffer, size_t capacity, void* data, mdns_record_t
+ 			data = MDNS_POINTER_OFFSET(data, 4);
+ 			break;
+ 
++#ifndef __circle__
+ 		case MDNS_RECORDTYPE_AAAA:
+ 			if (remain < 16)
+ 				return 0;
+ 			memcpy(data, &record.data.aaaa.addr.sin6_addr, 16);  // ipv6 address
+ 			data = MDNS_POINTER_OFFSET(data, 16);
+ 			break;
++#endif
+ 
+ 		default:
+ 			break;
+@@ -1360,7 +1479,7 @@ mdns_answer_get_record_count(const mdns_record_t* records, size_t record_count)
+ }
+ 
+ static inline int
+-mdns_query_answer_unicast(int sock, const void* address, size_t address_size, void* buffer,
++mdns_query_answer_unicast(mdns_socket_t sock, const void* address, size_t address_size, void* buffer,
+                           size_t capacity, uint16_t query_id, mdns_record_type_t record_type,
+                           const char* name, size_t name_length, mdns_record_t answer,
+                           const mdns_record_t* authority, size_t authority_count,
+@@ -1424,7 +1543,7 @@ mdns_query_answer_unicast(int sock, const void* address, size_t address_size, vo
+ }
+ 
+ static inline int
+-mdns_answer_multicast_rclass_ttl(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_answer_multicast_rclass_ttl(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                                  const mdns_record_t* authority, size_t authority_count,
+                                  const mdns_record_t* additional, size_t additional_count,
+                                  uint16_t rclass, uint32_t ttl) {
+@@ -1473,7 +1592,7 @@ mdns_answer_multicast_rclass_ttl(int sock, void* buffer, size_t capacity, mdns_r
+ }
+ 
+ static inline int
+-mdns_query_answer_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_query_answer_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                             const mdns_record_t* authority, size_t authority_count,
+                             const mdns_record_t* additional, size_t additional_count) {
+ 	return mdns_answer_multicast_rclass_ttl(sock, buffer, capacity, answer, authority,
+@@ -1482,7 +1601,7 @@ mdns_query_answer_multicast(int sock, void* buffer, size_t capacity, mdns_record
+ }
+ 
+ static inline int
+-mdns_announce_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_announce_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                         const mdns_record_t* authority, size_t authority_count,
+                         const  mdns_record_t* additional, size_t additional_count) {
+ 	return mdns_answer_multicast_rclass_ttl(sock, buffer, capacity, answer, authority,
+@@ -1491,7 +1610,7 @@ mdns_announce_multicast(int sock, void* buffer, size_t capacity, mdns_record_t a
+ }
+ 
+ static inline int
+-mdns_goodbye_multicast(int sock, void* buffer, size_t capacity, mdns_record_t answer,
++mdns_goodbye_multicast(mdns_socket_t sock, void* buffer, size_t capacity, mdns_record_t answer,
+                        const mdns_record_t* authority, size_t authority_count,
+                        const mdns_record_t* additional, size_t additional_count) {
+ 	// Goodbye should have ttl of 0
+@@ -1545,6 +1664,7 @@ mdns_record_parse_a(const void* buffer, size_t size, size_t offset, size_t lengt
+ 	return addr;
+ }
+ 
++#ifndef __circle__
+ static inline struct sockaddr_in6*
+ mdns_record_parse_aaaa(const void* buffer, size_t size, size_t offset, size_t length,
+                        struct sockaddr_in6* addr) {
+@@ -1557,6 +1677,7 @@ mdns_record_parse_aaaa(const void* buffer, size_t size, size_t offset, size_t le
+ 		memcpy(&addr->sin6_addr, MDNS_POINTER_OFFSET(buffer, offset), 16);
+ 	return addr;
+ }
++#endif
+ 
+ static inline size_t
+ mdns_record_parse_txt(const void* buffer, size_t size, size_t offset, size_t length,

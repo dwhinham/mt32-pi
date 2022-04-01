@@ -82,6 +82,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_WLAN(WLANFirmwarePath),
 	  m_WPASupplicant(WLANConfigFile),
 	  m_bNetworkReady(false),
+	  m_pMDNSResponder(nullptr),
 	  m_pAppleMIDIParticipant(nullptr),
 	  m_pUDPMIDIReceiver(nullptr),
 	  m_pFTPDaemon(nullptr),
@@ -900,6 +901,14 @@ void CMT32Pi::UpdateNetwork()
 			}
 			else
 				m_pLogger->Write(MT32PiName, LogNotice, "FTP daemon initialized");
+		}
+
+		m_pMDNSResponder = new CMDNSResponder();
+		if (!m_pMDNSResponder->Initialize())
+		{
+			m_pLogger->Write(MT32PiName, LogError, "Failed to init mDNS responder");
+			delete m_pMDNSResponder;
+			m_pMDNSResponder = nullptr;
 		}
 	}
 	else if (m_bNetworkReady && !bNetIsRunning)

@@ -98,6 +98,11 @@ namespace Utility
 		return nTicks / 1000;
 	}
 
+	constexpr u32 IPAddressToInteger(u8 nA, u8 nB, u8 nC, u8 nD)
+	{
+		return nA | (nB << 8) | (nC << 16) | (nD << 24);
+	}
+
 	// Computes the Roland checksum
 	constexpr u8 RolandChecksum(const u8* pData, size_t nSize)
 	{

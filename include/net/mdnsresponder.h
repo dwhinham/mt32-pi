@@ -1,8 +1,8 @@
 //
-// udpmidi.h
+// mdnsresponder.h
 //
 // mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
-// Copyright (C) 2020-2023 Dale Whinham <daleyo@gmail.com>
+// Copyright (C) 2020-2022 Dale Whinham <daleyo@gmail.com>
 //
 // This file is part of mt32-pi.
 //
@@ -20,37 +20,40 @@
 // mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _udpmidi_h
-#define _udpmidi_h
+#ifndef _mdnsresponder_h
+#define _mdnsresponder_h
 
 #include <circle/net/socket.h>
 #include <circle/sched/task.h>
 
-class CUDPMIDIHandler
+class CMDNSResponder : protected CTask
 {
 public:
-	virtual void OnUDPMIDIDataReceived(const u8* pData, size_t nSize) = 0;
-};
-
-class CUDPMIDIReceiver : protected CTask
-{
-public:
-	CUDPMIDIReceiver(CUDPMIDIHandler* pHandler);
-	virtual ~CUDPMIDIReceiver() override;
+	CMDNSResponder();
+	virtual ~CMDNSResponder() override;
 
 	bool Initialize();
 
 	virtual void Run() override;
 
 private:
+	void Probe();
+	void Announce();
+	void Goodbye();
+
+	static constexpr size_t MaxMDNSNameLength = 256;
+
 	// UDP socket
 	CSocket* m_pSocket;
 
 	// Socket receive buffer
-	u8 m_ReceiveBuffer[FRAME_BUFFER_SIZE];
+	u8 m_Buffer[FRAME_BUFFER_SIZE];
+	char m_DNSName[MaxMDNSNameLength];
 
-	// Callback handler
-	CUDPMIDIHandler* m_pHandler;
+	// static int MDNSServiceCallback(mdns_socket_t sock, const struct sockaddr* from, size_t addrlen, mdns_entry_type_t entry,
+	// 		uint16_t query_id, uint16_t rtype, uint16_t rclass, uint32_t ttl, const void* data,
+	// 		size_t size, size_t name_offset, size_t name_length, size_t record_offset,
+	// 		size_t record_length, void* user_data);
 };
 
 #endif

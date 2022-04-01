@@ -33,29 +33,29 @@ const char UDPMIDIName[] = "udpmidi";
 
 CUDPMIDIReceiver::CUDPMIDIReceiver(CUDPMIDIHandler* pHandler)
 	: CTask(TASK_STACK_SIZE, true),
-	  m_pMIDISocket(nullptr),
-	  m_MIDIBuffer{0},
+	  m_pSocket(nullptr),
+	  m_ReceiveBuffer{0},
 	  m_pHandler(pHandler)
 {
 }
 
 CUDPMIDIReceiver::~CUDPMIDIReceiver()
 {
-	if (m_pMIDISocket)
-		delete m_pMIDISocket;
+	if (m_pSocket)
+		delete m_pSocket;
 }
 
 bool CUDPMIDIReceiver::Initialize()
 {
-	assert(m_pMIDISocket == nullptr);
+	assert(m_pSocket == nullptr);
 
 	CLogger* const pLogger    = CLogger::Get();
 	CNetSubSystem* const pNet = CNetSubSystem::Get();
 
-	if ((m_pMIDISocket = new CSocket(pNet, IPPROTO_UDP)) == nullptr)
+	if ((m_pSocket = new CSocket(pNet, IPPROTO_UDP)) == nullptr)
 		return false;
 
-	if (m_pMIDISocket->Bind(MIDIPort) != 0)
+	if (m_pSocket->Bind(MIDIPort) != 0)
 	{
 		pLogger->Write(UDPMIDIName, LogError, "Couldn't bind to port %d", MIDIPort);
 		return false;
@@ -70,7 +70,7 @@ bool CUDPMIDIReceiver::Initialize()
 void CUDPMIDIReceiver::Run()
 {
 	assert(m_pHandler != nullptr);
-	assert(m_pMIDISocket != nullptr);
+	assert(m_pSocket != nullptr);
 
 	CLogger* const pLogger       = CLogger::Get();
 	CScheduler* const pScheduler = CScheduler::Get();
@@ -78,12 +78,12 @@ void CUDPMIDIReceiver::Run()
 	while (true)
 	{
 		// Blocking call
-		const int nMIDIResult = m_pMIDISocket->Receive(m_MIDIBuffer, sizeof(m_MIDIBuffer), 0);
+		const int nResult = m_pSocket->Receive(m_ReceiveBuffer, sizeof(m_ReceiveBuffer), 0);
 
-		if (nMIDIResult < 0)
-			pLogger->Write(UDPMIDIName, LogError, "MIDI socket receive error: %d", nMIDIResult);
-		else if (nMIDIResult > 0)
-			m_pHandler->OnUDPMIDIDataReceived(m_MIDIBuffer, nMIDIResult);
+		if (nResult < 0)
+			pLogger->Write(UDPMIDIName, LogError, "Socket receive error: %d", nResult);
+		else if (nResult > 0)
+			m_pHandler->OnUDPMIDIDataReceived(m_ReceiveBuffer, nResult);
 
 		// Allow other tasks to run
 		pScheduler->Yield();

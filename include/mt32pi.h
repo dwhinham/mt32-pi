@@ -55,6 +55,7 @@
 #include "midiparser.h"
 #include "net/applemidi.h"
 #include "net/ftpdaemon.h"
+#include "net/mdnsresponder.h"
 #include "net/udpmidi.h"
 #include "pisound.h"
 #include "power.h"
@@ -161,6 +162,7 @@ private:
 	CBcm4343Device m_WLAN;
 	CWPASupplicant m_WPASupplicant;
 	bool m_bNetworkReady;
+	CMDNSResponder* m_pMDNSResponder;
 	CAppleMIDIParticipant* m_pAppleMIDIParticipant;
 	CUDPMIDIReceiver* m_pUDPMIDIReceiver;
 	CFTPDaemon* m_pFTPDaemon;

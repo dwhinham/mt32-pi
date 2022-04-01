@@ -24,6 +24,7 @@ OBJS		:=	src/config.o \
 				src/net/applemidi.o \
 				src/net/ftpdaemon.o \
 				src/net/ftpworker.o \
+				src/net/mdnsresponder.o \
 				src/net/udpmidi.o \
 				src/pisound.o \
 				src/power.o \
@@ -47,6 +48,11 @@ OBJS		+=	$(INIHHOME)/ini.o
 INCLUDE		+=	-I $(INIHHOME)
 EXTRACLEAN	+=	$(INIHHOME)/ini.d \
 				$(INIHHOME)/ini.o
+
+#
+# mdns
+#
+INCLUDE		+=	-I $(MDNSHOME)
 
 include $(CIRCLEHOME)/Rules.mk
 

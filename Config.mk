@@ -86,4 +86,6 @@ FLUIDSYNTHLIB=$(FLUIDSYNTHBUILDDIR)/src/libfluidsynth.a
 
 INIHHOME=$(realpath external/inih)
 
+MDNSHOME=$(realpath external/mdns)
+
 -include $(CIRCLE_STDLIB_CONFIG)

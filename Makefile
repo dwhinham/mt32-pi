@@ -5,7 +5,7 @@
 include Config.mk
 
 .DEFAULT_GOAL=all
-.PHONY: circle-stdlib mt32emu fluidsynth all clean veryclean
+.PHONY: circle-stdlib mdns mt32emu fluidsynth all clean veryclean
 
 #
 # Functions to apply/reverse patches only if not completely applied/reversed already
@@ -36,7 +36,7 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 # Apply patches
 	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
 	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-45-cp210x-remove-partnum-check.patch
-	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-44-multicast.patch
+	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-45-multicast.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
 # Enable function/data sections for circle-stdlib
@@ -62,6 +62,15 @@ circle-stdlib: $(CIRCLESTDLIBHOME)/.done
 
 $(CIRCLESTDLIBHOME)/.done: $(CIRCLE_STDLIB_CONFIG)
 	@$(MAKE) -C $(CIRCLESTDLIBHOME)
+	touch $@
+
+#
+# Patch mdns
+#
+mdns: $(MDNSHOME)/.done
+
+$(MDNSHOME)/.done:
+	@${APPLY_PATCH} $(MDNSHOME) patches/mdns-1.4.2-circle.patch
 	touch $@
 
 #
@@ -127,7 +136,7 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 #
 # Build kernel itself
 #
-all: circle-stdlib mt32emu fluidsynth
+all: circle-stdlib mdns mt32emu fluidsynth
 	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #
@@ -145,10 +154,14 @@ veryclean: clean
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-cp210x-remove-partnum-check.patch
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
 	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
+	@${REVERSE_PATCH} $(MDNSHOME) patches/mdns-1.4.2-circle.patch
 
 # Clean circle-stdlib
 	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
 	@$(RM) $(CIRCLESTDLIBHOME)/.done
+
+# Clean mdns
+	@$(RM) $(MDNSHOME)/.done
 
 # Clean mt32emu
 	@$(RM) -r $(MT32EMUBUILDDIR)
