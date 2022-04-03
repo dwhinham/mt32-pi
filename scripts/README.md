@@ -32,7 +32,9 @@ An interactive Bash script for performing a first-time installation of mt32-pi. 
 
 <a href="../images/mt32pi_updater.gif?raw=1"><img title="mt32pi_updater.py in action." width="400rem" align="right" src="../images/mt32pi_updater.gif"></a>
 
-A non-interactive Python 3 script for automatically updating your mt32-pi via the embedded FTP server. Intended for use on MiSTer FPGA, but should be usable on any Linux PC.
+A non-interactive Python 3 script for automatically updating your mt32-pi via the [embedded FTP server]. Intended for use on MiSTer FPGA, but should be usable on any Linux PC.
+
+> ⚠️ **Note:** mt32-pi v0.11.0+ is required, as the script depends on the FTP server feature which was introduced in this version. Networking and the FTP server must be enabled; see the [wiki page][Embedded FTP server] to learn how to set them up.
 
 A wrapper script ([`mt32pi_updater.sh`]) is provided so that it can be launched from the MiSTer OSD's Scripts menu.
 
@@ -55,10 +57,15 @@ A wrapper script ([`mt32pi_updater.sh`]) is provided so that it can be launched 
 1. Download [`mt32pi_updater.py`] and [`mt32pi_updater.cfg`].
    - If you want to use it on MiSTer, download the [the wrapper script][`mt32pi_updater.sh`] too, and copy both scripts (`.py` and `.sh`) and the `.cfg` file to the `/Scripts` directory on your SD card.
 2. Make the script(s) executable by typing `chmod +x mt32pi_updater.{py,sh}` at a shell prompt.
-3. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `host`, `ftp_username` and `ftp_password` settings inside `mt32pi_updater.cfg` so that they match.
-4. Run the script by typing `./mt32pi_updater.py` at a shell prompt.
+3. Enable mt32-pi's [networking] and [embedded FTP server] features.
+4. If you have set a custom hostname, IP address or FTP username/password in `mt32-pi.cfg`, edit the `host`, `ftp_username` and `ftp_password` settings inside `mt32pi_updater.cfg` so that they match.
+5. Run the script by typing `./mt32pi_updater.py` at a shell prompt.
    - On MiSTer, you should see `mt32pi_updater` in the Scripts menu - simply select it to run the script.
 
+> ⚠️ **Note:** If mt32-pi cannot be reached by hostname (e.g. the script cannot connect or `ping mt32-pi` fails), you may have an issue with DNS resolution within your LAN. Check your router's DNS/DHCP settings, or try using an IP address instead of a hostname instead.
+
+[Embedded FTP server]: https://github.com/dwhinham/mt32-pi/wiki/Embedded-FTP-server
+[Networking]: https://github.com/dwhinham/mt32-pi/wiki/Networking
 [`mt32pi_installer.sh`]: mt32pi_installer.sh?raw=1
 [`mt32pi_updater.py`]: mt32pi_updater.py?raw=1
 [`mt32pi_updater.cfg`]: mt32pi_updater.cfg?raw=1
