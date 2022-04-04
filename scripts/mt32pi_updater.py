@@ -23,6 +23,9 @@
 # -----------------------------------------------------------------------------
 # Changelog
 # -----------------------------------------------------------------------------
+# 0.2.1 - 2022-04-04
+# - Implemented retries for timed-out/failed FTP operations.
+#
 # 0.2.0 - 2022-03-31
 # - User settings moved to external config file (mt32pi_updater.cfg).
 # - Script now updates and relaunches itself.
@@ -68,7 +71,7 @@ except ImportError:
 GITHUB_REPO = "dwhinham/mt32-pi"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
-SCRIPT_VERSION = "0.2.0"
+SCRIPT_VERSION = "0.2.1"
 
 # Config keys
 K_SECTION = "updater"
@@ -156,6 +159,10 @@ def print_result(message, color=None, replace=False):
         print(COLOR_RESET, end="", flush=True)
 
 
+def print_retry(attempt):
+    print_result(f"RETRY {attempt}/{RetryFTP.MAX_RETRIES}", COLOR_YELLOW, replace=True)
+
+
 def print_socket_error():
     print(
         "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
@@ -196,6 +203,64 @@ def restart():
 
     os.chdir(os.getcwd())
     os.execv(sys.executable, args)
+
+
+# -----------------------------------------------------------------------------
+# Custom ftplib wrapper with retry functionality
+# -----------------------------------------------------------------------------
+class RetryFTP:
+    MAX_RETRIES = 5
+
+    def __init__(self, *args, **kwargs):
+        self.ftp_args = args
+        self.ftp_kwargs = kwargs
+        self.on_retry = None
+        self.__reconnect()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.ftp.close()
+
+    def __reconnect(self):
+        try:
+            self.ftp.quit()
+        except Exception:
+            pass
+        self.ftp = FTP(*self.ftp_args, **self.ftp_kwargs)
+
+    def __retrywrapper(self, func, *args, **kwargs):
+        attempt = 0
+        retry = False
+
+        while True:
+            try:
+                if retry:
+                    if self.on_retry:
+                        self.on_retry(attempt)
+                    self.__reconnect()
+                    retry = False
+                func(self.ftp, *args, **kwargs)
+                break
+
+            except (EOFError, error_temp, socket.timeout, socket.error):
+                attempt += 1
+                if attempt == RetryFTP.MAX_RETRIES + 1:
+                    raise
+                retry = True
+
+    def set_on_retry(self, callback):
+        self.on_retry = callback
+
+    def getwelcome(self):
+        return self.ftp.getwelcome()
+
+    def retrbinary(self, cmd, callback, blocksize=8192, rest=None):
+        self.__retrywrapper(FTP.retrbinary, cmd, callback, blocksize, rest)
+
+    def storbinary(self, cmd, fp, blocksize=8192, callback=None, rest=None):
+        self.__retrywrapper(FTP.storbinary, cmd, fp, blocksize, callback, rest)
 
 
 # -----------------------------------------------------------------------------
@@ -247,9 +312,10 @@ def get_current_version(ftp):
 
 
 def get_old_data(ftp, temp_dir):
+    ftp.set_on_retry(print_retry)
+
     for file_name in OLD_FILE_NAMES:
         with open(temp_dir / file_name, "wb") as file:
-            # TODO: Handle when file doesn't exist
             print_status(f"Retrieving {COLOR_PURPLE}{file_name}{COLOR_RESET}...")
             try:
                 ftp.retrbinary(f"RETR /SD/{file_name}", file.write)
@@ -463,6 +529,13 @@ def install(ftp, source_path, config):
                         replace=True,
                     )
 
+                def on_retry(attempt):
+                    nonlocal transferred
+                    transferred = 0
+                    file.seek(0)
+                    print_retry(attempt)
+
+                ftp.set_on_retry(on_retry)
                 ftp.storbinary(f"STOR /SD/{remote_file_path}", file, callback=callback)
                 print_result("DONE!", COLOR_GREEN)
 
@@ -539,7 +612,7 @@ if __name__ == "__main__":
             f" '{COLOR_PURPLE}{host}{COLOR_RESET}'..."
         )
         try:
-            with FTP(
+            with RetryFTP(
                 host,
                 config.get(K_SECTION, K_FTP_USERNAME),
                 config.get(K_SECTION, K_FTP_PASSWORD),
