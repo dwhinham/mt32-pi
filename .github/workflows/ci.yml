@@ -73,7 +73,7 @@ jobs:
       run: make -j BOARD=${{ matrix.board }}
 
     - name: Upload built kernel
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: kernels
         path: kernel*.img
@@ -82,7 +82,7 @@ jobs:
       run: make clean && make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
 
     - name: Upload built kernel
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: kernels-hdmi
         path: kernel*.img
@@ -206,7 +206,7 @@ jobs:
         cp README.md sdcard/docs
 
     - name: Upload SD card archive
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: sdcard
         path: sdcard
