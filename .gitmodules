@@ -14,3 +14,7 @@
 	path = external/fluidsynth
 	url = https://github.com/FluidSynth/fluidsynth.git
 	ignore = dirty
+[submodule "external/mdns"]
+	path = external/mdns
+	url = https://github.com/mjansson/mdns.git
+	ignore = dirty
