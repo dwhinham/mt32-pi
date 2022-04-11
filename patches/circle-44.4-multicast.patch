@@ -1,0 +1,64 @@
+diff --git a/include/circle/net/ipaddress.h b/include/circle/net/ipaddress.h
+index 9a382bb..5187f97 100644
+--- a/include/circle/net/ipaddress.h
++++ b/include/circle/net/ipaddress.h
+@@ -53,6 +53,7 @@ public:
+ 
+ 	boolean IsNull (void) const;
+ 	boolean IsBroadcast (void) const;
++	boolean IsMulticast (void) const;
+ 	unsigned GetSize (void) const;
+ 
+ 	void Format (CString *pString) const;
+diff --git a/lib/net/ipaddress.cpp b/lib/net/ipaddress.cpp
+index 26f4a07..039f4ea 100644
+--- a/lib/net/ipaddress.cpp
++++ b/lib/net/ipaddress.cpp
+@@ -169,6 +169,12 @@ boolean CIPAddress::IsBroadcast (void) const
+ 	return m_nAddress == 0xFFFFFFFF;
+ }
+ 
++boolean CIPAddress::IsMulticast (void) const
++{
++	assert (m_bValid);
++	return (m_nAddress & 0xF0) == 0xE0;
++}
++
+ unsigned CIPAddress::GetSize (void) const
+ {
+ 	return IP_ADDRESS_SIZE;
+@@ -185,7 +191,7 @@ void CIPAddress::Format (CString *pString) const
+ 
+ boolean CIPAddress::OnSameNetwork (const CIPAddress &rAddress2, const u8 *pNetMask) const
+ {
+-	if (rAddress2.IsBroadcast ())	// a broadcast goes always to the same subnet
++	if (rAddress2.IsBroadcast () || rAddress2.IsMulticast ())	// a broadcast goes always to the same subnet
+ 	{
+ 		return TRUE;
+ 	}
+diff --git a/lib/net/linklayer.cpp b/lib/net/linklayer.cpp
+index 4a0169f..172dd80 100644
+--- a/lib/net/linklayer.cpp
++++ b/lib/net/linklayer.cpp
+@@ -149,7 +149,7 @@ boolean CLinkLayer::Send (const CIPAddress &rReceiver, const void *pIPPacket, un
+ 	assert (m_pNetConfig != 0);
+ 	assert (m_pARPHandler != 0);
+ 	CMACAddress MACAddressReceiver;
+-	if (   rReceiver.IsBroadcast ()
++	if (   rReceiver.IsBroadcast () || rReceiver.IsMulticast ()
+ 	    || rReceiver == *m_pNetConfig->GetBroadcastAddress ())
+ 	{
+ 		MACAddressReceiver.SetBroadcast ();
+diff --git a/lib/net/networklayer.cpp b/lib/net/networklayer.cpp
+index f544f0b..26fe325 100644
+--- a/lib/net/networklayer.cpp
++++ b/lib/net/networklayer.cpp
+@@ -175,7 +175,7 @@ boolean CNetworkLayer::Send (const CIPAddress &rReceiver, const void *pPacket, u
+ 	memcpy (PacketBuffer+sizeof (TIPHeader), pPacket, nLength);
+ 
+ 	if (   pOwnIPAddress->IsNull ()
+-	    && !rReceiver.IsBroadcast ())
++	    && !(rReceiver.IsBroadcast () || rReceiver.IsMulticast ()))
+ 	{
+ 		SendFailed (ICMP_CODE_DEST_NET_UNREACH, PacketBuffer, nPacketLength);
+ 
