@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Ethernet connectivity was broken on some Raspberry Pi models. Thanks to Sal Bugliarisi, @retro and @MorkMikael for the reports!
+- Network disconnection/reconnection notifications were broken.
 
 ## [0.11.2] - 2022-03-25
 

@@ -159,6 +159,7 @@ private:
 
 	// Networking
 	CNetSubSystem* m_pNet;
+	CNetDevice* m_pNetDevice;
 	CBcm4343Device m_WLAN;
 	CWPASupplicant m_WPASupplicant;
 	bool m_bNetworkReady;

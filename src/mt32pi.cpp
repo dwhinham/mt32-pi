@@ -78,6 +78,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_bUSBAvailable(false),
 
 	  m_pNet(nullptr),
+	  m_pNetDevice(nullptr),
 	  m_WLAN(WLANFirmwarePath),
 	  m_WPASupplicant(WLANConfigFile),
 	  m_bNetworkReady(false),
@@ -359,6 +360,8 @@ bool CMT32Pi::InitNetwork()
 			delete m_pNet;
 			m_pNet = nullptr;
 		}
+
+		m_pNetDevice = CNetDevice::GetNetDevice(NetDeviceType);
 	}
 
 	return m_pNet != nullptr;
@@ -828,7 +831,11 @@ void CMT32Pi::UpdateNetwork()
 	if (!m_pNet)
 		return;
 
-	const bool bNetIsRunning = m_pNet->IsRunning();
+	bool bNetIsRunning = m_pNet->IsRunning();
+	if (m_pConfig->NetworkMode == CConfig::TNetworkMode::Ethernet)
+		bNetIsRunning &= m_pNetDevice->IsLinkUp();
+	else if (m_pConfig->NetworkMode == CConfig::TNetworkMode::WiFi)
+		bNetIsRunning &= m_WPASupplicant.IsConnected();
 
 	if (!m_bNetworkReady && bNetIsRunning)
 	{
@@ -840,7 +847,7 @@ void CMT32Pi::UpdateNetwork()
 		m_pLogger->Write(MT32PiName, LogNotice, "Network up and running at: %s", static_cast<const char *>(IPString));
 		LCDLog(TLCDLogType::Notice, "%s: %s", GetNetworkDeviceShortName(), static_cast<const char*>(IPString));
 
-		if (m_pConfig->NetworkRTPMIDI)
+		if (m_pConfig->NetworkRTPMIDI && !m_pAppleMIDIParticipant)
 		{
 			m_pAppleMIDIParticipant = new CAppleMIDIParticipant(&m_Random, this);
 			if (!m_pAppleMIDIParticipant->Initialize())
@@ -853,7 +860,7 @@ void CMT32Pi::UpdateNetwork()
 				m_pLogger->Write(MT32PiName, LogNotice, "AppleMIDI receiver initialized");
 		}
 
-		if (m_pConfig->NetworkUDPMIDI)
+		if (m_pConfig->NetworkUDPMIDI && !m_pUDPMIDIReceiver)
 		{
 			m_pUDPMIDIReceiver = new CUDPMIDIReceiver(this);
 			if (!m_pUDPMIDIReceiver->Initialize())
@@ -866,7 +873,7 @@ void CMT32Pi::UpdateNetwork()
 				m_pLogger->Write(MT32PiName, LogNotice, "UDP MIDI receiver initialized");
 		}
 
-		if (m_pConfig->NetworkFTPServer)
+		if (m_pConfig->NetworkFTPServer && !m_pFTPDaemon)
 		{
 			m_pFTPDaemon = new CFTPDaemon(m_pConfig->NetworkFTPUsername, m_pConfig->NetworkFTPPassword);
 			if (!m_pFTPDaemon->Initialize())
@@ -885,12 +892,6 @@ void CMT32Pi::UpdateNetwork()
 		m_pLogger->Write(MT32PiName, LogNotice, "Network disconnected.");
 		LCDLog(TLCDLogType::Notice, "%s disconnected!", GetNetworkDeviceShortName());
 
-		delete m_pAppleMIDIParticipant;
-		m_pAppleMIDIParticipant = nullptr;
-		delete m_pUDPMIDIReceiver;
-		m_pUDPMIDIReceiver = nullptr;
-		delete m_pFTPDaemon;
-		m_pFTPDaemon = nullptr;
 	}
 }
 
