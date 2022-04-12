@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to inih r55.
 
+### Fixed
+
+- Ethernet connectivity was broken on some Raspberry Pi models. Thanks to Sal Bugliarisi, @retro and @MorkMikael for the reports!
+
 ## [0.11.2] - 2022-03-25
 
 ### Added
