@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to FluidSynth v2.2.6.
 - Update to inih r54.
 
-### [0.11.1] - 2022-03-10
+## [0.11.1] - 2022-03-10
 
 ### Added
 
