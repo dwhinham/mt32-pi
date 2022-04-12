@@ -85,7 +85,7 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 ## 🙌 Acknowledgments
 
 - Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
-- A huge thankyou to everyone who has donated via Ko-Fi, PayPal, or Amazon - your support means a lot! ❤️
+- A huge thankyou to everyone who has donated via Ko-fi, PayPal, or Amazon - your support means a lot! ❤️
 - Special thanks to [Edu Arana (Arananet)], [Porkchop Express (MiSTerAddons)], @djhardrich, [Nat (MiSTerFPGA.co.uk)], [Ricardo Saraiva (UltimateMiSTer.com)], [Serge Defever (Serdashop)], and @opjose who have all generously donated hardware to the project.
 - The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
 - The [FluidSynth] team for their excellent and easily-portable SoundFont synthesizer project.
