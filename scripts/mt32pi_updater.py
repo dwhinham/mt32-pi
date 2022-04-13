@@ -29,6 +29,7 @@
 # - Fix ignore list on Windows.
 # - Continue anyway if version number invalid (e.g. test build).
 # - Fix self-update file encoding on Windows.
+# - Fix screen clearing ANSI code.
 #
 # 0.2.1 - 2022-04-04
 # - Implemented retries for timed-out/failed FTP operations.
@@ -112,7 +113,7 @@ HAVE_ANSI = (
 )
 
 if HAVE_ANSI:
-    CLEAR_TERM = "\033c"
+    CLEAR_TERM = "\033[H\033[J"
     COLOR_RED = "\033[31;1m"
     COLOR_GREEN = "\033[32;1m"
     COLOR_YELLOW = "\033[33;1m"
