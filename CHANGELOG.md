@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2022-04-13
+
 ### Changed
 
 - Update to inih r55.
@@ -472,7 +474,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.2..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.3..HEAD
+[0.11.3]: https://github.com/dwhinham/mt32-pi/compare/v0.11.2..v0.11.3
 [0.11.2]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..v0.11.2
 [0.11.1]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..v0.11.1
 [0.11.0]: https://github.com/dwhinham/mt32-pi/compare/v0.10.3..v0.11.0
