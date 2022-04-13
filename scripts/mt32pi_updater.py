@@ -24,10 +24,11 @@
 # Changelog
 # -----------------------------------------------------------------------------
 # 0.2.2 - 2022-04-13
-# - Disable colors if colorama or Windows Terminal unavailable on Windows
-# - Fix text alignment and error message colors on Windows
-# - Fix ignore list on Windows
-# - Continue anyway if version number invalid (e.g. test build)
+# - Disable colors if colorama or Windows Terminal unavailable on Windows.
+# - Fix text alignment and error message colors on Windows.
+# - Fix ignore list on Windows.
+# - Continue anyway if version number invalid (e.g. test build).
+# - Fix self-update file encoding on Windows.
 #
 # 0.2.1 - 2022-04-04
 # - Implemented retries for timed-out/failed FTP operations.
@@ -302,7 +303,9 @@ def self_update():
                     print_result("OK!", COLOR_GREEN)
                     if parse_version(result[1]) > parse_version(SCRIPT_VERSION):
                         # Overwrite self with new version
-                        with open(__file__, "w") as old_script:
+                        with open(
+                            __file__, "w", encoding="utf-8", newline="\n"
+                        ) as old_script:
                             old_script.write(new_script)
 
                         print("A new version of the script is available; respawning...")
@@ -315,7 +318,8 @@ def self_update():
             print_result("WARNING!", COLOR_YELLOW)
             print(
                 "Unable to find version information in latest script from GitHub;"
-                " continuing anyway..."
+                " continuing anyway...",
+                file=sys.stderr,
             )
 
     except Exception:
