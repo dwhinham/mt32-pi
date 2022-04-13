@@ -23,6 +23,12 @@
 # -----------------------------------------------------------------------------
 # Changelog
 # -----------------------------------------------------------------------------
+# 0.2.2 - 2022-04-13
+# - Disable colors if colorama or Windows Terminal unavailable on Windows
+# - Fix text alignment and error message colors on Windows
+# - Fix ignore list on Windows
+# - Continue anyway if version number invalid (e.g. test build)
+#
 # 0.2.1 - 2022-04-04
 # - Implemented retries for timed-out/failed FTP operations.
 #
@@ -41,6 +47,7 @@
 import io
 import json
 import os
+import platform
 import re
 import shutil
 import socket
@@ -50,7 +57,6 @@ from configparser import ConfigParser
 from datetime import datetime
 from ftplib import FTP, error_temp
 from pathlib import Path
-from sys import stderr
 from time import sleep
 from urllib import request
 
@@ -71,7 +77,7 @@ except ImportError:
 GITHUB_REPO = "dwhinham/mt32-pi"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
-SCRIPT_VERSION = "0.2.1"
+SCRIPT_VERSION = "0.2.2"
 
 # Config keys
 K_SECTION = "updater"
@@ -98,13 +104,28 @@ DEFAULT_CONFIG = {
     }
 }
 
-CLEAR_TERM = "\033c"
-COLOR_RED = "\033[31;1m"
-COLOR_GREEN = "\033[32;1m"
-COLOR_YELLOW = "\033[33;1m"
-COLOR_PURPLE = "\033[35;1m"
-COLOR_BRIGHT_WHITE = "\033[97;1m"
-COLOR_RESET = "\033[0m"
+HAVE_ANSI = (
+    "colorama" in sys.modules
+    or os.environ.get("WT_SESSION")  # Crude way to detect Windows Terminal
+    or platform.system() != "Windows"
+)
+
+if HAVE_ANSI:
+    CLEAR_TERM = "\033c"
+    COLOR_RED = "\033[31;1m"
+    COLOR_GREEN = "\033[32;1m"
+    COLOR_YELLOW = "\033[33;1m"
+    COLOR_PURPLE = "\033[35;1m"
+    COLOR_BRIGHT_WHITE = "\033[97;1m"
+    COLOR_RESET = "\033[0m"
+else:
+    CLEAR_TERM = ""
+    COLOR_RED = ""
+    COLOR_GREEN = ""
+    COLOR_YELLOW = ""
+    COLOR_PURPLE = ""
+    COLOR_BRIGHT_WHITE = ""
+    COLOR_RESET = ""
 
 MT32PI_LOGO = r"""
   {}{}
@@ -142,7 +163,7 @@ def print_status(message):
     stripped_message = ANSI_ESCAPE_REGEX.sub("", message)
     length_diff = len(message) - len(stripped_message)
 
-    term_width = shutil.get_terminal_size()[0] + length_diff
+    term_width = shutil.get_terminal_size()[0] + length_diff - 1
     print(f"{message:{term_width}}", end="", flush=True)
 
 
@@ -153,7 +174,7 @@ def print_result(message, color=None, replace=False):
     if color:
         print(color, end="")
 
-    print(f"{message:>{clear_width + 1}}", end="" if replace else "\n", flush=True)
+    print(f"{message:>{clear_width}}", end="" if replace else "\n", flush=True)
 
     if color:
         print(COLOR_RESET, end="", flush=True)
@@ -167,19 +188,19 @@ def print_socket_error():
     print(
         "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
         f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?",
-        file=stderr,
+        file=sys.stderr,
     )
     print(
         "This script requires that you are running mt32-pi"
         f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above.",
-        file=stderr,
+        file=sys.stderr,
     )
 
 
 def print_socket_timeout():
     print(
         "Connection timed out. Please check your network connection and try again.",
-        file=stderr,
+        file=sys.stderr,
     )
 
 
@@ -299,15 +320,18 @@ def self_update():
 
     except Exception:
         print_result("FAILED!", COLOR_RED)
-        print("Failed to retrieve latest updater script from GitHub.", file=stderr)
+        print("Failed to retrieve latest updater script from GitHub.", file=sys.stderr)
 
 
 def get_current_version(ftp):
     result = re.search(r"mt32-pi (v[0-9]+.[0-9]+.[0-9]+)", ftp.getwelcome())
     if not result:
-        print_result("FAILED!", COLOR_RED)
-        print("Failed to extract version number from FTP welcome message.")
-        return None
+        print(
+            "Failed to extract version number from FTP welcome message; continuing"
+            " anyway",
+            file=sys.stderr,
+        )
+        return "<unknown>"
     return result.group(1)
 
 
@@ -335,7 +359,7 @@ def get_latest_release_info():
         print_result("OK!", COLOR_GREEN)
     except Exception:
         print_result("FAILED!", COLOR_RED)
-        print("Failed to retrieve release info from GitHub.", file=stderr)
+        print("Failed to retrieve release info from GitHub.", file=sys.stderr)
         return None
 
     # Sort by version number in descending order
@@ -499,18 +523,18 @@ def install(ftp, source_path, config):
         path.strip() for path in config.get(K_SECTION, K_IGNORE_LIST).split(",")
     ]
 
-    filter_dirs = [path[:-1] for path in ignore_list if path.endswith("/")]
-    filter_files = [path for path in ignore_list if not path.endswith("/")]
+    filter_dirs = [Path(path[:-1]) for path in ignore_list if path.endswith("/")]
+    filter_files = [Path(path) for path in ignore_list if not path.endswith("/")]
 
     for (dir_path, dir_names, filenames) in os.walk(source_path):
-        remote_dir = Path(dir_path.replace(str(source_path), "").lstrip("/"))
+        remote_dir = Path(dir_path.replace(str(source_path), "").lstrip(os.sep))
 
         for file_name in filenames:
             local_file_path = Path(dir_path) / file_name
             remote_file_path = remote_dir / file_name
             print_status(f"Uploading {COLOR_PURPLE}{remote_file_path}{COLOR_RESET}...")
 
-            if str(remote_dir) in filter_dirs or str(remote_file_path) in filter_files:
+            if remote_dir in filter_dirs or remote_file_path in filter_files:
                 print_result("SKIPPED!", COLOR_YELLOW)
                 continue
 
@@ -621,7 +645,7 @@ if __name__ == "__main__":
                 print_result("OK!", COLOR_GREEN)
                 # ftp.set_debuglevel(2)
 
-                current_version = get_current_version(ftp) or exit(1)
+                current_version = get_current_version(ftp)
                 release_info = get_latest_release_info() or exit(1)
                 latest_version = release_info["tag_name"]
 

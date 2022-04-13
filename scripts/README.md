@@ -32,7 +32,7 @@ An interactive Bash script for performing a first-time installation of mt32-pi. 
 
 <a href="../images/mt32pi_updater.gif?raw=1"><img title="mt32pi_updater.py in action." width="400rem" align="right" src="../images/mt32pi_updater.gif"></a>
 
-A non-interactive Python 3 script for automatically updating your mt32-pi via the [embedded FTP server]. Intended for use on MiSTer FPGA, but should be usable on any Linux PC.
+A non-interactive Python 3 script for automatically updating your mt32-pi via the [embedded FTP server]. Intended for use on MiSTer FPGA, but should be usable on any Linux or Windows PC.
 
 > ⚠️ **Note:** mt32-pi v0.11.0+ is required, as the script depends on the FTP server feature which was introduced in this version. Networking and the FTP server must be enabled; see the [wiki page][Embedded FTP server] to learn how to set them up.
 
