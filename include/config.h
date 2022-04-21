@@ -46,10 +46,6 @@ public:
 		ENUM(HDMI, hdmi)                 \
 		ENUM(I2S, i2s)
 
-	#define ENUM_AUDIOI2CDACINIT(ENUM) \
-		ENUM(None, none)               \
-		ENUM(PCM51xx, pcm51xx)
-
 	#define ENUM_CONTROLSCHEME(ENUM)        \
 		ENUM(None, none)                    \
 		ENUM(SimpleButtons, simple_buttons) \
@@ -78,7 +74,6 @@ public:
 
 	CONFIG_ENUM(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);
 	CONFIG_ENUM(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
-	CONFIG_ENUM(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
 	CONFIG_ENUM(TControlScheme, ENUM_CONTROLSCHEME);
 	CONFIG_ENUM(TLCDType, ENUM_LCDTYPE);
 	CONFIG_ENUM(TNetworkMode, ENUM_NETWORKMODE);
@@ -105,7 +100,6 @@ private:
 	static bool ParseOption(const char *pString, CIPAddress* pOut);
 	static bool ParseOption(const char* pString, TSystemDefaultSynth* pOut);
 	static bool ParseOption(const char* pString, TAudioOutputDevice* pOut);
-	static bool ParseOption(const char* pString, TAudioI2CDACInit* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuResamplerQuality* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuMIDIChannels* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuROMSet* pOut);

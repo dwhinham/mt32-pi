@@ -140,8 +140,6 @@ private:
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pFormat...);
 
-	bool InitPCM51xx(u8 nAddress);
-
 	CLogger* volatile m_pLogger;
 	CConfig* volatile m_pConfig;
 

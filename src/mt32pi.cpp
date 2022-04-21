@@ -242,11 +242,12 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 
 			// Pisound provides clock
 			const bool bSlave = m_pPisound != nullptr;
-			m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, m_pConfig->AudioSampleRate, m_pConfig->AudioChunkSize, bSlave);
-			Format = TSoundFormat::SoundFormatSigned24_32;
 
-			if (m_pConfig->AudioI2CDACInit == CConfig::TAudioI2CDACInit::PCM51xx)
-				InitPCM51xx(m_pConfig->AudioI2CDACAddress);
+			// Don't probe if using Pisound
+			CI2CMaster* const pI2CMaster = bSlave ? nullptr : m_pI2CMaster;
+
+			m_pSound = new CI2SSoundBaseDevice(m_pInterrupt, m_pConfig->AudioSampleRate, m_pConfig->AudioChunkSize, bSlave, pI2CMaster);
+			Format = TSoundFormat::SoundFormatSigned24_32;
 
 			break;
 		}
@@ -1222,33 +1223,6 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 	// Let LCD task pick up the message in its next update
 	else
 		m_UserInterface.ShowSystemMessage(Buffer, Type == TLCDLogType::Spinner);
-}
-
-// TODO: Generic configurable DAC init class
-bool CMT32Pi::InitPCM51xx(u8 nAddress)
-{
-	static const u8 InitBytes[][2] =
-	{
-		// Set PLL reference clock to BCK (set SREF to 001b)
-		{ 0x0D, 0x10 },
-
-		// Ignore clock halt detection (set IDCH to 1)
-		{ 0x25, 0x08 },
-
-		// Disable auto mute
-		{ 0x41, 0x04 }
-	};
-
-	for (auto& Command : InitBytes)
-	{
-		if (m_pI2CMaster->Write(nAddress, &Command, sizeof(Command)) != sizeof(Command))
-		{
-			m_pLogger->Write(MT32PiName, LogWarning, "I2C write error (DAC init sequence)");
-			return false;
-		}
-	}
-
-	return true;
 }
 
 const char* CMT32Pi::GetNetworkDeviceShortName() const

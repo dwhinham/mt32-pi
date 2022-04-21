@@ -59,7 +59,6 @@ const char* FalseStrings[] = {"false", "off", "0"};
 // Enum string tables
 CONFIG_ENUM_STRINGS(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);
 CONFIG_ENUM_STRINGS(TAudioOutputDevice, ENUM_AUDIOOUTPUTDEVICE);
-CONFIG_ENUM_STRINGS(TAudioI2CDACInit, ENUM_AUDIOI2CDACINIT);
 CONFIG_ENUM_STRINGS(TMT32EmuResamplerQuality, ENUM_RESAMPLERQUALITY);
 CONFIG_ENUM_STRINGS(TMT32EmuMIDIChannels, ENUM_MIDICHANNELS);
 CONFIG_ENUM_STRINGS(TMT32EmuROMSet, ENUM_MT32ROMSET);
@@ -259,7 +258,6 @@ bool CConfig::ParseOption(const char* pString, CIPAddress* pOut)
 // Define template function wrappers for parsing enums
 CONFIG_ENUM_PARSER(TSystemDefaultSynth);
 CONFIG_ENUM_PARSER(TAudioOutputDevice);
-CONFIG_ENUM_PARSER(TAudioI2CDACInit);
 CONFIG_ENUM_PARSER(TMT32EmuResamplerQuality);
 CONFIG_ENUM_PARSER(TMT32EmuMIDIChannels);
 CONFIG_ENUM_PARSER(TMT32EmuROMSet);
