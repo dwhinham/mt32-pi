@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to libmt32emu v2.6.3.
+
 ## [0.11.3] - 2022-04-13
 
 ### Changed
