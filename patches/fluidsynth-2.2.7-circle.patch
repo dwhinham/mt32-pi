@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index cfef8b3a..23843a8f 100644
+index 41a61ef3..a0a7bba1 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -492,6 +492,7 @@ if ( ASTYLE )
@@ -194,7 +194,7 @@ index dbee649b..ec3ab6e8 100644
  
  static int
 diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
-index e3c0ea4d..bf9321b6 100644
+index 08f41200..b6c635a2 100644
 --- a/src/utils/fluid_sys.c
 +++ b/src/utils/fluid_sys.c
 @@ -50,6 +50,7 @@
@@ -246,7 +246,7 @@ index e3c0ea4d..bf9321b6 100644
  /**
   * Get time in milliseconds to be used in relative timing operations.
 @@ -400,6 +406,7 @@ unsigned int fluid_curtime(void)
-     return (unsigned int)((now - initial_time) / 1000.0f);
+     return (unsigned int)((now - initial_time) / 1000.0);
  }
  
 +#if 0
