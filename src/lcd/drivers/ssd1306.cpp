@@ -165,12 +165,16 @@ bool CSSD1306::Initialize()
 {
 	assert(m_pI2CMaster != nullptr);
 
-	// Validate dimensions - only 128x32 and 128x64 supported for now
-	if (!(m_nHeight == 32 || m_nHeight == 64) || m_nWidth != 128)
+	// Validate dimensions - only 128x32, 128x64, and 132x{32, 64} (SSD1305) supported for now
+	if (!(m_nHeight == 32 || m_nHeight == 64) || !(m_nWidth == 128 || m_nWidth == 132))
 		return false;
 
+	// HACK: Assume SSD1305 if width is 132 (visible width is usually 128 on these modules)
+	// TODO: Some kind of abstraction between visible size and pixel memory size?
+	const bool bIsSSD1305 = m_nWidth == 132;
+
 	const u8 nMultiplexRatio  = m_nHeight - 1;
-	const u8 nCOMPins         = m_nHeight == 32 ? 0x02 : 0x12;
+	const u8 nCOMPins         = (m_nHeight == 32 && !bIsSSD1305) ? 0x02 : 0x12;
 	const u8 nColumnAddrRange = m_nWidth - 1;
 	const u8 nPageAddrRange   = m_nHeight / 8 - 1;
 	// https://www.buydisplay.com/download/ic/SSD1312_Datasheet.pdf Pg. 51 Section 2.1.19

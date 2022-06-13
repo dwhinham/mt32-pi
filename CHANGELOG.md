@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for SSD1305 displays via a temporary hack (assume SSD1305 when `width` is set to 132). Further details in the wiki.
+
 ### Changed
 
 - Update to circle-stdlib v15.13/Circle Step 44.5.
