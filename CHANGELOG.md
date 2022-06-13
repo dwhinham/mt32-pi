@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2022-06-13
+
 ### Added
 
 - Support for SSD1305 displays via a temporary hack (assume SSD1305 when `width` is set to 132). Further details in the wiki.
+- Support for WM8960 DACs (e.g. Waveshare WM8960 Audio HAT).
 
 ### Changed
 
@@ -20,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `[fluidsynth.soundfont.x]` sections have now been deprecated. SoundFont effects profiles must now be stored in separate .cfg files, with the same file name as the SoundFont (minus extension). This means that file index no longer influences SoundFont settings. See `soundfonts/GeneralUser GS v1.511.cfg` for an example.
 - The maximum number of SoundFonts has been increased to 512.
 - Updater: deprecated options are now removed when merging configs.
+- Installer: missing tools (e.g. `dialog`, `jq`) are now reported if they are missing from the system.
+
+### Fixed
+
+- HDMI audio channels were reversed.
+- USB MIDI device stability improvements.
 
 ## [0.11.3] - 2022-04-13
 
@@ -488,7 +497,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.11.3..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.12.0..HEAD
+[0.12.0]: https://github.com/dwhinham/mt32-pi/compare/v0.11.3..v0.12.0
 [0.11.3]: https://github.com/dwhinham/mt32-pi/compare/v0.11.2..v0.11.3
 [0.11.2]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..v0.11.2
 [0.11.1]: https://github.com/dwhinham/mt32-pi/compare/v0.11.0..v0.11.1
