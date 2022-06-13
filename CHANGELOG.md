@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update to circle-stdlib v15.13/Circle Step 44.5.
 - Update to libmt32emu v2.6.3.
 - Update to FluidSynth v2.2.7.
 
