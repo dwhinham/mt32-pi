@@ -23,6 +23,9 @@
 # -----------------------------------------------------------------------------
 # Changelog
 # -----------------------------------------------------------------------------
+# 0.2.3 - 2022-06-13
+# - Remove deprecated options from config file.
+#
 # 0.2.2 - 2022-04-13
 # - Disable colors if colorama or Windows Terminal unavailable on Windows.
 # - Fix text alignment and error message colors on Windows.
@@ -79,7 +82,7 @@ except ImportError:
 GITHUB_REPO = "dwhinham/mt32-pi"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
-SCRIPT_VERSION = "0.2.2"
+SCRIPT_VERSION = "0.2.3"
 
 # Config keys
 K_SECTION = "updater"
@@ -159,6 +162,13 @@ OLD_FILE_NAMES = [
     "config.txt",  # Raspberry Pi configuration file
     "wpa_supplicant.conf",  # Wi-Fi configuration file
 ]
+
+DEPRECATED_OPTIONS = {
+    "audio": [
+        "i2c_dac_address",
+        "i2c_dac_init",
+    ]
+}
 
 
 def print_status(message):
@@ -488,27 +498,32 @@ def update_option(config_lines, section, key, value):
         insert_new_option_line(config_lines, section_index + 1, key, value)
 
 
-def merge_configs(old_config_path, new_config_path):
+def merge_configs(old_config_path, new_config_path, skipped_options):
     print_status("Merging your old settings into the new config file template...")
 
     try:
         config_old = ConfigParser()
         config_old.read(old_config_path)
-        # print(
-        #     {
-        #         section: dict(config_old.items(section))
-        #         for section in config_old.sections()
-        #     }
-        # )
 
         new_config_lines = []
-        with open(install_dir / "mt32-pi.cfg", "r") as in_file:
+        with open(new_config_path, "r") as in_file:
             new_config_lines = in_file.read().splitlines()
 
         for section in config_old.sections():
+            # Don't merge deprecated sections
+            if section.startswith("fluidsynth.soundfont."):
+                skipped_options.append(f"[{section}] (whole section)")
+                continue
+
             for item in config_old.items(section):
                 key = item[0]
                 value = item[1]
+
+                # Don't merge deprecated options
+                if section in DEPRECATED_OPTIONS and key in DEPRECATED_OPTIONS[section]:
+                    skipped_options.append(key)
+                    continue
+
                 update_option(new_config_lines, section, key, value)
 
         with open(new_config_path, "w") as out_file:
@@ -635,6 +650,7 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as temp_dir_name:
         temp_dir = Path(temp_dir_name)
         host = config.get(K_SECTION, K_HOST)
+        skipped_options = []
 
         print_status(
             "Connecting to your mt32-pi's embedded FTP server at"
@@ -686,7 +702,9 @@ if __name__ == "__main__":
 
                 # Create backup of old config and merge with new
                 shutil.move(temp_dir / "mt32-pi.cfg", old_config_path)
-                merge_configs(old_config_path, new_config_path) or exit(1)
+                merge_configs(
+                    old_config_path, new_config_path, skipped_options
+                ) or exit(1)
 
                 # Move new Wi-Fi/boot configs aside in case the user needs to adapt them
                 shutil.move(install_dir / "config.txt", install_dir / "config.txt.new")
@@ -722,6 +740,14 @@ if __name__ == "__main__":
             f"{COLOR_PURPLE}-{COLOR_RESET} The settings from your old config file have"
             " been merged into the latest config template."
         )
+        if skipped_options:
+            skipped_list = ", ".join(
+                [f"{COLOR_PURPLE}{o}{COLOR_RESET}" for o in skipped_options]
+            )
+            print(
+                f"{COLOR_PURPLE}-{COLOR_RESET} The following deprecated options were"
+                f" removed from your config file: {skipped_list}"
+            )
         print(
             f"{COLOR_PURPLE}-{COLOR_RESET} A backup of your old config is available as"
             f" {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry"

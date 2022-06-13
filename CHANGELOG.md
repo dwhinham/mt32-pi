@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `i2c_dac_address` and `i2c_dac_init` configuration options have been deprecated and have no longer have any effect. DACs requiring initialization are now automatically detected.
 - The `[fluidsynth.soundfont.x]` sections have now been deprecated. SoundFont effects profiles must now be stored in separate .cfg files, with the same file name as the SoundFont (minus extension). This means that file index no longer influences SoundFont settings. See `soundfonts/GeneralUser GS v1.511.cfg` for an example.
 - The maximum number of SoundFonts has been increased to 512.
+- Updater: deprecated options are now removed when merging configs.
 
 ## [0.11.3] - 2022-04-13
 
