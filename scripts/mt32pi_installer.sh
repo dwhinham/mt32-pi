@@ -22,7 +22,7 @@
 
 set -o pipefail
 
-SCRIPT_VERSION=0.1.0
+SCRIPT_VERSION=0.1.1
 GITHUB_API_URL="https://api.github.com/repos/dwhinham/mt32-pi/releases/latest"
 MISTER_WPA_SUPPLICANT_CFG_PATH="/media/fat/linux/wpa_supplicant.conf"
 
