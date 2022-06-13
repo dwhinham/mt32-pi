@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to libmt32emu v2.6.3.
 - Update to FluidSynth v2.2.7.
 - The `i2c_dac_address` and `i2c_dac_init` configuration options have been deprecated and have no longer have any effect. DACs requiring initialization are now automatically detected.
+- The maximum number of SoundFonts has been increased to 512.
 
 ## [0.11.3] - 2022-04-13
 
