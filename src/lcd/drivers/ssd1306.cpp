@@ -177,12 +177,13 @@ bool CSSD1306::Initialize()
 	const u8 nCOMPins         = (m_nHeight == 32 && !bIsSSD1305) ? 0x02 : 0x12;
 	const u8 nColumnAddrRange = m_nWidth - 1;
 	const u8 nPageAddrRange   = m_nHeight / 8 - 1;
+
 	// https://www.buydisplay.com/download/ic/SSD1312_Datasheet.pdf Pg. 51 Section 2.1.19
 	//            normal    inverted
 	// normal     A1 C8       A0 C0
 	// mirrored   A0 C8       A1 C0
-	const u8 nSegRemap        = (m_Rotation == TLCDRotation::Inverted && m_Mirror == TLCDMirror::Normal) || 
-                              (m_Rotation == TLCDRotation::Normal   && m_Mirror == TLCDMirror::Mirrored) ? 0xA0 : 0xA1;	
+	const u8 nSegRemap        = (m_Rotation == TLCDRotation::Inverted && m_Mirror == TLCDMirror::Normal) ||
+                                    (m_Rotation == TLCDRotation::Normal   && m_Mirror == TLCDMirror::Mirrored) ? 0xA0 : 0xA1;
 	const u8 nCOMScanDir      = m_Rotation == TLCDRotation::Inverted ? 0xC0 : 0xC8;
 
 	const u8 InitSequence[] =
