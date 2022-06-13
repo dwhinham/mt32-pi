@@ -337,6 +337,12 @@ function die {
 	exit 1
 }
 
+function check_tool {
+	if ! command -v "$1" &>/dev/null; then
+		die "Command '$1' is unavailable. Please install it using your system package manager."
+	fi
+}
+
 function get_latest_version {
 	local temp_dir temp_file release_url
 
@@ -404,6 +410,18 @@ if [ "$EUID" -ne 0 ]; then
 	echo "Please try 'sudo $0'."
 	exit 1
 fi
+
+# Ensure all required tools are available
+check_tool awk
+check_tool curl
+check_tool dialog
+check_tool grep
+check_tool jq
+check_tool mkfs.fat
+check_tool parted
+check_tool sed
+check_tool udevadm
+check_tool unzip
 
 read -r -d '' MSG_WELCOME <<EOF
 $MT32PI_LOGO

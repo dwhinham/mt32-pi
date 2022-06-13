@@ -19,6 +19,21 @@ An interactive Bash script for performing a first-time installation of mt32-pi. 
 - Assumes I²S audio output, 128x64 SSD1306 OLED, MiSTer OSD enabled, and `simple_encoder` control scheme.
 - For performing **clean installation only**; does not save/restore settings or any extra files on the SD card.
 
+### Requirements
+
+This script requires the following tools to be installed on your system. Use your system package manager (e.g. `apt` or `pacman`) to install them. If you're using MiSTer, all of these tools are available out of the box; no need to install any extra software.
+
+- `awk`
+- `curl`
+- `dialog`
+- `grep`
+- `jq`
+- `mkfs.fat` (from `dosfstools`)
+- `parted`
+- `sed`
+- `udevadm` (should be installed as part of the base system)
+- `unzip`
+
 ### Usage
 
 1. Download [`mt32pi_installer.sh`].
