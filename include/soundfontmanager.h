@@ -25,6 +25,8 @@
 
 #include <circle/string.h>
 
+#include "synth/fxprofile.h"
+
 class CSoundFontManager
 {
 public:
@@ -35,6 +37,7 @@ public:
 	size_t GetSoundFontCount() const { return m_nSoundFonts; }
 	const char* GetSoundFontPath(size_t nIndex) const;
 	const char* GetSoundFontName(size_t nIndex) const;
+	TFXProfile GetSoundFontFXProfile(size_t nIndex) const;
 	const char* GetFirstValidSoundFontPath() const;
 
 	static constexpr size_t MaxSoundFonts = 512;
@@ -53,6 +56,7 @@ private:
 	size_t m_nSoundFonts;
 	TSoundFontListEntry m_SoundFontList[MaxSoundFonts];
 
+	static int INIHandler(void* pUser, const char* pSection, const char* pName, const char* pValue);
 	inline static bool SoundFontListComparator(const TSoundFontListEntry& lhs, const TSoundFontListEntry& rhs);
 };
 

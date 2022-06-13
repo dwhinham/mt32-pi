@@ -41,11 +41,16 @@ public:
 		operator=(Other);
 	}
 
-	template<typename U>
-	TOptional(U&& Value)
+	explicit TOptional(T&& Value)
 	{
 		m_bSet = true;
-		new(reinterpret_cast<T*>(m_Value)) T(static_cast<U&&>(Value));
+		new(reinterpret_cast<T*>(m_Value)) T(static_cast<T&&>(Value));
+	}
+
+	explicit TOptional(TOptional<T>&& Other)
+	{
+		m_bSet = Other.m_bSet;
+		new(reinterpret_cast<T*>(m_Value)) T(*reinterpret_cast<const T*>(Other.m_Value));
 	}
 
 	~TOptional() { Reset(); }
@@ -77,8 +82,15 @@ public:
 
 	TOptional<T>& operator =(const TOptional<T>& Other)
 	{
-		m_bSet = true;
+		m_bSet = Other.m_bSet;
 		*reinterpret_cast<T*>(m_Value) = *reinterpret_cast<const T*>(Other.m_Value);
+		return *this;
+	}
+
+	TOptional<T>& operator =(const T& Value)
+	{
+		m_bSet = true;
+		*reinterpret_cast<T*>(m_Value) = Value;
 		return *this;
 	}
 

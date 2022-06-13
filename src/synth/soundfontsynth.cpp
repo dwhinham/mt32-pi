@@ -179,6 +179,8 @@ bool CSoundFontSynth::Initialize()
 	if (!pSoundFontPath)
 		return false;
 
+	TFXProfile FXProfile = m_SoundFontManager.GetSoundFontFXProfile(m_nCurrentSoundFontIndex);
+
 	// Install logging handlers
 	fluid_set_log_function(FLUID_PANIC, FluidSynthLogCallback, this);
 	fluid_set_log_function(FLUID_ERR, FluidSynthLogCallback, this);
@@ -198,7 +200,7 @@ bool CSoundFontSynth::Initialize()
 	fluid_settings_setnum(m_pSettings, "synth.sample-rate", static_cast<double>(m_nSampleRate));
 	fluid_settings_setint(m_pSettings, "synth.threadsafe-api", false);
 
-	return Reinitialize(pSoundFontPath, &pConfig->FXProfiles[m_nCurrentSoundFontIndex]);
+	return Reinitialize(pSoundFontPath, &FXProfile);
 }
 
 void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
@@ -355,8 +357,10 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	if (m_pUI)
 		m_pUI->ShowSystemMessage("Loading SoundFont", true);
 
+	TFXProfile FXProfile = m_SoundFontManager.GetSoundFontFXProfile(nIndex);
+
 	// We can't use fluid_synth_sfunload() as we don't support the lazy SoundFont unload timer, so trash the entire synth and create a new one
-	if (!Reinitialize(pSoundFontPath, &CConfig::Get()->FXProfiles[nIndex]))
+	if (!Reinitialize(pSoundFontPath, &FXProfile))
 	{
 		if (m_pUI)
 			m_pUI->ShowSystemMessage("SF switch failed!");
@@ -404,7 +408,7 @@ bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile*
 	fluid_synth_set_reverb_group_roomsize(m_pSynth, -1, pFXProfile->nReverbRoomSize.ValueOr(pConfig->FluidSynthDefaultReverbRoomSize));
 	fluid_synth_set_reverb_group_width(m_pSynth, -1, pFXProfile->nReverbWidth.ValueOr(pConfig->FluidSynthDefaultReverbWidth));
 
-	fluid_synth_chorus_on(m_pSynth, -1,	pFXProfile->bChorusActive.ValueOr(pConfig->FluidSynthDefaultChorusActive));
+	fluid_synth_chorus_on(m_pSynth, -1, pFXProfile->bChorusActive.ValueOr(pConfig->FluidSynthDefaultChorusActive));
 	fluid_synth_set_chorus_group_depth(m_pSynth, -1, pFXProfile->nChorusDepth.ValueOr(pConfig->FluidSynthDefaultChorusDepth));
 	fluid_synth_set_chorus_group_level(m_pSynth, -1, pFXProfile->nChorusLevel.ValueOr(pConfig->FluidSynthDefaultChorusLevel));
 	fluid_synth_set_chorus_group_nr(m_pSynth, -1, pFXProfile->nChorusVoices.ValueOr(pConfig->FluidSynthDefaultChorusVoices));
