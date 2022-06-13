@@ -161,24 +161,42 @@ CSSD1306::CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, T
 {
 }
 
+static const struct SupportedDiemension
+{
+	u8 width;
+	u8 height;
+	u8 comPins;
+} SupportedDiemensions[] = {
+	{128, 32, 0x02},
+	{128, 64, 0x12},
+	// This is actually a modded SSD1305
+	// For more information: https://gist.github.com/ebraminio/8eabaf89f8ef7e3dd3d2233d306ead9f
+	{128, 132, 0x12}
+};
+
 bool CSSD1306::Initialize()
 {
 	assert(m_pI2CMaster != nullptr);
 
-	// Validate dimensions - only 128x32 and 128x64 as well as 132x32 for the SSD1305 supported for now
-	if (!(m_nHeight == 32 || m_nHeight == 64) || !(m_nWidth == 128 || m_nWidth == 132))
+	const SupportedDiemension *diemension = nullptr;
+	for (auto &x : SupportedDiemensions)
+	{
+		if (x.width == m_nWidth && x.height == m_nHeight)
+			diemension = &x;
+	}
+	if (diemension == nullptr)
 		return false;
 
 	const u8 nMultiplexRatio  = m_nHeight - 1;
-	const u8 nCOMPins         = (m_nHeight == 32 && m_nWidth != 132) ? 0x02 : 0x12;
+	const u8 nCOMPins         = diemension->comPins;
 	const u8 nColumnAddrRange = m_nWidth - 1;
 	const u8 nPageAddrRange   = m_nHeight / 8 - 1;
 	// https://www.buydisplay.com/download/ic/SSD1312_Datasheet.pdf Pg. 51 Section 2.1.19
 	//            normal    inverted
 	// normal     A1 C8       A0 C0
 	// mirrored   A0 C8       A1 C0
-	const u8 nSegRemap        = (m_Rotation == TLCDRotation::Inverted && m_Mirror == TLCDMirror::Normal) || 
-                              (m_Rotation == TLCDRotation::Normal   && m_Mirror == TLCDMirror::Mirrored) ? 0xA0 : 0xA1;	
+	const u8 nSegRemap        = (m_Rotation == TLCDRotation::Inverted && m_Mirror == TLCDMirror::Normal) ||
+                              (m_Rotation == TLCDRotation::Normal   && m_Mirror == TLCDMirror::Mirrored) ? 0xA0 : 0xA1;
 	const u8 nCOMScanDir      = m_Rotation == TLCDRotation::Inverted ? 0xC0 : 0xC8;
 
 	const u8 InitSequence[] =
