@@ -1,0 +1,13 @@
+diff --git a/boot/Makefile b/boot/Makefile
+index 6aadb4b..90395d4 100644
+--- a/boot/Makefile
++++ b/boot/Makefile
+@@ -9,7 +9,7 @@
+ #FIRMWARE = master
+ 
+ # Use firmware revision built/committed on: Mar 24 2022
+-FIRMWARE ?= ea4c803c57697aad951a27fcd64c01ef16f9fe7f
++FIRMWARE ?= 827fdd073638fa7b7292d1148fe0af7465111eae
+ 
+ BASEURL = https://github.com/raspberrypi/firmware/blob/$(FIRMWARE)/boot
+ 
