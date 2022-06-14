@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2022-06-14
+
 ### Fixed
 
 - I²C communications failure on MiSTer introduced with newer Raspberry Pi firmware. The previous firmware version has been restored until this is resolved.
@@ -501,7 +503,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.12.0..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.12.1..HEAD
+[0.12.1]: https://github.com/dwhinham/mt32-pi/compare/v0.12.0..v0.12.1
 [0.12.0]: https://github.com/dwhinham/mt32-pi/compare/v0.11.3..v0.12.0
 [0.11.3]: https://github.com/dwhinham/mt32-pi/compare/v0.11.2..v0.11.3
 [0.11.2]: https://github.com/dwhinham/mt32-pi/compare/v0.11.1..v0.11.2
