@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updater: `config.txt` is now replaced on update, however the `avoid_warnings` setting is preserved (the only setting that matters to most users).
+
 ### Fixed
 
 - Incorrect I²C clock speed with recent Raspberry Pi firmware versions (issue #292). This was caused by core clock frequency scaling by the GPU firmware. Changes to `config.txt` have been added to ensure the I²C clock is stable by locking the core frequency to 250MHz. The newer Raspberry Pi firmware has been restored.

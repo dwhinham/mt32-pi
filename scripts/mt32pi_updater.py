@@ -23,6 +23,9 @@
 # -----------------------------------------------------------------------------
 # Changelog
 # -----------------------------------------------------------------------------
+# 0.2.4 - 2022-06-15
+# - Backup and update config.txt, merge avoid_warnings setting.
+#
 # 0.2.3 - 2022-06-13
 # - Remove deprecated options from config file.
 #
@@ -82,7 +85,7 @@ except ImportError:
 GITHUB_REPO = "dwhinham/mt32-pi"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
-SCRIPT_VERSION = "0.2.3"
+SCRIPT_VERSION = "0.2.4"
 
 # Config keys
 K_SECTION = "updater"
@@ -156,6 +159,8 @@ MT32PI_LOGO = r"""
 
 RESULT_COLUMN_WIDTH = 10
 ANSI_ESCAPE_REGEX = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+AVOID_WARNINGS_ENABLED_REGEX = re.compile(r"^avoid_warnings\s*=\s*2$")
+AVOID_WARNINGS_DISABLED_REGEX = re.compile(r"^#avoid_warnings\s*=\s*2$")
 
 OLD_FILE_NAMES = [
     "mt32-pi.cfg",  # mt32-pi main configuration file
@@ -538,6 +543,40 @@ def merge_configs(old_config_path, new_config_path, skipped_options):
         return False
 
 
+def merge_rpi_configs(old_config_path, new_config_path):
+    print_status("Updating config.txt...")
+
+    try:
+        avoid_warnings = False
+        with open(old_config_path, "r") as in_file:
+            for line in in_file:
+                if AVOID_WARNINGS_ENABLED_REGEX.match(line):
+                    avoid_warnings = True
+                    break
+
+        # User enabled avoid_warnings in the old config.txt; re-apply it
+        if avoid_warnings:
+            new_config_lines = []
+            with open(new_config_path, "r") as in_file:
+                new_config_lines = in_file.read().splitlines()
+
+            for i, line in enumerate(new_config_lines):
+                if AVOID_WARNINGS_DISABLED_REGEX.match(line):
+                    new_config_lines[i] = "avoid_warnings=2"
+                    break
+
+            with open(new_config_path, "w") as out_file:
+                config_text = "\n".join(new_config_lines) + "\n"
+                out_file.write(config_text)
+
+        print_result("OK!", COLOR_GREEN)
+        return True
+
+    except Exception:
+        print_result("FAILED!", COLOR_RED)
+        return False
+
+
 def install(ftp, source_path, config):
     ignore_list = [
         path.strip() for path in config.get(K_SECTION, K_IGNORE_LIST).split(",")
@@ -700,16 +739,19 @@ if __name__ == "__main__":
                 old_config_path = install_dir / "mt32-pi.cfg.bak"
                 new_config_path = install_dir / "mt32-pi.cfg"
 
-                # Create backup of old config and merge with new
+                old_rpi_config_path = install_dir / "config.txt.bak"
+                new_rpi_config_path = install_dir / "config.txt"
+
+                # Create backups of old configs and merge with new
                 shutil.move(temp_dir / "mt32-pi.cfg", old_config_path)
+                shutil.move(temp_dir / "config.txt", old_rpi_config_path)
+
                 merge_configs(
                     old_config_path, new_config_path, skipped_options
                 ) or exit(1)
+                merge_rpi_configs(old_rpi_config_path, new_rpi_config_path) or exit(1)
 
-                # Move new Wi-Fi/boot configs aside in case the user needs to adapt them
-                shutil.move(install_dir / "config.txt", install_dir / "config.txt.new")
-                shutil.move(temp_dir / "config.txt", install_dir)
-
+                # Move new Wi-Fi config aside in case the user needs to adapt it
                 old_wifi_config_path = temp_dir / "wpa_supplicant.conf"
                 old_wifi_config_exists = old_wifi_config_path.exists()
                 if old_wifi_config_exists:
@@ -749,13 +791,14 @@ if __name__ == "__main__":
                 f" removed from your config file: {skipped_list}"
             )
         print(
-            f"{COLOR_PURPLE}-{COLOR_RESET} A backup of your old config is available as"
-            f" {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} on the root of your Raspberry"
-            " Pi's SD card."
+            f"{COLOR_PURPLE}-{COLOR_RESET} Your"
+            f" {COLOR_PURPLE}config.txt{COLOR_RESET} has been updated."
         )
         print(
-            f"{COLOR_PURPLE}-{COLOR_RESET} Your"
-            f" {COLOR_PURPLE}config.txt{COLOR_RESET} has been preserved."
+            f"{COLOR_PURPLE}-{COLOR_RESET} Backups of your old config files are"
+            f" available as {COLOR_PURPLE}mt32-pi.cfg.bak{COLOR_RESET} and"
+            f" {COLOR_PURPLE}config.txt.bak{COLOR_RESET} on the root of your Raspberry"
+            " Pi's SD card."
         )
         if old_wifi_config_exists:
             print(
