@@ -16,7 +16,6 @@ $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
 
 	# Apply patches
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.5-revert-firmware.patch
 	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.4-minimal-usb-drivers.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
@@ -122,7 +121,6 @@ clean:
 veryclean: clean
 	# Reverse patches
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.4-minimal-usb-drivers.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.5-revert-firmware.patch
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.2.7-circle.patch
 
 	# Clean circle-stdlib
