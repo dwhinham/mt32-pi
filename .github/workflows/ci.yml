@@ -99,23 +99,23 @@ jobs:
       with:
         submodules: recursive
 
-    # - name: Cache boot files
-    #   id: cache-boot-files
-    #   uses: actions/cache@v3
-    #   with:
-    #     path: |
-    #       sdcard/armstub8-rpi4.bin
-    #       sdcard/bcm2711-rpi-4-b.dtb
-    #       sdcard/bcm2711-rpi-400.dtb
-    #       sdcard/bcm2711-rpi-cm4.dtb
-    #       sdcard/bootcode.bin
-    #       sdcard/COPYING.linux
-    #       sdcard/fixup_cd.dat
-    #       sdcard/fixup4cd.dat
-    #       sdcard/LICENCE.broadcom
-    #       sdcard/start_cd.elf
-    #       sdcard/start4cd.elf
-    #     key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
+    - name: Cache boot files
+      id: cache-boot-files
+      uses: actions/cache@v3
+      with:
+        path: |
+          sdcard/armstub8-rpi4.bin
+          sdcard/bcm2711-rpi-4-b.dtb
+          sdcard/bcm2711-rpi-400.dtb
+          sdcard/bcm2711-rpi-cm4.dtb
+          sdcard/bootcode.bin
+          sdcard/COPYING.linux
+          sdcard/fixup_cd.dat
+          sdcard/fixup4cd.dat
+          sdcard/LICENCE.broadcom
+          sdcard/start_cd.elf
+          sdcard/start4cd.elf
+        key: cache-boot-files-${{ hashFiles(join(env.boot-home, '/Makefile')) }}
 
     - name: Cache WLAN firmware
       id: cache-wlan-firmware
@@ -134,17 +134,15 @@ jobs:
         key: cache-arm-toolchains-${{ env.toolchain-version }}
 
     - name: Update PATH
-      # if: steps.cache-boot-files.outputs.cache-hit != 'true'
+      if: steps.cache-boot-files.outputs.cache-hit != 'true'
       run: |
         for triplet in arm-none-eabi aarch64-none-elf; do
           echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
         done
 
     - name: Download boot files and build ARM stub if not retrieved from cache
-      # if: steps.cache-boot-files.outputs.cache-hit != 'true'
-      # Temporarily patch boot firmware version
+      if: steps.cache-boot-files.outputs.cache-hit != 'true'
       run: |
-        patch -N -p1 --no-backup-if-mismatch -r - -d external/circle-stdlib/libs/circle < patches/circle-44.5-revert-firmware.patch
         make -C ${{ env.boot-home }} firmware armstub64
         cp  ${{ env.boot-home }}/armstub8-rpi4.bin \
             ${{ env.boot-home }}/bcm2711-rpi-4-b.dtb \
