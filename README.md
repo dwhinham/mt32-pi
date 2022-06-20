@@ -72,7 +72,7 @@ Take a look at our [FAQ] page for answers to the most common questions about mt3
 
 If you need some help with mt32-pi and the wiki doesn't answer your questions, head over to the [discussions] area and feel free to start a topic.
 
-> ⚠ **Note**: Please don't use the Issues area to ask for help - Issues are intended for reproducible bug reports and feature requests. Thankyou!
+> ⚠ **Note**: Please don't use the Issues area to ask for help - Issues are intended for reproducible bug reports and feature requests. Thank you!
 
 ## ❤️ Contributing
 
@@ -82,10 +82,23 @@ Hence, please **DO NOT** work on large features and open pull requests without p
 
 Trivial changes to the code that fix issues are always welcome, as are improvements to documentation, and hardware/software compatibility reports.
 
+## ⚖️ License
+
+This project's source code is licensed under the [GNU General Public License v3.0][license].
+
+The [mt32-pi logo] was designed by and is © Dale Whinham. The terms of use for the logo are as follows:
+
+- The logo **MAY** be used on open-source community hardware.
+- The logo **MAY** be used to link back to this repository or for similar promotional purposes of a strictly **non-commercial nature** (e.g. blog posts, social media, YouTube videos).
+- The logo **MUST NOT** be used on or for the marketing of closed-source or commercial hardware (e.g. case designs, PCBs), without express permission.
+- The logo **MUST NOT** be used for any other commercial products or purposes without express permission.
+- The shape and overall design of the logo **MUST NOT** be modified or distorted. You **MAY** change the colors if required.
+- If in any doubt, please ask. Thank you.
+
 ## 🙌 Acknowledgments
 
 - Many thanks go out to @rc55 and @nswaldman for their encouragement and testing! ❤️
-- A huge thankyou to everyone who has donated via Ko-fi, PayPal, or Amazon - your support means a lot! ❤️
+- A huge thank you to everyone who has donated via Ko-fi, PayPal, or Amazon - your support means a lot! ❤️
 - Special thanks to [Edu Arana (Arananet)], [Porkchop Express (MiSTerAddons)], @djhardrich, [Nat (MiSTerFPGA.co.uk)], [Ricardo Saraiva (UltimateMiSTer.com)], [Serge Defever (Serdashop)], and @opjose who have all generously donated hardware to the project.
 - The [Munt] team for their incredible work reverse-engineering the Roland MT-32 and producing an excellent emulation and well-structured project.
 - The [FluidSynth] team for their excellent and easily-portable SoundFont synthesizer project.
@@ -109,9 +122,11 @@ Trivial changes to the code that fix issues are always welcome, as are improveme
 [I²S Hi-Fi DACs]: https://github.com/dwhinham/mt32-pi/wiki/I%C2%B2S-DACs
 [inih]: https://github.com/benhoyt/inih
 [LCD and OLED displays]: https://github.com/dwhinham/mt32-pi/wiki/LCD-and-OLED-displays
+[License]: https://github.com/dwhinham/mt32-pi/blob/master/LICENSE
 [MiSTer FPGA]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA
 [MiSTer setup]: https://github.com/dwhinham/mt32-pi/wiki/MiSTer-FPGA%3A-Setup-and-usage
 [MT-32 synthesis]: https://github.com/dwhinham/mt32-pi/wiki/MT-32-synthesis
+[mt32-pi logo]: https://github.com/dwhinham/mt32-pi/blob/master/images/mt32pi_logo.svg
 [mt32-pi wiki]: https://github.com/dwhinham/mt32-pi/wiki
 [Munt]: https://github.com/munt/munt
 [Nat (MiSTerFPGA.co.uk)]: https://misterfpga.co.uk
