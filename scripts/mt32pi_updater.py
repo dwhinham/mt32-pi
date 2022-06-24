@@ -25,6 +25,7 @@
 # -----------------------------------------------------------------------------
 # 0.2.4 - 2022-06-15
 # - Backup and update config.txt, merge avoid_warnings setting.
+# - Improved error handling.
 #
 # 0.2.3 - 2022-06-13
 # - Remove deprecated options from config file.
@@ -201,7 +202,7 @@ def print_retry(attempt):
     print_result(f"RETRY {attempt}/{RetryFTP.MAX_RETRIES}", COLOR_YELLOW, replace=True)
 
 
-def print_socket_error():
+def print_socket_connection_failed():
     print(
         "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
         f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?",
@@ -209,7 +210,8 @@ def print_socket_error():
     )
     print(
         "This script requires that you are running mt32-pi"
-        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above.",
+        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above. Previous versions do not"
+        " feature the FTP server.",
         file=sys.stderr,
     )
 
@@ -690,6 +692,7 @@ if __name__ == "__main__":
         temp_dir = Path(temp_dir_name)
         host = config.get(K_SECTION, K_HOST)
         skipped_options = []
+        connected = False
 
         print_status(
             "Connecting to your mt32-pi's embedded FTP server at"
@@ -705,6 +708,7 @@ if __name__ == "__main__":
                 print_result("OK!", COLOR_GREEN)
                 # ftp.set_debuglevel(2)
 
+                connected = True
                 current_version = get_current_version(ftp)
                 release_info = get_latest_release_info() or exit(1)
                 latest_version = release_info["tag_name"]
@@ -764,14 +768,12 @@ if __name__ == "__main__":
                 # Upload new version
                 install(ftp, install_dir, config) or exit(1)
 
-        except socket.timeout:
-            print_result("FAILED!", COLOR_RED)
-            print_socket_timeout()
-            exit(1)
-
         except socket.error:
             print_result("FAILED!", COLOR_RED)
-            print_socket_error()
+            if connected:
+                print_socket_timeout()
+            else:
+                print_socket_connection_failed()
             exit(1)
 
         # Reboot mt32-pi
