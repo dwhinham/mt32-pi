@@ -45,8 +45,13 @@ END_SECTION
 
 BEGIN_SECTION(midi)
 CFG(gpio_baud_rate,		int,				MIDIGPIOBaudRate,			31250						)
-CFG(gpio_thru,			bool,				MIDIGPIOThru,				false						)
 CFG(usb_serial_baud_rate,	int,				MIDIUSBSerialBaudRate,			38400						)
+CFG(route_gpio,			TMIDIRouting,			MIDIRouteGPIO,				TMIDIRoutingDest::Synth				)
+CFG(route_usb_midi,		TMIDIRouting,			MIDIRouteUSBMIDI,			TMIDIRoutingDest::Synth				)
+CFG(route_usb_serial,		TMIDIRouting,			MIDIRouteUSBSerial,			TMIDIRoutingDest::Synth				)
+CFG(route_pisound,		TMIDIRouting,			MIDIRoutePisound,			TMIDIRoutingDest::Synth				)
+CFG(route_rtp,			TMIDIRouting,			MIDIRouteRTP,				TMIDIRoutingDest::Synth				)
+CFG(route_udp,			TMIDIRouting,			MIDIRouteUDP,				TMIDIRoutingDest::Synth				)
 END_SECTION
 
 BEGIN_SECTION(audio)

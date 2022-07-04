@@ -200,6 +200,31 @@ bool CConfig::ParseOption(const char* pString, CIPAddress* pOut)
 	return true;
 }
 
+bool CConfig::ParseOption(const char* pString, TMIDIRouting* pOut)
+{
+	TMIDIRouting Routing = TMIDIRoutingDest::None;
+	char Buffer[strlen(pString) + 1];
+
+	strncpy(Buffer, pString, sizeof(Buffer));
+	char* pToken = strtok(Buffer, ",");
+
+	while (pToken != nullptr)
+	{
+		if (strstr(pToken, "synth"))		Routing |= TMIDIRoutingDest::Synth;
+		else if (strstr(pToken, "gpio"))	Routing |= TMIDIRoutingDest::GPIO;
+		else if (strstr(pToken, "pisound"))	Routing |= TMIDIRoutingDest::Pisound;
+		else if (strstr(pToken, "usb_midi"))	Routing |= TMIDIRoutingDest::USBMIDI;
+		else if (strstr(pToken, "usb_serial"))	Routing |= TMIDIRoutingDest::USBSerial;
+		else if (strstr(pToken, "rtp"))		Routing |= TMIDIRoutingDest::RTP;
+		else if (strstr(pToken, "udp"))		Routing |= TMIDIRoutingDest::UDP;
+
+		pToken = strtok(nullptr, ",");
+	}
+
+	*pOut = Routing;
+	return true;
+}
+
 // Define template function wrappers for parsing enums
 CONFIG_ENUM_PARSER(TSystemDefaultSynth);
 CONFIG_ENUM_PARSER(TAudioOutputDevice);

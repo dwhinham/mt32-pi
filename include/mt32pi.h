@@ -101,12 +101,12 @@ private:
 	virtual void OnSysExOverflow() override;
 
 	// CAppleMIDIHandler
-	virtual void OnAppleMIDIDataReceived(const u8* pData, size_t nSize) override { ParseMIDIBytes(pData, nSize); };
+	virtual void OnAppleMIDIDataReceived(const u8* pData, size_t nSize) override { ProcessMIDIRouting(m_pConfig->MIDIRouteRTP, pData, nSize); };
 	virtual void OnAppleMIDIConnect(const CIPAddress* pIPAddress, const char* pName) override;
 	virtual void OnAppleMIDIDisconnect(const CIPAddress* pIPAddress, const char* pName) override;
 
 	// CUDPMIDIHandler
-	virtual void OnUDPMIDIDataReceived(const u8* pData, size_t nSize) override { ParseMIDIBytes(pData, nSize); };
+	virtual void OnUDPMIDIDataReceived(const u8* pData, size_t nSize) override { ProcessMIDIRouting(m_pConfig->MIDIRouteUDP, pData, nSize); };
 
 	// Initialization
 	bool InitNetwork();
@@ -121,8 +121,10 @@ private:
 	void UpdateUSB(bool bStartup = false);
 	void UpdateNetwork();
 	void UpdateMIDI();
+
 	void PurgeMIDIBuffers();
 	size_t ReceiveSerialMIDI(u8* pOutData, size_t nSize);
+	void ProcessMIDIRouting(const TMIDIRouting& Routing, const u8* pData, size_t nSize, bool bIgnoreNoteOns = false);
 	bool ParseCustomSysEx(const u8* pData, size_t nSize);
 
 	void ProcessEventQueue();
@@ -213,8 +215,9 @@ private:
 	CMT32Synth* m_pMT32Synth;
 	CSoundFontSynth* m_pSoundFontSynth;
 
-	// MIDI receive buffer
-	CRingBuffer<u8, MIDIRxBufferSize> m_MIDIRxBuffer;
+	// MIDI receive buffers
+	CRingBuffer<u8, MIDIRxBufferSize> m_USBMIDIRxBuffer;
+	CRingBuffer<u8, MIDIRxBufferSize> m_PisoundMIDIRxBuffer;
 
 	// Event handling
 	TEventQueue m_EventQueue;
@@ -222,7 +225,8 @@ private:
 	static void EventHandler(const TEvent& Event);
 	static void USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext);
 	static void USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength);
-	static void IRQMIDIReceiveHandler(const u8* pData, size_t nSize);
+	static void PisoundMIDIReceiveHandler(const u8* pData, size_t nSize);
+	static void IRQMIDIReceiveHandler(CRingBuffer<u8, MIDIRxBufferSize>& RxBuffer, const u8* pData, size_t nSize);
 
 	static void PanicHandler();
 

@@ -54,6 +54,7 @@ enum class TCustomSysExCommand : u8
 	SwitchSoundFont       = 0x02,
 	SwitchSynth           = 0x03,
 	SetMT32ReversedStereo = 0x04,
+	SetMIDIRouting        = 0x05,
 };
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
@@ -202,7 +203,7 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		if (m_pPisound->Initialize())
 		{
 			LOGWARN("Blokas Pisound detected");
-			m_pPisound->RegisterMIDIReceiveHandler(IRQMIDIReceiveHandler);
+			m_pPisound->RegisterMIDIReceiveHandler(PisoundMIDIReceiveHandler);
 			m_bSerialMIDIEnabled = false;
 		}
 		else
@@ -730,6 +731,23 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 		return true;
 	}
 
+	// Set MIDI routing (F0 7D 05 xx yy F7)
+	if (nSize == 6 && Command == TCustomSysExCommand::SetMIDIRouting)
+	{
+		const u8 nDevice = pData[3];
+		const u8 nRouting = pData[4];
+		switch (nDevice)
+		{
+			case 0: m_pConfig->MIDIRouteGPIO	= nRouting;	break;
+			case 1: m_pConfig->MIDIRouteUSBMIDI	= nRouting;	break;
+			case 2: m_pConfig->MIDIRouteUSBSerial	= nRouting;	break;
+			case 3: m_pConfig->MIDIRoutePisound	= nRouting;	break;
+			case 4: m_pConfig->MIDIRouteRTP		= nRouting;	break;
+			case 5: m_pConfig->MIDIRouteUDP		= nRouting;	break;
+		}
+		return true;
+	}
+
 	if (nSize != 5)
 		return false;
 
@@ -915,25 +933,25 @@ void CMT32Pi::UpdateMIDI()
 	size_t nBytes;
 	u8 Buffer[MIDIRxBufferSize];
 
-	// Read MIDI messages from serial device or ring buffer
+	// Read MIDI messages from each device or ring buffer and perform routing
 	if (m_bSerialMIDIEnabled)
+	{
 		nBytes = ReceiveSerialMIDI(Buffer, sizeof(Buffer));
-	else if (m_pUSBSerialDevice)
+		ProcessMIDIRouting(m_pConfig->MIDIRouteGPIO, Buffer, nBytes);
+	}
+
+	if (m_pUSBSerialDevice)
 	{
 		const int nResult = m_pUSBSerialDevice->Read(Buffer, sizeof(Buffer));
 		nBytes = nResult > 0 ? static_cast<size_t>(nResult) : 0;
+		ProcessMIDIRouting(m_pConfig->MIDIRouteUSBSerial, Buffer, nBytes);
 	}
-	else
-		nBytes = m_MIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer));
 
-	if (nBytes == 0)
-		return;
+	if (nBytes = m_PisoundMIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer)))
+		ProcessMIDIRouting(m_pConfig->MIDIRoutePisound, Buffer, nBytes);
 
-	// Process MIDI messages
-	ParseMIDIBytes(Buffer, nBytes);
-
-	// Reset the Active Sense timer
-	m_nActiveSenseTime = m_pTimer->GetTicks();
+	if (nBytes = m_USBMIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer)))
+		ProcessMIDIRouting(m_pConfig->MIDIRouteUSBMIDI, Buffer, nBytes);
 }
 
 void CMT32Pi::PurgeMIDIBuffers()
@@ -943,13 +961,16 @@ void CMT32Pi::PurgeMIDIBuffers()
 
 	// Process MIDI messages from all devices/ring buffers, but ignore note-ons
 	while (m_bSerialMIDIEnabled && (nBytes = ReceiveSerialMIDI(Buffer, sizeof(Buffer))) > 0)
-		ParseMIDIBytes(Buffer, nBytes, true);
+		ProcessMIDIRouting(m_pConfig->MIDIRouteGPIO, Buffer, nBytes, true);
 
 	while (m_pUSBSerialDevice && (nBytes = m_pUSBSerialDevice->Read(Buffer, sizeof(Buffer))) > 0)
-		ParseMIDIBytes(Buffer, nBytes, true);
+		ProcessMIDIRouting(m_pConfig->MIDIRouteUSBSerial, Buffer, nBytes, true);
 
-	while ((nBytes = m_MIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer))) > 0)
-		ParseMIDIBytes(Buffer, nBytes, true);
+	while ((nBytes = m_PisoundMIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer))) > 0)
+		ProcessMIDIRouting(m_pConfig->MIDIRoutePisound, Buffer, nBytes, true);
+
+	while ((nBytes = m_USBMIDIRxBuffer.Dequeue(Buffer, sizeof(Buffer))) > 0)
+		ProcessMIDIRouting(m_pConfig->MIDIRouteUSBMIDI, Buffer, nBytes, true);
 }
 
 size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
@@ -993,18 +1014,72 @@ size_t CMT32Pi::ReceiveSerialMIDI(u8* pOutData, size_t nSize)
 		return 0;
 	}
 
-	// Replay received MIDI data out via the serial port ('software thru')
-	if (m_pConfig->MIDIGPIOThru)
+	return static_cast<size_t>(nResult);
+}
+
+void CMT32Pi::ProcessMIDIRouting(const TMIDIRouting& Routing, const u8* pData, size_t nSize, bool bIgnoreNoteOns)
+{
+	if (pData == nullptr || nSize == 0 || Routing == None)
+		return;
+
+	// Send to synth
+	if (Routing & Synth)
 	{
-		int nSendResult = m_pSerial->Write(pOutData, nResult);
-		if (nSendResult != nResult)
+		ParseMIDIBytes(pData, nSize, bIgnoreNoteOns);
+
+		// Reset the Active Sense timer
+		m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+	}
+
+	// Send to GPIO UART
+	if (Routing & GPIO && m_bSerialMIDIEnabled)
+	{
+		const int nSendResult = m_pSerial->Write(pData, nSize);
+		if (nSendResult < 0 || static_cast<size_t>(nSendResult) != nSize)
 		{
-			LOGERR("received %d bytes, but only sent %d bytes", nResult, nSendResult);
+			LOGERR("UART TX error %d (wanted to send %d bytes)", nSendResult, nSize);
 			LCDLog(TLCDLogType::Error, "UART TX error!");
 		}
 	}
 
-	return static_cast<size_t>(nResult);
+	// Send to Pisound
+	if (Routing & Pisound && m_pPisound)
+	{
+		// TODO: Pisound driver has no transmit functionality
+	}
+
+	// Send to USB MIDI
+	if (Routing & USBMIDI && m_pUSBMIDIDevice)
+	{
+		if (m_pUSBMIDIDevice->SendPlainMIDI(0, pData, nSize) == false)
+		{
+			m_pLogger->Write(MT32PiName, LogError, "USB MIDI TX error");
+			LCDLog(TLCDLogType::Error, "USB MIDI TX error!");
+		}
+	}
+
+	// Send to USB serial
+	if (Routing & USBSerial && m_pUSBSerialDevice)
+	{
+		const int nSendResult = m_pUSBSerialDevice->Write(pData, nSize);
+		if (nSendResult < 0 || static_cast<size_t>(nSendResult) != nSize)
+		{
+			m_pLogger->Write(MT32PiName, LogError, "USB serial TX error %d (wanted to send %d bytes)", nSendResult, nSize);
+			LCDLog(TLCDLogType::Error, "USB serial TX error!");
+		}
+	}
+
+	// Send to AppleMIDI
+	if (Routing & RTP && m_pAppleMIDIParticipant)
+	{
+		// TODO: AppleMIDIParticipant has no transmit functionality
+	}
+
+	// Send to UDP MIDI
+	if (Routing & UDP && m_pUDPMIDIReceiver)
+	{
+		// TODO: UDPMIDIReceiver has no transmit functionality
+	}
 }
 
 void CMT32Pi::ProcessEventQueue()
@@ -1279,15 +1354,20 @@ void CMT32Pi::USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext)
 // The following handlers are called from interrupt context, enqueue into ring buffer for main thread
 void CMT32Pi::USBMIDIPacketHandler(unsigned nCable, u8* pPacket, unsigned nLength)
 {
-	IRQMIDIReceiveHandler(pPacket, nLength);
+	assert(s_pThis != nullptr);
+	IRQMIDIReceiveHandler(s_pThis->m_USBMIDIRxBuffer, pPacket, nLength);
 }
 
-void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
+void CMT32Pi::PisoundMIDIReceiveHandler(const u8* pData, size_t nSize)
 {
 	assert(s_pThis != nullptr);
+	IRQMIDIReceiveHandler(s_pThis->m_PisoundMIDIRxBuffer, pData, nSize);
+}
 
+void CMT32Pi::IRQMIDIReceiveHandler(CRingBuffer<u8, MIDIRxBufferSize>& RxBuffer, const u8* pData, size_t nSize)
+{
 	// Enqueue data into ring buffer
-	if (s_pThis->m_MIDIRxBuffer.Enqueue(pData, nSize) != nSize)
+	if (RxBuffer.Enqueue(pData, nSize) != nSize)
 	{
 		static const char* pErrorString = "MIDI overrun error!";
 		LOGWARN(pErrorString);

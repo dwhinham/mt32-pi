@@ -28,6 +28,7 @@
 
 #include "control/rotaryencoder.h"
 #include "lcd/drivers/ssd1306.h"
+#include "midirouting.h"
 #include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
 #include "utility.h"
@@ -91,6 +92,7 @@ public:
 	static bool ParseOption(const char* pString, float* pOutFloat);
 	static bool ParseOption(const char *pString, CString* pOut);
 	static bool ParseOption(const char *pString, CIPAddress* pOut);
+	static bool ParseOption(const char* pString, TMIDIRouting* pOut);
 	static bool ParseOption(const char* pString, TSystemDefaultSynth* pOut);
 	static bool ParseOption(const char* pString, TAudioOutputDevice* pOut);
 	static bool ParseOption(const char* pString, TMT32EmuResamplerQuality* pOut);
