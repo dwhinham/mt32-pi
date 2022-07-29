@@ -53,6 +53,9 @@ endif
 # Enable multi-core
 	@echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
 
+# Increase kernel size
+	@echo "DEFINE += -D'KERNEL_MAX_SIZE = (4 * MEGABYTE)'" >> $(CIRCLE_CONFIG)
+
 # Disable delay loop calibration (boot speed improvement)
 	@echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
 
