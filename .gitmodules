@@ -18,3 +18,7 @@
 	path = external/libadlmidi
 	url = https://github.com/Wohlstand/libADLMIDI.git
 	ignore = dirty
+[submodule "external/libopnmidi"]
+	path = external/libopnmidi
+	url = https://github.com/Wohlstand/libOPNMIDI.git
+	ignore = dirty
