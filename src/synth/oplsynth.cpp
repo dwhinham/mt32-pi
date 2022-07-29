@@ -30,7 +30,8 @@ COPLSynth::COPLSynth(unsigned nSampleRate)
 	: CSynthBase(nSampleRate),
 
 	  m_pSynth(nullptr),
-	  m_nVolume(100)
+	  m_nVolume(100),
+	  m_nCurrentBank(0)
 {
 }
 
@@ -183,6 +184,25 @@ size_t COPLSynth::Render(s16* pOutBuffer, size_t nFrames)
 
 void COPLSynth::ReportStatus() const
 {
-	if (m_pUI)
-		m_pUI->ShowSystemMessage("OPL Mode");
+	if (!m_pUI)
+		return;
+
+	const char* const* pNames = adl_getBankNames();
+	m_pUI->ShowSystemMessage(pNames[m_nCurrentBank]);
+}
+
+bool COPLSynth::NextBank()
+{
+	bool bResult = true;
+
+	m_nCurrentBank = (m_nCurrentBank + 1) % adl_getBanksCount();
+
+	m_Lock.Acquire();
+	if (adl_setBank(m_pSynth, m_nCurrentBank) != 0)
+		bResult = false;
+	else
+		adl_reset(m_pSynth);
+	m_Lock.Release();
+
+	return bResult;
 }

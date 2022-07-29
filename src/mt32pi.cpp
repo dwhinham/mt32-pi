@@ -1161,6 +1161,8 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 				DeferSwitchSoundFont(nNextSoundFont);
 			}
 		}
+		else if (m_pCurrentSynth == m_pOPLSynth)
+			NextOPLBank();
 	}
 	else if (Event.Button == TButton::Button3)
 	{
@@ -1253,6 +1255,17 @@ void CMT32Pi::SwitchSoundFont(size_t nIndex)
 		if (m_pCurrentSynth == m_pSoundFontSynth)
 			m_pSoundFontSynth->ReportStatus();
 	}
+}
+
+void CMT32Pi::NextOPLBank()
+{
+	if (m_pOPLSynth == nullptr)
+		return;
+
+	m_pLogger->Write(MT32PiName, LogNotice, "Switching to next OPL bank");
+
+	if (m_pOPLSynth->NextBank() && m_pCurrentSynth == m_pOPLSynth)
+		m_pOPLSynth->ReportStatus();
 }
 
 void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)

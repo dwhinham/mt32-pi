@@ -46,10 +46,13 @@ public:
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 	virtual void ReportStatus() const override;
 
+	bool NextBank();
+
 private:
 	ADL_MIDIPlayer* m_pSynth;
 
 	u8 m_nVolume;
+	u8 m_nCurrentBank;
 };
 
 #endif
