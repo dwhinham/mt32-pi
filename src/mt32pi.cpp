@@ -120,7 +120,8 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_nMasterVolume(100),
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
-	  m_pSoundFontSynth(nullptr)
+	  m_pSoundFontSynth(nullptr),
+	  m_pOPLSynth(nullptr)
 {
 	s_pThis = this;
 }
@@ -276,11 +277,16 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	LCDLog(TLCDLogType::Startup, "Init FluidSynth");
 	InitSoundFontSynth();
 
+	LCDLog(TLCDLogType::Startup, "Init ADLMIDI");
+	InitOPLSynth();
+
 	// Set initial synthesizer
 	if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
 		m_pCurrentSynth = m_pMT32Synth;
 	else if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::SoundFont)
 		m_pCurrentSynth = m_pSoundFontSynth;
+	else if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::OPL)
+		m_pCurrentSynth = m_pOPLSynth;
 
 	if (!m_pCurrentSynth)
 	{
@@ -291,6 +297,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			m_pCurrentSynth = m_pMT32Synth;
 		else if (m_pSoundFontSynth)
 			m_pCurrentSynth = m_pSoundFontSynth;
+		else if (m_pOPLSynth)
+			m_pCurrentSynth = m_pOPLSynth;
 		else
 		{
 			m_pLogger->Write(MT32PiName, LogPanic, "No synths available; ROMs/SoundFonts not found");
@@ -407,6 +415,24 @@ bool CMT32Pi::InitSoundFontSynth()
 	}
 
 	m_pSoundFontSynth->SetUserInterface(&m_UserInterface);
+
+	return true;
+}
+
+bool CMT32Pi::InitOPLSynth()
+{
+	assert(m_pOPLSynth == nullptr);
+
+	m_pOPLSynth = new COPLSynth(m_pConfig->AudioSampleRate);
+	if (!m_pOPLSynth->Initialize())
+	{
+		m_pLogger->Write(MT32PiName, LogWarning, "ADLMIDI init failed; no banks present?");
+		delete m_pOPLSynth;
+		m_pOPLSynth = nullptr;
+		return false;
+	}
+
+	m_pOPLSynth->SetUserInterface(&m_UserInterface);
 
 	return true;
 }
@@ -1073,6 +1099,8 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 		// Swap synths
 		if (m_pCurrentSynth == m_pMT32Synth)
 			SwitchSynth(TSynth::SoundFont);
+		else if (m_pCurrentSynth == m_pSoundFontSynth)
+			SwitchSynth(TSynth::OPL);
 		else
 			SwitchSynth(TSynth::MT32);
 	}
@@ -1080,7 +1108,7 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 	{
 		if (m_pCurrentSynth == m_pMT32Synth)
 			NextMT32ROMSet();
-		else
+		else if (m_pCurrentSynth == m_pSoundFontSynth)
 		{
 			// Next SoundFont
 			const size_t nSoundFonts = m_pSoundFontSynth->GetSoundFontManager().GetSoundFontCount();
@@ -1119,11 +1147,25 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 void CMT32Pi::SwitchSynth(TSynth NewSynth)
 {
 	CSynthBase* pNewSynth = nullptr;
+	const char* pModeString;
 
-	if (NewSynth == TSynth::MT32)
-		pNewSynth = m_pMT32Synth;
-	else if (NewSynth == TSynth::SoundFont)
-		pNewSynth = m_pSoundFontSynth;
+	switch (NewSynth)
+	{
+		case TSynth::MT32:
+			pNewSynth = m_pMT32Synth;
+			pModeString = "MT-32 mode";
+			break;
+
+		case TSynth::SoundFont:
+			pNewSynth = m_pSoundFontSynth;
+			pModeString = "SoundFont mode";
+			break;
+
+		case TSynth::OPL:
+			pNewSynth = m_pOPLSynth;
+			pModeString = "OPL mode";
+			break;
+	}
 
 	if (pNewSynth == nullptr)
 	{
@@ -1139,9 +1181,8 @@ void CMT32Pi::SwitchSynth(TSynth NewSynth)
 
 	m_pCurrentSynth->AllSoundOff();
 	m_pCurrentSynth = pNewSynth;
-	const char* pMode = NewSynth == TSynth::MT32 ? "MT-32 mode" : "SoundFont mode";
-	m_pLogger->Write(MT32PiName, LogNotice, "Switching to %s", pMode);
-	LCDLog(TLCDLogType::Notice, pMode);
+	m_pLogger->Write(MT32PiName, LogNotice, "Switching to %s", pModeString);
+	LCDLog(TLCDLogType::Notice, pModeString);
 }
 
 void CMT32Pi::SwitchMT32ROMSet(TMT32ROMSet ROMSet)
@@ -1201,8 +1242,10 @@ void CMT32Pi::SetMasterVolume(s32 nVolume)
 		m_pMT32Synth->SetMasterVolume(m_nMasterVolume);
 	if (m_pSoundFontSynth)
 		m_pSoundFontSynth->SetMasterVolume(m_nMasterVolume);
+	if (m_pOPLSynth)
+		m_pOPLSynth->SetMasterVolume(m_nMasterVolume);
 
-	if (m_pCurrentSynth == m_pSoundFontSynth)
+	if (m_pCurrentSynth != m_pMT32Synth)
 		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
 }
 

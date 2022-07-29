@@ -36,8 +36,9 @@ class CConfig
 {
 public:
 	#define ENUM_SYSTEMDEFAULTSYNTH(ENUM) \
-		ENUM(MT32, mt32)                  \
-		ENUM(SoundFont, soundfont)
+		ENUM(MT32, mt32)              \
+		ENUM(SoundFont, soundfont)    \
+		ENUM(OPL, opl)
 
 	#define ENUM_AUDIOOUTPUTDEVICE(ENUM) \
 		ENUM(PWM, pwm)                   \

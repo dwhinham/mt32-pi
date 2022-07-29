@@ -132,9 +132,28 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@touch $@
 
 #
+# Build libADLMIDI
+#
+libadlmidi: $(LIBADLMIDIBUILDDIR)/.done
+
+$(LIBADLMIDIBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
+	@CFLAGS="$(CFLAGS_EXTERNAL) -DDOSBOX_NO_MUTEX" \
+	CXXFLAGS="$(CFLAGS_EXTERNAL) -DDOSBOX_NO_MUTEX" \
+	cmake -B $(LIBADLMIDIBUILDDIR) \
+		 $(CMAKE_TOOLCHAIN_FLAGS) \
+		 -DCMAKE_BUILD_TYPE=Release \
+		 -DWITH_MIDI_SEQUENCER=OFF \
+		 -DUSE_OPAL_EMULATOR=OFF \
+		 -DUSE_JAVA_EMULATOR=OFF \
+		 $(LIBADLMIDIHOME) \
+		 >/dev/null
+	@cmake --build $(LIBADLMIDIBUILDDIR) --target ADLMIDI_static
+	@touch $@
+
+#
 # Build kernel itself
 #
-all: circle-stdlib mt32emu fluidsynth
+all: circle-stdlib mt32emu fluidsynth libadlmidi
 	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #
@@ -161,3 +180,6 @@ mrproper: clean
 
 # Clean FluidSynth
 	@$(RM) -r $(FLUIDSYNTHBUILDDIR)
+
+# Clean libADLMIDI
+	@$(RM) -r $(LIBADLMIDIBUILDDIR)
