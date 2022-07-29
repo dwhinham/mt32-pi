@@ -62,6 +62,7 @@
 #include "synth/mt32romset.h"
 #include "synth/mt32synth.h"
 #include "synth/oplsynth.h"
+#include "synth/opnsynth.h"
 #include "synth/soundfontsynth.h"
 #include "synth/synth.h"
 
@@ -114,6 +115,7 @@ private:
 	bool InitMT32Synth();
 	bool InitSoundFontSynth();
 	bool InitOPLSynth();
+	bool InitOPNSynth();
 
 	// Tasks for specific CPU cores
 	void MainTask();
@@ -216,6 +218,7 @@ private:
 	CMT32Synth* m_pMT32Synth;
 	CSoundFontSynth* m_pSoundFontSynth;
 	COPLSynth* m_pOPLSynth;
+	COPNSynth* m_pOPNSynth;
 
 	// MIDI receive buffer
 	CRingBuffer<u8, MIDIRxBufferSize> m_MIDIRxBuffer;

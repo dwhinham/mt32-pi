@@ -31,6 +31,7 @@ OBJS		:=	src/config.o \
 			src/soundfontmanager.o \
 			src/synth/mt32synth.o \
 			src/synth/oplsynth.o \
+			src/synth/opnsynth.o \
 			src/synth/soundfontsynth.o \
 			src/synth/synthbase.o \
 			src/zoneallocator.o
@@ -88,6 +89,9 @@ EXTRALIBS	+=	$(FLUIDSYNTHLIB)
 
 INCLUDE		+=	-I $(LIBADLMIDIHOME)/include
 EXTRALIBS	+=	$(LIBADLMIDILIB)
+
+INCLUDE		+=	-I $(LIBOPNMIDIHOME)/include
+EXTRALIBS	+=	$(LIBOPNMIDILIB)
 
 #
 # Generate version string from git tag

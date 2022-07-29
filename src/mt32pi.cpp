@@ -121,7 +121,8 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pCurrentSynth(nullptr),
 	  m_pMT32Synth(nullptr),
 	  m_pSoundFontSynth(nullptr),
-	  m_pOPLSynth(nullptr)
+	  m_pOPLSynth(nullptr),
+	  m_pOPNSynth(nullptr)
 {
 	s_pThis = this;
 }
@@ -280,6 +281,9 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	LCDLog(TLCDLogType::Startup, "Init ADLMIDI");
 	InitOPLSynth();
 
+	LCDLog(TLCDLogType::Startup, "Init OPNMIDI");
+	InitOPNSynth();
+
 	// Set initial synthesizer
 	if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::MT32)
 		m_pCurrentSynth = m_pMT32Synth;
@@ -287,6 +291,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		m_pCurrentSynth = m_pSoundFontSynth;
 	else if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::OPL)
 		m_pCurrentSynth = m_pOPLSynth;
+	else if (m_pConfig->SystemDefaultSynth == CConfig::TSystemDefaultSynth::OPN)
+		m_pCurrentSynth = m_pOPNSynth;
 
 	if (!m_pCurrentSynth)
 	{
@@ -299,6 +305,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 			m_pCurrentSynth = m_pSoundFontSynth;
 		else if (m_pOPLSynth)
 			m_pCurrentSynth = m_pOPLSynth;
+		else if (m_pOPNSynth)
+			m_pCurrentSynth = m_pOPNSynth;
 		else
 		{
 			m_pLogger->Write(MT32PiName, LogPanic, "No synths available; ROMs/SoundFonts not found");
@@ -433,6 +441,24 @@ bool CMT32Pi::InitOPLSynth()
 	}
 
 	m_pOPLSynth->SetUserInterface(&m_UserInterface);
+
+	return true;
+}
+
+bool CMT32Pi::InitOPNSynth()
+{
+	assert(m_pOPNSynth == nullptr);
+
+	m_pOPNSynth = new COPNSynth(m_pConfig->AudioSampleRate);
+	if (!m_pOPNSynth->Initialize())
+	{
+		m_pLogger->Write(MT32PiName, LogWarning, "OPNMIDI init failed; no banks present?");
+		delete m_pOPNSynth;
+		m_pOPNSynth = nullptr;
+		return false;
+	}
+
+	m_pOPNSynth->SetUserInterface(&m_UserInterface);
 
 	return true;
 }
@@ -1101,6 +1127,8 @@ void CMT32Pi::ProcessButtonEvent(const TButtonEvent& Event)
 			SwitchSynth(TSynth::SoundFont);
 		else if (m_pCurrentSynth == m_pSoundFontSynth)
 			SwitchSynth(TSynth::OPL);
+		else if (m_pCurrentSynth == m_pOPLSynth)
+			SwitchSynth(TSynth::OPN);
 		else
 			SwitchSynth(TSynth::MT32);
 	}
@@ -1164,6 +1192,11 @@ void CMT32Pi::SwitchSynth(TSynth NewSynth)
 		case TSynth::OPL:
 			pNewSynth = m_pOPLSynth;
 			pModeString = "OPL mode";
+			break;
+
+		case TSynth::OPN:
+			pNewSynth = m_pOPNSynth;
+			pModeString = "OPN mode";
 			break;
 	}
 
@@ -1244,6 +1277,8 @@ void CMT32Pi::SetMasterVolume(s32 nVolume)
 		m_pSoundFontSynth->SetMasterVolume(m_nMasterVolume);
 	if (m_pOPLSynth)
 		m_pOPLSynth->SetMasterVolume(m_nMasterVolume);
+	if (m_pOPNSynth)
+		m_pOPNSynth->SetMasterVolume(m_nMasterVolume);
 
 	if (m_pCurrentSynth != m_pMT32Synth)
 		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
