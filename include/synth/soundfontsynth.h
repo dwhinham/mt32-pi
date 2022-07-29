@@ -47,7 +47,6 @@ public:
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) override;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 	virtual void ReportStatus() const override;
-	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) override;
 
 	bool SwitchSoundFont(size_t nIndex);
 	size_t GetSoundFontIndex() const { return m_nCurrentSoundFontIndex; }

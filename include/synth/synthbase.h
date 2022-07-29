@@ -33,13 +33,7 @@
 class CSynthBase
 {
 public:
-	CSynthBase(unsigned int nSampleRate)
-		: m_Lock(TASK_LEVEL),
-		  m_nSampleRate(nSampleRate),
-		  m_pUI(nullptr)
-	{
-	}
-
+	CSynthBase(unsigned int nSampleRate);
 	virtual ~CSynthBase() = default;
 
 	virtual bool Initialize() = 0;
@@ -51,7 +45,7 @@ public:
 	virtual size_t Render(s16* pOutBuffer, size_t nFrames) = 0;
 	virtual size_t Render(float* pOutBuffer, size_t nFrames) = 0;
 	virtual void ReportStatus() const = 0;
-	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) = 0;
+	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks);
 	void SetUserInterface(CUserInterface* pUI) { m_pUI = pUI; }
 
 	CSpinLock m_Lock;

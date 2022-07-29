@@ -327,14 +327,6 @@ void CSoundFontSynth::ReportStatus() const
 		m_pUI->ShowSystemMessage(m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex));
 }
 
-void CSoundFontSynth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
-{
-	const u8 nBarHeight = LCD.Height();
-	float ChannelLevels[16], PeakLevels[16];
-	m_MIDIMonitor.GetChannelLevels(nTicks, ChannelLevels, PeakLevels, m_nPercussionMask);
-	CUserInterface::DrawChannelLevels(LCD, nBarHeight, ChannelLevels, PeakLevels, 16, true);
-}
-
 bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 {
 	// Is this SoundFont already active?
