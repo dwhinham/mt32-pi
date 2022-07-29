@@ -14,3 +14,7 @@
 	path = external/fluidsynth
 	url = https://github.com/FluidSynth/fluidsynth.git
 	ignore = dirty
+[submodule "external/libadlmidi"]
+	path = external/libadlmidi
+	url = https://github.com/Wohlstand/libADLMIDI.git
+	ignore = dirty
