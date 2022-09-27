@@ -69,7 +69,7 @@ $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 fluidsynth: $(FLUIDSYNTHBUILDDIR)/.done
 
 $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.2.8-circle.patch
+	@patch -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.3.0-circle.patch
 
 	@export CFLAGS="$(CFLAGS_FOR_TARGET)"
 	@cmake  -B $(FLUIDSYNTHBUILDDIR) \
@@ -89,9 +89,10 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 			-Denable-midishare=OFF \
 			-Denable-network=OFF \
 			-Denable-oboe=OFF \
+			-Denable-openmp=OFF \
 			-Denable-opensles=OFF \
 			-Denable-oss=OFF \
-			-Denable-pkgconfig=OFF \
+			-Denable-pipewire=OFF \
 			-Denable-pulseaudio=OFF \
 			-Denable-readline=OFF \
 			-Denable-sdl2=OFF \
@@ -121,7 +122,7 @@ clean:
 veryclean: clean
 	# Reverse patches
 	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.4-minimal-usb-drivers.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.2.8-circle.patch
+	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.3.0-circle.patch
 
 	# Clean circle-stdlib
 	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
