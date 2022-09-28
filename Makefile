@@ -8,33 +8,51 @@ include Config.mk
 .PHONY: circle-stdlib mt32emu fluidsynth all clean veryclean
 
 #
+# Functions to apply/reverse patches only if not completely applied/reversed already
+#
+APPLY_PATCH=sh -c '																\
+	if patch --dry-run --reverse --force --strip 1 --directory $$1 < $$2 >/dev/null 2>&1; then						\
+		echo "Patch $$2 already applied; skipping";											\
+	else																	\
+		echo "Applying patch $$2 to directory $$1...";											\
+		patch --forward --strip 1 --no-backup-if-mismatch -r - --directory $$1 < $$2 || (echo "Patch $$2 failed" >&2 && exit 1);	\
+	fi' APPLY_PATCH
+
+REVERSE_PATCH=sh -c '																\
+	if patch --dry-run --forward --force --strip 1 --directory $$1 < $$2 >/dev/null 2>&1; then						\
+		echo "Patch $$2 already reversed; skipping";											\
+	else																	\
+		echo "Reversing patch $$2 in directory $$1...";											\
+		patch --reverse --strip 1 --no-backup-if-mismatch -r - --directory $$1 < $$2 || (echo "Patch $$2 failed" >&2 && exit 1);	\
+	fi' REVERSE_PATCH
+
+#
 # Configure circle-stdlib
 #
-.ONESHELL:
 $(CIRCLE_STDLIB_CONFIG) $(CIRCLE_CONFIG)&:
 	@echo "Configuring for Raspberry Pi $(RASPBERRYPI) ($(BITS) bit)"
 	$(CIRCLESTDLIBHOME)/configure --raspberrypi=$(RASPBERRYPI) --prefix=$(PREFIX)
 
-	# Apply patches
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.4-minimal-usb-drivers.patch
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.5-usb-midi-interrupt-ep.patch
+# Apply patches
+	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-44.4-minimal-usb-drivers.patch
+	@${APPLY_PATCH} $(CIRCLEHOME) patches/circle-44.5-usb-midi-interrupt-ep.patch
 
 ifeq ($(strip $(GC_SECTIONS)),1)
-	# Enable function/data sections for circle-stdlib
-	echo "CFLAGS_FOR_TARGET += -ffunction-sections -fdata-sections" >> $(CIRCLE_STDLIB_CONFIG)
+# Enable function/data sections for circle-stdlib
+	@echo "CFLAGS_FOR_TARGET += -ffunction-sections -fdata-sections" >> $(CIRCLE_STDLIB_CONFIG)
 endif
 
-	# Enable multi-core
-	echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
+# Enable multi-core
+	@echo "DEFINE += -DARM_ALLOW_MULTI_CORE" >> $(CIRCLE_CONFIG)
 
-	# Disable delay loop calibration (boot speed improvement)
-	echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
+# Disable delay loop calibration (boot speed improvement)
+	@echo "DEFINE += -DNO_CALIBRATE_DELAY" >> $(CIRCLE_CONFIG)
 
-	# Improve I/O throughput
-	echo "DEFINE += -DNO_BUSY_WAIT" >> $(CIRCLE_CONFIG)
+# Improve I/O throughput
+	@echo "DEFINE += -DNO_BUSY_WAIT" >> $(CIRCLE_CONFIG)
 
-	# Enable PWM audio output on GPIO 12/13 for the Pi Zero 2 W
-	echo "DEFINE += -DUSE_PWM_AUDIO_ON_ZERO" >> $(CIRCLE_CONFIG)
+# Enable PWM audio output on GPIO 12/13 for the Pi Zero 2 W
+	@echo "DEFINE += -DUSE_PWM_AUDIO_ON_ZERO" >> $(CIRCLE_CONFIG)
 
 #
 # Build circle-stdlib
@@ -51,9 +69,9 @@ $(CIRCLESTDLIBHOME)/.done: $(CIRCLE_STDLIB_CONFIG)
 mt32emu: $(MT32EMUBUILDDIR)/.done
 
 $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
-	@export CFLAGS="$(CFLAGS_FOR_TARGET)"
-	@export CXXFLAGS="$(CFLAGS_FOR_TARGET)"
-	@cmake  -B $(MT32EMUBUILDDIR) \
+	@CFLAGS="$(CFLAGS_FOR_TARGET)" \
+	CXXFLAGS="$(CFLAGS_FOR_TARGET)" \
+	cmake  -B $(MT32EMUBUILDDIR) \
 			$(CMAKE_TOOLCHAIN_FLAGS) \
 			-DCMAKE_CXX_FLAGS_RELEASE="-Ofast" \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -70,10 +88,10 @@ $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 fluidsynth: $(FLUIDSYNTHBUILDDIR)/.done
 
 $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
-	@patch -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.3.0-circle.patch
+	@${APPLY_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.0-circle.patch
 
-	@export CFLAGS="$(CFLAGS_FOR_TARGET)"
-	@cmake  -B $(FLUIDSYNTHBUILDDIR) \
+	@CFLAGS="$(CFLAGS_FOR_TARGET)" \
+	cmake  -B $(FLUIDSYNTHBUILDDIR) \
 			$(CMAKE_TOOLCHAIN_FLAGS) \
 			-DCMAKE_C_FLAGS_RELEASE="-Ofast -fopenmp-simd" \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -121,17 +139,17 @@ clean:
 # Clean kernel and all dependencies
 #
 veryclean: clean
-	# Reverse patches
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.5-usb-midi-interrupt-ep.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(CIRCLEHOME) < patches/circle-44.4-minimal-usb-drivers.patch
-	@patch -R -N -p1 --no-backup-if-mismatch -r - -d $(FLUIDSYNTHHOME) < patches/fluidsynth-2.3.0-circle.patch
+# Reverse patches
+	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-44.5-usb-midi-interrupt-ep.patch
+	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-44.4-minimal-usb-drivers.patch
+	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.0-circle.patch
 
-	# Clean circle-stdlib
+# Clean circle-stdlib
 	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
 	@$(RM) $(CIRCLESTDLIBHOME)/.done
 
-	# Clean mt32emu
+# Clean mt32emu
 	@$(RM) -r $(MT32EMUBUILDDIR)
 
-	# Clean FluidSynth
+# Clean FluidSynth
 	@$(RM) -r $(FLUIDSYNTHBUILDDIR)
