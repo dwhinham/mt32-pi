@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [pi2, pi3-64, pi4-64]
+        board: [pi2, pi3-64, pi4-64, cm4-64]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -70,7 +70,13 @@ jobs:
         done
 
     - name: Build
-      run: make -j BOARD=${{ matrix.board }}
+      run: |
+        if [ "${{ matrix.board }}" == "cm4-64" ]; then
+          make -j BOARD=pi4-64 USE_EMMC=1
+          mv kernel8-rpi4.img kernel8-rpi4-emmc.img
+        else
+          make -j BOARD=${{ matrix.board }}
+        fi
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v3
@@ -79,7 +85,14 @@ jobs:
         path: kernel*.img
 
     - name: Build (HDMI console)
-      run: make clean && make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
+      run: |
+        make clean
+        if [ "${{ matrix.board }}" == "cm4-64" ]; then
+          make -j BOARD=pi4-64 USE_EMMC=1 HDMI_CONSOLE=1
+          mv kernel8-rpi4.img kernel8-rpi4-emmc.img
+        else
+          make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
+        fi
 
     - name: Upload built kernel
       uses: actions/upload-artifact@v3

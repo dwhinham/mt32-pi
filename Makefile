@@ -54,6 +54,11 @@ endif
 # Enable PWM audio output on GPIO 12/13 for the Pi Zero 2 W
 	@echo "DEFINE += -DUSE_PWM_AUDIO_ON_ZERO" >> $(CIRCLE_CONFIG)
 
+ifeq ($(strip $(USE_EMMC)),1)
+# Enable eMMC for non-lite Compute Module
+	@echo "DEFINE += -DUSE_EMBEDDED_MMC_CM" >> $(CIRCLE_CONFIG)
+endif
+
 #
 # Build circle-stdlib
 #

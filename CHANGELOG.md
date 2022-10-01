@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- eMMC-enabled kernel for the non-"lite" version of the Compute Module 4. This is a separate specially-built kernel that you must manually opt into; there is currently no way to automatically detect "lite" versus "non-lite" CM4s.
+  * To use this kernel, you must manually rename `kernel8-rpi4-emmc.img` to `kernel8-rpi4.img` (replacing the default Pi 4/CM4 "Lite" compatible kernel).
+
 ### Fixed
 
 - Memory corruption/crashing caused by faulty ring buffer dequeue implementation.
