@@ -97,6 +97,16 @@ public:
 		return nDequeued;
 	}
 
+	size_t Count() const
+	{
+		return (N - m_nOutPtr + m_nInPtr) & BufferMask;
+	}
+
+	bool IsEmpty() const
+	{
+		return m_nInPtr == m_nOutPtr;
+	}
+
 private:
 	static_assert(Utility::IsPowerOfTwo(N), "Ring buffer size must be a power of 2");
 

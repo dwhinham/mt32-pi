@@ -1045,7 +1045,11 @@ void CMT32Pi::ProcessMIDIRouting(const TMIDIRouting& Routing, const u8* pData, s
 	// Send to Pisound
 	if (Routing & Pisound && m_pPisound)
 	{
-		// TODO: Pisound driver has no transmit functionality
+		if (m_pPisound->SendMIDI(pData, nSize) != nSize)
+		{
+			m_pLogger->Write(MT32PiName, LogError, "Pisound MIDI TX error");
+			LCDLog(TLCDLogType::Error, "Pisound MIDI TX error!");
+		}
 	}
 
 	// Send to USB MIDI

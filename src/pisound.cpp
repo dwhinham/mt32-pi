@@ -134,17 +134,25 @@ bool CPisound::Initialize()
 	return true;
 }
 
+size_t CPisound::SendMIDI(const u8* pData, size_t nSize)
+{
+	// TODO
+	m_MIDITxBuffer.Enqueue(pData, nSize);
+	SPITask();
+	return nSize;
+}
+
 u16 CPisound::Transfer16(u16 nTxValue) const
 {
-	u8 RxBuffer[2];
-	u8 TxBuffer[2];
-	TxBuffer[0] = nTxValue >> 8;
-	TxBuffer[1] = nTxValue & 0xFF;
+	u8 SPIRxBuffer[2];
+	u8 SPITxBuffer[2];
+	SPITxBuffer[0] = nTxValue >> 8;
+	SPITxBuffer[1] = nTxValue & 0xFF;
 
-	if (m_pSPIMaster->WriteRead(SPIChipSelect, TxBuffer, RxBuffer, sizeof(RxBuffer)) < 0)
+	if (m_pSPIMaster->WriteRead(SPIChipSelect, SPITxBuffer, SPIRxBuffer, sizeof(SPIRxBuffer)) < 0)
 		return 0;
 
-	return (RxBuffer[0] << 8) | RxBuffer[1];
+	return (SPIRxBuffer[0] << 8) | SPIRxBuffer[1];
 }
 
 size_t CPisound::ReadBytes(u8* pOutBuffer, size_t nSize) const
@@ -179,12 +187,12 @@ bool CPisound::ReadInfo()
 		return false;
 
 	u8 nCount = nRx & 0xFF;
-	u8 RxBuffer[256 + 1];
+	u8 SPIRxBuffer[256 + 1];
 
 	for (u8 i = 0; i < nCount; ++i)
 	{
-		memset(RxBuffer, 0, sizeof(RxBuffer));
-		size_t nResult = ReadBytes(RxBuffer, sizeof(RxBuffer) - 1);
+		memset(SPIRxBuffer, 0, sizeof(SPIRxBuffer));
+		size_t nResult = ReadBytes(SPIRxBuffer, sizeof(SPIRxBuffer) - 1);
 		if (!nResult)
 			return false;
 
@@ -195,14 +203,14 @@ bool CPisound::ReadInfo()
 			if (nResult != 2)
 				return false;
 
-			snprintf(i == 0 ? m_FirmwareVersion : m_HardwareVersion, MaxVersionStringLength, "%x.%02x", RxBuffer[0], RxBuffer[1]);
+			snprintf(i == 0 ? m_FirmwareVersion : m_HardwareVersion, MaxVersionStringLength, "%x.%02x", SPIRxBuffer[0], SPIRxBuffer[1]);
 			break;
 
 		case 1:
 			if (nResult >= sizeof(m_SerialNumber))
 				return false;
 
-			memcpy(m_SerialNumber, RxBuffer, sizeof(m_SerialNumber));
+			memcpy(m_SerialNumber, SPIRxBuffer, sizeof(m_SerialNumber));
 			break;
 
 		case 2:
@@ -212,7 +220,7 @@ bool CPisound::ReadInfo()
 
 			char* pCurrentChar = m_ID;
 			for (size_t j = 0; j < nResult; ++j)
-				pCurrentChar += sprintf(pCurrentChar, "%02x", RxBuffer[j]);
+				pCurrentChar += sprintf(pCurrentChar, "%02x", SPIRxBuffer[j]);
 			*pCurrentChar = '\0';
 
 			break;
@@ -238,26 +246,41 @@ void CPisound::SetOSRPins(unsigned bRatio1, unsigned bRatio2, unsigned bRatio3)
 void CPisound::DataAvailableInterruptHandler(void* pUserData)
 {
 	CPisound* pThis = static_cast<CPisound*>(pUserData);
-	assert(pThis && pThis->m_pReceiveHandler);
+	pThis->SPITask();
+}
 
+void CPisound::SPITask()
+{
 	do
 	{
-		size_t nMIDIBytes = 0;
-		u8 MIDIBuffer[SPITransferSize / 2];
+		size_t nMIDIRxBytes = 0;
+		size_t nMIDITxBytes = 0;
+		u8 MIDIRxBuffer[SPITransferSize / 2];
+		u8 MIDITxBuffer[SPITransferSize / 2];
 
-		u8 RxBuffer[SPITransferSize];
-		memset(RxBuffer, 0, sizeof(RxBuffer));
+		u8 SPIRxBuffer[SPITransferSize];
+		u8 SPITxBuffer[SPITransferSize];
+		memset(SPIRxBuffer, 0, sizeof(SPIRxBuffer));
+		memset(SPITxBuffer, 0, sizeof(SPITxBuffer));
 
-		// Extract MIDI bytes from SPI packet
-		pThis->m_pSPIMaster->Read(SPIChipSelect, RxBuffer, sizeof(RxBuffer));
-		for (size_t i = 0; i < sizeof(RxBuffer); i += 2)
+		// Prepare outgoing MIDI SPI packet
+		nMIDITxBytes = m_MIDITxBuffer.Dequeue(MIDITxBuffer, sizeof(MIDITxBuffer));
+		for (size_t i = 0; i < nMIDITxBytes; ++i)
 		{
-			if (RxBuffer[i])
-				MIDIBuffer[nMIDIBytes++] = RxBuffer[i + 1];
+			SPITxBuffer[i * 2] = 0x0F;
+			SPITxBuffer[i * 2 + 1] = MIDITxBuffer[i];
+		}
+
+		// Extract incoming MIDI bytes from SPI packet
+		m_pSPIMaster->WriteRead(SPIChipSelect, SPITxBuffer, SPIRxBuffer, sizeof(SPIRxBuffer));
+		for (size_t i = 0; i < sizeof(SPIRxBuffer); i += 2)
+		{
+			if (SPIRxBuffer[i])
+				MIDIRxBuffer[nMIDIRxBytes++] = SPIRxBuffer[i + 1];
 		}
 
 		// Pass MIDI bytes on to handler
-		if (nMIDIBytes)
-			pThis->m_pReceiveHandler(MIDIBuffer, nMIDIBytes);
-	} while (pThis->m_DataAvailable.Read() == HIGH);
+		if (nMIDIRxBytes && m_pReceiveHandler)
+			m_pReceiveHandler(MIDIRxBuffer, nMIDIRxBytes);
+	} while (m_DataAvailable.Read() == HIGH || !m_MIDITxBuffer.IsEmpty());
 }

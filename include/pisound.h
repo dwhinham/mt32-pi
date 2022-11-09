@@ -28,6 +28,8 @@
 #include <circle/spimaster.h>
 #include <circle/types.h>
 
+#include "ringbuffer.h"
+
 class CPisound
 {
 public:
@@ -38,12 +40,14 @@ public:
 
 	bool Initialize();
 	void RegisterMIDIReceiveHandler(TMIDIReceiveHandler pHandler) { m_pReceiveHandler = pHandler; }
+	size_t SendMIDI(const u8* pData, size_t nSize);
 
 private:
 	u16 Transfer16(u16 nValue) const;
 	size_t ReadBytes(u8* pOutBuffer, size_t nSize) const;
 	bool ReadInfo();
 	void SetOSRPins(unsigned bRatio1, unsigned bRatio2, unsigned bRatio3);
+	void SPITask();
 
 	static constexpr size_t MaxSerialNumberStringLength = 11;
 	static constexpr size_t MaxIDStringLength = 25;
@@ -66,6 +70,8 @@ private:
 	char m_ID[MaxIDStringLength];
 	char m_FirmwareVersion[MaxVersionStringLength];
 	char m_HardwareVersion[MaxVersionStringLength];
+
+	CRingBuffer<u8, 64> m_MIDITxBuffer;
 
 	static void DataAvailableInterruptHandler(void* pUserData);
 };
