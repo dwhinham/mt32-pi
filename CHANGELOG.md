@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ability to reverse global left and right audio channels (new configuration file option) to work around broken hardware (issue #307).
+
 ### Changed
 
 - Update to libmt32emu v2.7.0.

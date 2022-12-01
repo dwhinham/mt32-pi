@@ -562,6 +562,7 @@ void CMT32Pi::AudioTask()
 
 	// Circle's "fast path" for I2S 24-bit really expects 32-bit samples
 	const bool bI2S = m_pConfig->AudioOutputDevice == CConfig::TAudioOutputDevice::I2S;
+	const bool bReversedStereo = m_pConfig->AudioReversedStereo;
 	const u8 nBytesPerSample = bI2S ? sizeof(s32) : (sizeof(s8) * 3);
 	const u8 nBytesPerFrame = 2 * nBytesPerSample;
 
@@ -578,11 +579,25 @@ void CMT32Pi::AudioTask()
 
 		m_pCurrentSynth->Render(FloatBuffer, nFrames);
 
-		// Convert to signed 24-bit integers
-		for (size_t i = 0; i < nFrames * nChannels; ++i)
+		if (bReversedStereo)
 		{
-			s32* const pSample = reinterpret_cast<s32*>(IntBuffer + i * nBytesPerSample);
-			*pSample = FloatBuffer[i] * Sample24BitMax;
+			// Convert to signed 24-bit integers with channel swap
+			for (size_t i = 0; i < nFrames * nChannels; i += nChannels)
+			{
+				s32* const pLeftSample = reinterpret_cast<s32*>(IntBuffer + i * nBytesPerSample);
+				s32* const pRightSample = reinterpret_cast<s32*>(IntBuffer + (i + 1) * nBytesPerSample);
+				*pLeftSample = FloatBuffer[i + 1] * Sample24BitMax;
+				*pRightSample = FloatBuffer[i] * Sample24BitMax;
+			}
+		}
+		else
+		{
+			// Convert to signed 24-bit integers
+			for (size_t i = 0; i < nFrames * nChannels; ++i)
+			{
+				s32* const pSample = reinterpret_cast<s32*>(IntBuffer + i * nBytesPerSample);
+				*pSample = FloatBuffer[i] * Sample24BitMax;
+			}
 		}
 
 		const int nResult = m_pSound->Write(IntBuffer, nWriteBytes);
