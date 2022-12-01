@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   toolchain-version: 10.3-2021.07
-  python-version: 3.6
+  python-version: 3.11
 
 jobs:
   lint:
