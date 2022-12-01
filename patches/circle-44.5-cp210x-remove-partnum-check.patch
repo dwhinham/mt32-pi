@@ -1,0 +1,22 @@
+diff --git a/lib/usb/usbserialcp2102.cpp b/lib/usb/usbserialcp2102.cpp
+index 41b6177..513502f 100644
+--- a/lib/usb/usbserialcp2102.cpp
++++ b/lib/usb/usbserialcp2102.cpp
+@@ -90,12 +90,12 @@ boolean CUSBSerialCP2102Device::Configure (void)
+ 
+ 		return FALSE;
+ 	}
+-	if (rxData[0] != CP210X_PARTNUM_CP2102)
+-	{
+-		CLogger::Get ()->Write (FromCp2102, LogError, "Unsupported part number");
++	// if (rxData[0] != CP210X_PARTNUM_CP2102)
++	// {
++	// 	CLogger::Get ()->Write (FromCp2102, LogError, "Unsupported part number");
+ 
+-		return FALSE;
+-	}
++	// 	return FALSE;
++	// }
+ 	CLogger::Get ()->Write (FromCp2102, LogNotice, "Part number: CP210%d", rxData[0]);
+ 
+ 	if (pHost->ControlMessage (GetEndpoint0 (),

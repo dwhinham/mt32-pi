@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Ability to reverse global left and right audio channels (new configuration file option) to work around broken hardware (issue #307).
+- Support for CP2104 (and possibly other members of CP210x family) USB serial devices (issue #305). Thanks to @gritd and @ajhuitsing for reporting/finding a solution!
+  * This is currently achieved by applying a temporary patch to Circle to remove a part number check in the CP2102 driver.
 
 ### Changed
 
