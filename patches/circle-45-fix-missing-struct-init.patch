@@ -1,0 +1,22 @@
+From 26fef0f51d9a4fb2fc65a0c4abaf29c64ed5dea7 Mon Sep 17 00:00:00 2001
+From: Dale Whinham <daleyo@gmail.com>
+Date: Sun, 4 Dec 2022 22:09:40 +0000
+Subject: [PATCH] FIXED: soundcontroller: missing field initializers
+
+---
+ include/circle/sound/soundcontroller.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/circle/sound/soundcontroller.h b/include/circle/sound/soundcontroller.h
+index cc578fbc..193a82ce 100644
+--- a/include/circle/sound/soundcontroller.h
++++ b/include/circle/sound/soundcontroller.h
+@@ -104,7 +104,7 @@ class CSoundController		/// Optional controller of a sound device
+ 	/// \return Info about the control in the selected configuration
+ 	/// \note A control may be supported for ChannelAll, but not for ChannelLeft/Right.
+ 	virtual const TControlInfo GetControlInfo (TControl Control, TJack Jack,
+-						   TChannel Channel) const { return { FALSE }; }
++						   TChannel Channel) const { return { FALSE, 0, 0 }; }
+ 	/// \param Control Control selector
+ 	/// \param Jack Affected jack
+ 	/// \param Channel Affected channel(s)

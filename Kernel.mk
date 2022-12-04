@@ -68,6 +68,7 @@ LIBS 		:=	$(CIRCLE_STDLIB_LIBS) \
 				$(CIRCLEHOME)/lib/libcircle.a \
 				$(CIRCLEHOME)/lib/net/libnet.a \
 				$(CIRCLEHOME)/lib/sched/libsched.a \
+				$(CIRCLEHOME)/lib/sound/libsound.a \
 				$(CIRCLEHOME)/lib/usb/libusb.a
 
 ifeq ($(HDMI_CONSOLE), 1)

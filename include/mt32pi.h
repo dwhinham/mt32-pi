@@ -35,7 +35,7 @@
 #include <circle/multicore.h>
 #include <circle/net/netsubsystem.h>
 #include <circle/sched/scheduler.h>
-#include <circle/soundbasedevice.h>
+#include <circle/sound/soundbasedevice.h>
 #include <circle/spimaster.h>
 #include <circle/timer.h>
 #include <circle/types.h>
