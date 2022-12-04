@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update to circle-stdlib v15.14/Circle Step 45.
+- Update ARM toolchains to 11.3.rel1.
 - Update to libmt32emu v2.7.0.
 - Update to FluidSynth v2.3.0.
 - Update to inih r56.

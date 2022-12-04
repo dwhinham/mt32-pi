@@ -3,7 +3,7 @@ name: mt32-pi CI
 on: [push, pull_request]
 
 env:
-  toolchain-version: 10.3-2021.07
+  toolchain-version: 11.3.rel1
   python-version: 3.11
 
 jobs:
@@ -50,23 +50,23 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
-          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
+          ~/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-arm-none-eabi
+          ~/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
         key: cache-arm-toolchains-${{ env.toolchain-version }}
 
     - name: Install toolchains if not retrieved from cache
       if: steps.cache-toolchains.outputs.cache-hit != 'true'
       run: |
         for triplet in arm-none-eabi aarch64-none-elf; do
-          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-a/${{ env.toolchain-version }}/binrel/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
-          tar -xf gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz -C ~
-          rm gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
+          wget -q https://developer.arm.com/-/media/Files/downloads/gnu/${{ env.toolchain-version }}/binrel/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
+          tar -xf arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz -C ~
+          rm arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}.tar.xz
         done
 
     - name: Update PATH
       run: |
         for triplet in arm-none-eabi aarch64-none-elf; do
-          echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
+          echo "$HOME/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
         done
 
     - name: Build
@@ -129,15 +129,15 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-arm-none-eabi
-          ~/gcc-arm-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
+          ~/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-arm-none-eabi
+          ~/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-aarch64-none-elf
         key: cache-arm-toolchains-${{ env.toolchain-version }}
 
     - name: Update PATH
       if: steps.cache-boot-files.outputs.cache-hit != 'true'
       run: |
         for triplet in arm-none-eabi aarch64-none-elf; do
-          echo "$HOME/gcc-arm-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
+          echo "$HOME/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
         done
 
     - name: Download boot files and build ARM stub if not retrieved from cache
