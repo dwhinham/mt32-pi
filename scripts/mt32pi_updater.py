@@ -204,14 +204,18 @@ def print_retry(attempt):
 
 def print_socket_connection_failed():
     print(
-        "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
-        f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?",
+        (
+            "Couldn't connect to your mt32-pi - you did enable networking and the FTP"
+            f" server in {COLOR_PURPLE}mt32-pi.cfg{COLOR_RESET}, right?"
+        ),
         file=sys.stderr,
     )
     print(
-        "This script requires that you are running mt32-pi"
-        f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above. Previous versions do not"
-        " feature the FTP server.",
+        (
+            "This script requires that you are running mt32-pi"
+            f" {COLOR_PURPLE}v0.11.0{COLOR_RESET} or above. Previous versions do not"
+            " feature the FTP server."
+        ),
         file=sys.stderr,
     )
 
@@ -335,8 +339,10 @@ def self_update():
 
             print_result("WARNING!", COLOR_YELLOW)
             print(
-                "Unable to find version information in latest script from GitHub;"
-                " continuing anyway...",
+                (
+                    "Unable to find version information in latest script from GitHub;"
+                    " continuing anyway..."
+                ),
                 file=sys.stderr,
             )
 
@@ -349,8 +355,10 @@ def get_current_version(ftp):
     result = re.search(r"mt32-pi (v[0-9]+.[0-9]+.[0-9]+)", ftp.getwelcome())
     if not result:
         print(
-            "Failed to extract version number from FTP welcome message; continuing"
-            " anyway",
+            (
+                "Failed to extract version number from FTP welcome message; continuing"
+                " anyway"
+            ),
             file=sys.stderr,
         )
         return "<unknown>"
@@ -587,7 +595,7 @@ def install(ftp, source_path, config):
     filter_dirs = [Path(path[:-1]) for path in ignore_list if path.endswith("/")]
     filter_files = [Path(path) for path in ignore_list if not path.endswith("/")]
 
-    for (dir_path, dir_names, filenames) in os.walk(source_path):
+    for dir_path, dir_names, filenames in os.walk(source_path):
         remote_dir = Path(dir_path.replace(str(source_path), "").lstrip(os.sep))
 
         for file_name in filenames:
