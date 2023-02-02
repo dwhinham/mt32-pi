@@ -85,9 +85,6 @@ bool CKernel::Initialize(void)
 		return false;
 	}
 
-	// Initialize newlib stdio with a reference to Circle's file system
-	CGlueStdioInit(m_SDFileSystem);
-
 	// Load configuration file
 	if (!m_Config.Initialize("mt32-pi.cfg"))
 		m_Logger.Write(GetKernelName(), LogWarning, "Unable to find or parse config file; using defaults");
