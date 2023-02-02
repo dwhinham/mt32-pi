@@ -22,11 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to inih r56.
 - Updater: `config.txt` is now replaced on update, however the `avoid_warnings` setting is preserved (the only setting that matters to most users).
 - Updater: improved error handling.
+- Installer: less often-selected Wi-Fi countries have been moved to a separate list.
 
 ### Fixed
 
 - Incorrect I²C clock speed with recent Raspberry Pi firmware versions (issue #292). This was caused by core clock frequency scaling by the GPU firmware. Changes to `config.txt` have been added to ensure the I²C clock is stable by locking the core frequency to 250MHz. The newer Raspberry Pi firmware has been restored.
 - Some USB MIDI controllers which make use of interrupt endpoints [would not be usable](https://github.com/rsta2/circle/issues/316) (e.g. some Novation models).
+- Installer: invalid Wi-Fi countries removed from list according to driver source.
+- Installer: if using a wpa_supplicant.conf copied from a MiSTer system, invalid lines are now removed (e.g. "ctrl_interface") as they will fail under mt32-pi.
 
 ## [0.12.1] - 2022-06-14
 

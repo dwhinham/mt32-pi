@@ -20,9 +20,24 @@
 # You should have received a copy of the GNU General Public License along with
 # mt32-pi. If not, see <http://www.gnu.org/licenses/>.
 
+# -----------------------------------------------------------------------------
+# Changelog
+# -----------------------------------------------------------------------------
+# 0.2.0 - 2023-02-02
+# - Less often-selected Wi-Fi countries have been moved to a separate list.
+# - Invalid Wi-Fi countries removed from list according to driver source.
+# - If using a wpa_supplicant.conf copied from a MiSTer system, invalid lines
+#   are now removed (e.g. "ctrl_interface") as they will fail under mt32-pi.
+#
+# 0.1.1 - 2022-06-13
+# - Missing tools (e.g. `dialog`, `jq`) are now reported if they aren't found.
+#
+# 0.1.0 - 2022-03-25
+# - Initial version.
+
 set -o pipefail
 
-SCRIPT_VERSION=0.1.1
+SCRIPT_VERSION=0.2.0
 GITHUB_API_URL="https://api.github.com/repos/dwhinham/mt32-pi/releases/latest"
 MISTER_WPA_SUPPLICANT_CFG_PATH="/media/fat/linux/wpa_supplicant.conf"
 
@@ -35,22 +50,37 @@ if [ -f /etc/ssl/certs/cacert.pem ]; then
 fi
 
 # ISO 3166-1 alpha-2 names and codes from: https://www.iso.org/obp/ui/#search
-COUNTRY_CODES=(
+# N.B. Countries that don't appear in circle/addon/wlan/hostap/src/drivers/driver_circle.cpp are disabled
+COMMON_COUNTRY_CODES=(
+	"US" "United States of America (the)"
+	"GB" "United Kingdom of Great Britain and Northern Ireland (the)"
+	"CA" "Canada"
+	"AU" "Australia"
+	"NZ" "New Zealand"
+	"FR" "France"
+	"DE" "Germany"
+	"ES" "Spain"
+	"JP" "Japan"
+	"KR" "Korea (the Republic of)"
+)
+
+ALL_COUNTRY_CODES=(
 	"AD" "Andorra"
 	"AE" "United Arab Emirates (the)"
 	"AF" "Afghanistan"
-	"AG" "Antigua and Barbuda"
+	#"AG" "Antigua and Barbuda"
 	"AI" "Anguilla"
 	"AL" "Albania"
 	"AM" "Armenia"
-	"AO" "Angola"
-	"AQ" "Antarctica"
+	"AN" "Netherlands Antilles"
+	#"AO" "Angola"
+	#"AQ" "Antarctica"
 	"AR" "Argentina"
 	"AS" "American Samoa"
 	"AT" "Austria"
 	"AU" "Australia"
 	"AW" "Aruba"
-	"AX" "Åland Islands"
+	#"AX" "Åland Islands"
 	"AZ" "Azerbaijan"
 	"BA" "Bosnia and Herzegovina"
 	"BB" "Barbados"
@@ -59,41 +89,41 @@ COUNTRY_CODES=(
 	"BF" "Burkina Faso"
 	"BG" "Bulgaria"
 	"BH" "Bahrain"
-	"BI" "Burundi"
-	"BJ" "Benin"
+	#"BI" "Burundi"
+	#"BJ" "Benin"
 	"BL" "Saint Barthélemy"
 	"BM" "Bermuda"
 	"BN" "Brunei Darussalam"
 	"BO" "Bolivia (Plurinational State of)"
-	"BQ" "Bonaire, Sint Eustatius and Saba"
+	#"BQ" "Bonaire, Sint Eustatius and Saba"
 	"BR" "Brazil"
 	"BS" "Bahamas (the)"
 	"BT" "Bhutan"
-	"BV" "Bouvet Island"
-	"BW" "Botswana"
+	#"BV" "Bouvet Island"
+	#"BW" "Botswana"
 	"BY" "Belarus"
 	"BZ" "Belize"
 	"CA" "Canada"
-	"CC" "Cocos (Keeling) Islands (the)"
-	"CD" "Congo (the Democratic Republic of the)"
+	#"CC" "Cocos (Keeling) Islands (the)"
+	#"CD" "Congo (the Democratic Republic of the)"
 	"CF" "Central African Republic (the)"
-	"CG" "Congo (the)"
+	#"CG" "Congo (the)"
 	"CH" "Switzerland"
 	"CI" "Côte d'Ivoire"
-	"CK" "Cook Islands (the)"
+	#"CK" "Cook Islands (the)"
 	"CL" "Chile"
-	"CM" "Cameroon"
+	#"CM" "Cameroon"
 	"CN" "China"
 	"CO" "Colombia"
 	"CR" "Costa Rica"
 	"CU" "Cuba"
-	"CV" "Cabo Verde"
-	"CW" "Curaçao"
+	#"CV" "Cabo Verde"
+	#"CW" "Curaçao"
 	"CX" "Christmas Island"
 	"CY" "Cyprus"
 	"CZ" "Czechia"
 	"DE" "Germany"
-	"DJ" "Djibouti"
+	#"DJ" "Djibouti"
 	"DK" "Denmark"
 	"DM" "Dominica"
 	"DO" "Dominican Republic (the)"
@@ -101,37 +131,37 @@ COUNTRY_CODES=(
 	"EC" "Ecuador"
 	"EE" "Estonia"
 	"EG" "Egypt"
-	"EH" "Western Sahara"
-	"ER" "Eritrea"
+	#"EH" "Western Sahara"
+	#"ER" "Eritrea"
 	"ES" "Spain"
 	"ET" "Ethiopia"
 	"FI" "Finland"
-	"FJ" "Fiji"
-	"FK" "Falkland Islands (the)"
+	#"FJ" "Fiji"
+	#"FK" "Falkland Islands (the)"
 	"FM" "Micronesia (Federated States of)"
-	"FO" "Faroe Islands (the)"
+	#"FO" "Faroe Islands (the)"
 	"FR" "France"
-	"GA" "Gabon"
+	#"GA" "Gabon"
 	"GB" "United Kingdom of Great Britain and Northern Ireland (the)"
 	"GD" "Grenada"
 	"GE" "Georgia"
 	"GF" "French Guiana"
-	"GG" "Guernsey"
+	#"GG" "Guernsey"
 	"GH" "Ghana"
-	"GI" "Gibraltar"
+	#"GI" "Gibraltar"
 	"GL" "Greenland"
-	"GM" "Gambia (the)"
-	"GN" "Guinea"
+	#"GM" "Gambia (the)"
+	#"GN" "Guinea"
 	"GP" "Guadeloupe"
-	"GQ" "Equatorial Guinea"
+	#"GQ" "Equatorial Guinea"
 	"GR" "Greece"
-	"GS" "South Georgia and the South Sandwich Islands"
+	#"GS" "South Georgia and the South Sandwich Islands"
 	"GT" "Guatemala"
 	"GU" "Guam"
-	"GW" "Guinea-Bissau"
+	#"GW" "Guinea-Bissau"
 	"GY" "Guyana"
 	"HK" "Hong Kong"
-	"HM" "Heard Island and McDonald Islands"
+	#"HM" "Heard Island and McDonald Islands"
 	"HN" "Honduras"
 	"HR" "Croatia"
 	"HT" "Haiti"
@@ -139,73 +169,73 @@ COUNTRY_CODES=(
 	"ID" "Indonesia"
 	"IE" "Ireland"
 	"IL" "Israel"
-	"IM" "Isle of Man"
+	#"IM" "Isle of Man"
 	"IN" "India"
-	"IO" "British Indian Ocean Territory (the)"
-	"IQ" "Iraq"
+	#"IO" "British Indian Ocean Territory (the)"
+	#"IQ" "Iraq"
 	"IR" "Iran (Islamic Republic of)"
 	"IS" "Iceland"
 	"IT" "Italy"
-	"JE" "Jersey"
+	#"JE" "Jersey"
 	"JM" "Jamaica"
 	"JO" "Jordan"
 	"JP" "Japan"
 	"KE" "Kenya"
-	"KG" "Kyrgyzstan"
+	#"KG" "Kyrgyzstan"
 	"KH" "Cambodia"
-	"KI" "Kiribati"
-	"KM" "Comoros (the)"
+	#"KI" "Kiribati"
+	#"KM" "Comoros (the)"
 	"KN" "Saint Kitts and Nevis"
 	"KP" "Korea (the Democratic People's Republic of)"
 	"KR" "Korea (the Republic of)"
 	"KW" "Kuwait"
 	"KY" "Cayman Islands (the)"
 	"KZ" "Kazakhstan"
-	"LA" "Lao People's Democratic Republic (the)"
+	#"LA" "Lao People's Democratic Republic (the)"
 	"LB" "Lebanon"
 	"LC" "Saint Lucia"
 	"LI" "Liechtenstein"
 	"LK" "Sri Lanka"
-	"LR" "Liberia"
+	#"LR" "Liberia"
 	"LS" "Lesotho"
 	"LT" "Lithuania"
 	"LU" "Luxembourg"
 	"LV" "Latvia"
-	"LY" "Libya"
+	#"LY" "Libya"
 	"MA" "Morocco"
 	"MC" "Monaco"
 	"MD" "Moldova (the Republic of)"
 	"ME" "Montenegro"
 	"MF" "Saint Martin (French part)"
-	"MG" "Madagascar"
+	#"MG" "Madagascar"
 	"MH" "Marshall Islands"
 	"MK" "North Macedonia"
-	"ML" "Mali"
-	"MM" "Myanmar"
+	#"ML" "Mali"
+	#"MM" "Myanmar"
 	"MN" "Mongolia"
 	"MO" "Macao"
 	"MP" "Northern Mariana Islands (the)"
 	"MQ" "Martinique"
 	"MR" "Mauritania"
-	"MS" "Montserrat"
+	#"MS" "Montserrat"
 	"MT" "Malta"
 	"MU" "Mauritius"
 	"MV" "Maldives"
 	"MW" "Malawi"
 	"MX" "Mexico"
 	"MY" "Malaysia"
-	"MZ" "Mozambique"
-	"NA" "Namibia"
-	"NC" "New Caledonia"
-	"NE" "Niger (the)"
-	"NF" "Norfolk Island"
+	#"MZ" "Mozambique"
+	#"NA" "Namibia"
+	#"NC" "New Caledonia"
+	#"NE" "Niger (the)"
+	#"NF" "Norfolk Island"
 	"NG" "Nigeria"
 	"NI" "Nicaragua"
 	"NL" "Netherlands (the)"
 	"NO" "Norway"
 	"NP" "Nepal"
-	"NR" "Nauru"
-	"NU" "Niue"
+	#"NR" "Nauru"
+	#"NU" "Niue"
 	"NZ" "New Zealand"
 	"OM" "Oman"
 	"PA" "Panama"
@@ -216,9 +246,9 @@ COUNTRY_CODES=(
 	"PK" "Pakistan"
 	"PL" "Poland"
 	"PM" "Saint Pierre and Miquelon"
-	"PN" "Pitcairn"
+	#"PN" "Pitcairn"
 	"PR" "Puerto Rico"
-	"PS" "Palestine, State of"
+	#"PS" "Palestine, State of"
 	"PT" "Portugal"
 	"PW" "Palau"
 	"PY" "Paraguay"
@@ -229,52 +259,52 @@ COUNTRY_CODES=(
 	"RU" "Russian Federation (the)"
 	"RW" "Rwanda"
 	"SA" "Saudi Arabia"
-	"SB" "Solomon Islands"
-	"SC" "Seychelles"
-	"SD" "Sudan (the)"
+	#"SB" "Solomon Islands"
+	#"SC" "Seychelles"
+	#"SD" "Sudan (the)"
 	"SE" "Sweden"
 	"SG" "Singapore"
-	"SH" "Saint Helena, Ascension and Tristan da Cunha"
+	#"SH" "Saint Helena, Ascension and Tristan da Cunha"
 	"SI" "Slovenia"
-	"SJ" "Svalbard and Jan Mayen"
+	#"SJ" "Svalbard and Jan Mayen"
 	"SK" "Slovakia"
-	"SL" "Sierra Leone"
-	"SM" "San Marino"
+	#"SL" "Sierra Leone"
+	#"SM" "San Marino"
 	"SN" "Senegal"
-	"SO" "Somalia"
+	#"SO" "Somalia"
 	"SR" "Suriname"
-	"SS" "South Sudan"
-	"ST" "Sao Tome and Principe"
+	#"SS" "South Sudan"
+	#"ST" "Sao Tome and Principe"
 	"SV" "El Salvador"
-	"SX" "Sint Maarten (Dutch part)"
+	#"SX" "Sint Maarten (Dutch part)"
 	"SY" "Syrian Arab Republic (the)"
-	"SZ" "Eswatini"
+	#"SZ" "Eswatini"
 	"TC" "Turks and Caicos Islands (the)"
 	"TD" "Chad"
-	"TF" "French Southern Territories (the)"
+	#"TF" "French Southern Territories (the)"
 	"TG" "Togo"
 	"TH" "Thailand"
-	"TJ" "Tajikistan"
-	"TK" "Tokelau"
-	"TL" "Timor-Leste"
-	"TM" "Turkmenistan"
+	#"TJ" "Tajikistan"
+	#"TK" "Tokelau"
+	#"TL" "Timor-Leste"
+	#"TM" "Turkmenistan"
 	"TN" "Tunisia"
-	"TO" "Tonga"
+	#"TO" "Tonga"
 	"TR" "Turkey"
 	"TT" "Trinidad and Tobago"
-	"TV" "Tuvalu"
+	#"TV" "Tuvalu"
 	"TW" "Taiwan (Province of China)"
 	"TZ" "Tanzania, the United Republic of"
 	"UA" "Ukraine"
 	"UG" "Uganda"
-	"UM" "United States Minor Outlying Islands (the)"
+	#"UM" "United States Minor Outlying Islands (the)"
 	"US" "United States of America (the)"
 	"UY" "Uruguay"
 	"UZ" "Uzbekistan"
-	"VA" "Holy See (the)"
+	#"VA" "Holy See (the)"
 	"VC" "Saint Vincent and the Grenadines"
 	"VE" "Venezuela (Bolivarian Republic of)"
-	"VG" "Virgin Islands (British)"
+	#"VG" "Virgin Islands (British)"
 	"VI" "Virgin Islands (U.S.)"
 	"VN" "Viet Nam"
 	"VU" "Vanuatu"
@@ -283,7 +313,7 @@ COUNTRY_CODES=(
 	"YE" "Yemen"
 	"YT" "Mayotte"
 	"ZA" "South Africa"
-	"ZM" "Zambia"
+	#"ZM" "Zambia"
 	"ZW" "Zimbabwe"
 )
 
@@ -330,7 +360,6 @@ EOF
 unset IFS
 
 function die {
-	clear
 	if [ "$@" ]; then
 		echo "$@" >&2
 	fi
@@ -402,7 +431,31 @@ function prepare_disk {
 }
 
 function get_wifi_country_code {
-	"${DIALOG[@]}" --title "Network configuration" --menu "Please choose your country (to ensure the Wi-Fi radio complies with regulations and improve compatibility):" 30 80 10 "${COUNTRY_CODES[@]}" --output-fd 1
+	local MSG_WIFI_COUNTRY country_code
+
+	read -r -d '' MSG_WIFI_COUNTRY <<-EOF
+		Please choose your country (to ensure the Wi-Fi radio complies with regulations and improve compatibility).
+
+		Choose "All countries" if your country is not shown.
+	EOF
+
+	country_code=$("${DIALOG[@]}" --title "Network configuration" \
+			--extra-button \
+			--extra-label "All countries" \
+			--menu "${MSG_WIFI_COUNTRY}" \
+			20 80 10 \
+			"${COMMON_COUNTRY_CODES[@]}" --output-fd 1
+		)
+
+	if [ $? -eq 3 ]; then
+		country_code=$("${DIALOG[@]}" --title "Network configuration" \
+				--menu "${MSG_WIFI_COUNTRY}" \
+				30 80 10 \
+				"${ALL_COUNTRY_CODES[@]}" --output-fd 1
+		)
+	fi
+
+	echo "${country_code}"
 }
 
 if [ "$EUID" -ne 0 ]; then
@@ -513,6 +566,10 @@ if "${DIALOG[@]}" --title "Network configuration" --yesno "$MSG_NETWORK_CONFIG" 
 	if [ -f "$MISTER_WPA_SUPPLICANT_CFG_PATH" ] && \
 	   "${DIALOG[@]}" --title "Network configuration" --yesno "$MSG_WPA_SUPPLICANT_CFG_DETECTED" 7 90; then
 		cp "$MISTER_WPA_SUPPLICANT_CFG_PATH" "$wpa_supplicant"
+
+		# Remove unsupported config lines
+		sed -i "/ctrl_interface\s*=.*/,/update_config\s*=.*/d" "$wpa_supplicant"
+
 		if ! grep -qE "country\s*=\s*[A-Z]{2}" "$wpa_supplicant"; then
 			"${DIALOG[@]}" --title "Network configuration" --msgbox "$MSG_WPA_SUPPLICANT_CFG_NO_COUNTRY" 9 90
 			wifi_country_code=$(get_wifi_country_code)
@@ -540,7 +597,7 @@ fi
 read -r -d '' MSG_LOW_VOLTAGE <<EOF
 Would you like to disable low voltage warnings?
 
-You will usually need this when powering your mt32-pi from the MiSTer's user port due to voltage drop.
+You will usually need this when powering your mt32-pi from a MiSTer FPGA device's user port due to voltage drop.
 
 This is normal.
 
@@ -565,10 +622,11 @@ MT-32 mode will be unavailable until you add MT-32 ROM files to the \Zb\Z4roms\Z
              Thankyou for using mt32-pi! \Z5<3\Zn
 
            \Z1\Zuhttps://github.com/dwhinham/mt32-pi\Zn
+               \Z1\Zuhttps://ko-fi.com/d0pefish\Zn
 
          Please support open source developers!
 EOF
 
-"${DIALOG[@]}" --title "Installation complete!" --msgbox "$MSG_COMPLETE" 16 60
+"${DIALOG[@]}" --title "Installation complete!" --msgbox "$MSG_COMPLETE" 17 60
 
 clear
