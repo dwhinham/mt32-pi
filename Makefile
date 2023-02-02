@@ -88,7 +88,7 @@ $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 fluidsynth: $(FLUIDSYNTHBUILDDIR)/.done
 
 $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
-	@${APPLY_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.0-circle.patch
+	@${APPLY_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 
 	@CFLAGS="$(CFLAGS_FOR_TARGET)" \
 	cmake  -B $(FLUIDSYNTHBUILDDIR) \
@@ -142,7 +142,7 @@ veryclean: clean
 # Reverse patches
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-cp210x-remove-partnum-check.patch
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
-	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.0-circle.patch
+	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 
 # Clean circle-stdlib
 	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
