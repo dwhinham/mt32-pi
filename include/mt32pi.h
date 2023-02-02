@@ -36,7 +36,7 @@
 #include <circle/net/netsubsystem.h>
 #include <circle/sched/scheduler.h>
 #include <circle/sound/soundbasedevice.h>
-#include <circle/spimaster.h>
+#include <circle/spimasterdma.h>
 #include <circle/timer.h>
 #include <circle/types.h>
 #include <circle/usb/usbhcidevice.h>
@@ -69,7 +69,7 @@
 class CMT32Pi : CMultiCoreSupport, CPower, CMIDIParser, CAppleMIDIHandler, CUDPMIDIHandler
 {
 public:
-	CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
+	CMT32Pi(CI2CMaster* pI2CMaster, CSPIMasterDMA* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI);
 	virtual ~CMT32Pi() override;
 
 	bool Initialize(bool bSerialMIDIAvailable = true);
@@ -148,7 +148,7 @@ private:
 	CActLED* m_pActLED;
 
 	CI2CMaster* m_pI2CMaster;
-	CSPIMaster* m_pSPIMaster;
+	CSPIMasterDMA* m_pSPIMaster;
 	CInterruptSystem* m_pInterrupt;
 	CGPIOManager* m_pGPIOManager;
 	CSerialDevice* m_pSerial;

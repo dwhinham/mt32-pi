@@ -41,6 +41,8 @@ void CMIDIParser::ParseMIDIBytes(const u8* pData, size_t nSize, bool bIgnoreNote
 	{
 		u8 nByte = pData[i];
 
+		//CLogger::Get()->Write(MIDIParserName, LogNotice, "0x%02X", nByte);
+
 		// System Real-Time message - single byte, handle immediately
 		// Can appear anywhere in the stream, even in between status/data bytes
 		if (nByte >= 0xF8)

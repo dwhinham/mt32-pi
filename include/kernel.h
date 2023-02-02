@@ -29,7 +29,7 @@
 #include <circle/gpiomanager.h>
 #include <circle/i2cmaster.h>
 #include <circle/sched/scheduler.h>
-#include <circle/spimaster.h>
+#include <circle/spimasterdma.h>
 #include <circle/timer.h>
 
 #include "config.h"
@@ -58,7 +58,7 @@ protected:
 	FATFS m_SDFileSystem;
 
 	CI2CMaster m_I2CMaster;
-	CSPIMaster m_SPIMaster;
+	CSPIMasterDMA m_SPIMaster;
 	CGPIOManager m_GPIOManager;
 
 private:

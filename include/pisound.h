@@ -25,22 +25,27 @@
 
 #include <circle/gpiomanager.h>
 #include <circle/gpiopin.h>
-#include <circle/spimaster.h>
+#include <circle/sched/task.h>
+#include <circle/spimasterdma.h>
+#include <circle/spinlock.h>
 #include <circle/types.h>
 
 #include "ringbuffer.h"
 
-class CPisound
+class CPisound : protected CTask
 {
 public:
 	using TMIDIReceiveHandler = void (*)(const u8* pData, size_t nSize);
 
-	CPisound(CSPIMaster* pSPIMaster, CGPIOManager* pGPIOManager, unsigned nSamplerate);
-	~CPisound();
+	CPisound(CSPIMasterDMA* pSPIMaster, CGPIOManager* pGPIOManager, unsigned nSamplerate);
+	virtual ~CPisound() override;
 
 	bool Initialize();
 	void RegisterMIDIReceiveHandler(TMIDIReceiveHandler pHandler) { m_pReceiveHandler = pHandler; }
 	size_t SendMIDI(const u8* pData, size_t nSize);
+
+	virtual void Run() override;
+	void DoTransfer();
 
 private:
 	u16 Transfer16(u16 nValue) const;
@@ -53,7 +58,8 @@ private:
 	static constexpr size_t MaxIDStringLength = 25;
 	static constexpr size_t MaxVersionStringLength = 6;
 
-	CSPIMaster* m_pSPIMaster;
+	CSpinLock m_Lock;
+	CSPIMasterDMA* m_pSPIMaster;
 	unsigned m_nSamplerate;
 
 	CGPIOPin m_SPIReset;

@@ -42,6 +42,7 @@ CKernel::CKernel(void)
 	  m_SDFileSystem{},
 
 	  m_I2CMaster(1, true),
+	  m_SPIMaster(&mInterrupt),
 	  m_GPIOManager(&mInterrupt),
 
 	  m_MT32Pi(&m_I2CMaster, &m_SPIMaster, &mInterrupt, &m_GPIOManager, &m_Serial, &m_USBHCI)

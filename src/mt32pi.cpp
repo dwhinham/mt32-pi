@@ -59,7 +59,7 @@ enum class TCustomSysExCommand : u8
 
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
-CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
+CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMasterDMA* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
 	: CMultiCoreSupport(CMemorySystem::Get()),
 	  CMIDIParser(),
 
@@ -712,6 +712,29 @@ void CMT32Pi::OnAppleMIDIDisconnect(const CIPAddress* pIPAddress, const char* pN
 	LCDLog(TLCDLogType::Notice, "%s disconnected!", pName);
 }
 
+void PrintRouting(const char* pDevice, u8 nRouting)
+{
+	char Buffer[256];
+	sprintf(Buffer, " - %-10s ->", pDevice);
+
+	if (nRouting == TMIDIRoutingDest::None)
+	{
+		strcat(Buffer, " none");
+		LOGNOTE(Buffer);
+		return;
+	}
+
+	if (nRouting & TMIDIRoutingDest::Synth)		strncat(Buffer, " synth",	sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::GPIO)		strncat(Buffer, " gpio",	sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::Pisound)	strncat(Buffer, " pisound",	sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::USBMIDI)	strncat(Buffer, " usb_midi",	sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::USBSerial)	strncat(Buffer, " usb_serial",	sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::RTP)		strncat(Buffer, " rtp",		sizeof(Buffer));
+	if (nRouting & TMIDIRoutingDest::UDP)		strncat(Buffer, " udp",		sizeof(Buffer));
+
+	LOGNOTE(Buffer);
+}
+
 bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 {
 	if (nSize < 4)
@@ -745,6 +768,15 @@ bool CMT32Pi::ParseCustomSysEx(const u8* pData, size_t nSize)
 			case 4: m_pConfig->MIDIRouteRTP		= nRouting;	break;
 			case 5: m_pConfig->MIDIRouteUDP		= nRouting;	break;
 		}
+
+		LOGNOTE("MIDI routing setup:");
+		PrintRouting("gpio", m_pConfig->MIDIRouteGPIO);
+		PrintRouting("usb_midi", m_pConfig->MIDIRouteUSBMIDI);
+		PrintRouting("usb_serial", m_pConfig->MIDIRouteUSBSerial);
+		PrintRouting("pisound", m_pConfig->MIDIRoutePisound);
+		PrintRouting("rtp", m_pConfig->MIDIRouteRTP);
+		PrintRouting("udp", m_pConfig->MIDIRouteUDP);
+
 		return true;
 	}
 
@@ -1032,7 +1064,7 @@ void CMT32Pi::ProcessMIDIRouting(const TMIDIRouting& Routing, const u8* pData, s
 	}
 
 	// Send to GPIO UART
-	if (Routing & GPIO && m_bSerialMIDIEnabled)
+	if ((Routing & GPIO) && m_bSerialMIDIEnabled)
 	{
 		const int nSendResult = m_pSerial->Write(pData, nSize);
 		if (nSendResult < 0 || static_cast<size_t>(nSendResult) != nSize)
@@ -1043,44 +1075,44 @@ void CMT32Pi::ProcessMIDIRouting(const TMIDIRouting& Routing, const u8* pData, s
 	}
 
 	// Send to Pisound
-	if (Routing & Pisound && m_pPisound)
+	if ((Routing & Pisound) && m_pPisound)
 	{
 		if (m_pPisound->SendMIDI(pData, nSize) != nSize)
 		{
-			m_pLogger->Write(MT32PiName, LogError, "Pisound MIDI TX error");
+			LOGERR("Pisound MIDI TX error");
 			LCDLog(TLCDLogType::Error, "Pisound MIDI TX error!");
 		}
 	}
 
 	// Send to USB MIDI
-	if (Routing & USBMIDI && m_pUSBMIDIDevice)
+	if ((Routing & USBMIDI) && m_pUSBMIDIDevice)
 	{
 		if (m_pUSBMIDIDevice->SendPlainMIDI(0, pData, nSize) == false)
 		{
-			m_pLogger->Write(MT32PiName, LogError, "USB MIDI TX error");
+			LOGERR("USB MIDI TX error");
 			LCDLog(TLCDLogType::Error, "USB MIDI TX error!");
 		}
 	}
 
 	// Send to USB serial
-	if (Routing & USBSerial && m_pUSBSerialDevice)
+	if ((Routing & USBSerial) && m_pUSBSerialDevice)
 	{
 		const int nSendResult = m_pUSBSerialDevice->Write(pData, nSize);
 		if (nSendResult < 0 || static_cast<size_t>(nSendResult) != nSize)
 		{
-			m_pLogger->Write(MT32PiName, LogError, "USB serial TX error %d (wanted to send %d bytes)", nSendResult, nSize);
+			LOGERR("USB serial TX error %d (wanted to send %d bytes)", nSendResult, nSize);
 			LCDLog(TLCDLogType::Error, "USB serial TX error!");
 		}
 	}
 
 	// Send to AppleMIDI
-	if (Routing & RTP && m_pAppleMIDIParticipant)
+	if ((Routing & RTP) && m_pAppleMIDIParticipant)
 	{
 		// TODO: AppleMIDIParticipant has no transmit functionality
 	}
 
 	// Send to UDP MIDI
-	if (Routing & UDP && m_pUDPMIDIReceiver)
+	if ((Routing & UDP) && m_pUDPMIDIReceiver)
 	{
 		// TODO: UDPMIDIReceiver has no transmit functionality
 	}
