@@ -3,7 +3,7 @@
 # mt32pi_updater.py
 #
 # mt32-pi - A baremetal MIDI synthesizer for Raspberry Pi
-# Copyright (C) 2020-2022 Dale Whinham <daleyo@gmail.com>
+# Copyright (C) 2020-2023 Dale Whinham <daleyo@gmail.com>
 #
 # This file is part of mt32-pi.
 #
@@ -155,7 +155,7 @@ MT32PI_LOGO = r"""
     COLOR_PURPLE,
     COLOR_GREEN,
     COLOR_RESET,
-    f"update script v{SCRIPT_VERSION}, © Dale Whinham 2020-2022",
+    f"update script v{SCRIPT_VERSION}, © Dale Whinham 2020-2023",
 )
 
 RESULT_COLUMN_WIDTH = 10
