@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Memory corruption/crashing caused by faulty ring buffer dequeue implementation.
+
 ## [0.13.0] - 2023-02-23
 
 ### Added
