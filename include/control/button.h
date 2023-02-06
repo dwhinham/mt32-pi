@@ -23,14 +23,18 @@
 #ifndef _button_h
 #define _button_h
 
-enum class TButton
+#include <circle/types.h>
+
+enum TButton : u8
 {
 	Button1,
 	Button2,
 	Button3,
 	Button4,
 
-	EncoderButton
+	EncoderButton,
+
+	Max,
 };
 
 #endif

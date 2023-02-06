@@ -33,6 +33,7 @@ struct TButtonEvent
 {
 	TButton Button;
 	bool bPressed;
+	bool bRepeat;
 };
 
 struct TEncoderEvent

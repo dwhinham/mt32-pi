@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to libmt32emu v2.7.0.
 - Update to FluidSynth v2.3.1.
 - Update to inih r56.
+- Volume up/down buttons in the `simple_buttons` control scheme now repeat and accelerate when pressed and held (issue #323).
 - Updater: `config.txt` is now replaced on update, however the `avoid_warnings` setting is preserved (the only setting that matters to most users).
 - Updater: improved error handling.
 - Installer: less often-selected Wi-Fi countries have been moved to a separate list.

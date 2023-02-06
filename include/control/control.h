@@ -29,6 +29,7 @@
 
 #include "control/rotaryencoder.h"
 #include "event.h"
+#include "optional.h"
 #include "utility.h"
 
 class CControl
@@ -51,14 +52,38 @@ protected:
 	static constexpr size_t ButtonStateHistoryLength = 16;
 	static constexpr size_t ButtonStateHistoryMask   = ButtonStateHistoryLength - 1;
 
+	static constexpr u32 RepeatDelayMicros 	   = 500000;	// 500ms
+	static constexpr u32 RepeatAccelTimeMicros = 3000000;	// 3s
+	static constexpr u32 MaxRepeatPeriodMicros = 100000;	// 10Hz
+	static constexpr u32 MinRepeatPeriodMicros = 20000;	// 50Hz
+
 	TEventQueue* m_pEventQueue;
 	CUserTimer m_Timer;
 
 	// Debouncing
 	u8 m_ButtonStateHistory[ButtonStateHistoryLength];
 	size_t m_nButtonStateHistoryIndex;
+
+	// State tracking
 	u8 m_nButtonState;
 	u8 m_nLastButtonState;
+
+	// Repeat
+	TOptional<u8> m_RepeatButton;
+	u32 m_PressedTime;
+	u32 m_RepeatTime;
+
+	static inline u32 RepeatPeriod(u32 nPressedDuration)
+	{
+		return Utility::Lerp
+		(
+			nPressedDuration,
+			0,
+			RepeatAccelTimeMicros,
+			MaxRepeatPeriodMicros,
+			MinRepeatPeriodMicros
+		);
+	}
 
 	static void InterruptHandler(CUserTimer* pUserTimer, void* pParam);
 };

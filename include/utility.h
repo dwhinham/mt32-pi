@@ -61,6 +61,12 @@ namespace Utility
 		return nLHS > nRHS ? nLHS : nRHS;
 	}
 
+	// Function for performing a linear interpolation of a value
+	constexpr float Lerp(float nValue, float nMinA, float nMaxA, float nMinB, float nMaxB)
+	{
+		return nMinB + (nValue - nMinA) * ((nMaxB - nMinB) / (nMaxA - nMinA));
+	}
+
 	// Return number of elements in an array
 	template <class T, size_t N>
 	constexpr size_t ArraySize(const T(&)[N]) { return N; }

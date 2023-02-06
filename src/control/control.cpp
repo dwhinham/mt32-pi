@@ -21,6 +21,7 @@
 //
 
 #include <circle/interrupt.h>
+#include <circle/timer.h>
 
 #include "control/control.h"
 
@@ -33,7 +34,10 @@ CControl::CControl(TEventQueue& pEventQueue)
 	  m_ButtonStateHistory{0},
 	  m_nButtonStateHistoryIndex(0),
 	  m_nButtonState(0),
-	  m_nLastButtonState(0)
+	  m_nLastButtonState(0),
+	  m_RepeatButton(),
+	  m_PressedTime(0),
+	  m_RepeatTime(0)
 {
 }
 
@@ -55,20 +59,51 @@ void CControl::Update()
 	{
 		Event.Type = TEventType::Button;
 
-		for (u8 i = 0; i < 8; ++i)
+		for (u8 i = 0; i < TButton::Max; ++i)
 		{
 			const bool bCurrentState = m_nButtonState & (1 << i);
 			const bool bLastState    = m_nLastButtonState & (1 << i);
 
 			if (bCurrentState != bLastState)
 			{
+				if (bCurrentState)
+				{
+					m_RepeatButton = i;
+					m_PressedTime = CTimer::GetClockTicks();
+					m_RepeatTime = 0;
+				}
+				else if (m_RepeatButton && m_RepeatButton.Value() == i)
+					m_RepeatButton.Reset();
+
 				Event.Button.Button   = static_cast<TButton>(i);
 				Event.Button.bPressed = bCurrentState;
+				Event.Button.bRepeat = false;
 				m_pEventQueue->Enqueue(Event);
 			}
 		}
 
 		m_nLastButtonState = m_nButtonState;
+	}
+
+	// Handle repeat
+	if (m_RepeatButton)
+	{
+		const u32 nTicks = CTimer::GetClockTicks();
+		const u32 nPressedDuration = nTicks - m_PressedTime;
+
+		if (nPressedDuration > RepeatDelayMicros)
+		{
+			if (m_RepeatTime == 0)
+				m_RepeatTime = nTicks;
+			else if (nTicks - m_RepeatTime > RepeatPeriod(nPressedDuration - RepeatDelayMicros))
+			{
+				Event.Button.Button   = static_cast<TButton>(m_RepeatButton.Value());
+				Event.Button.bPressed = true;
+				Event.Button.bRepeat = true;
+				m_pEventQueue->Enqueue(Event);
+				m_RepeatTime = nTicks;
+			}
+		}
 	}
 }
 
