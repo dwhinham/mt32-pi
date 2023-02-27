@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced rotary encoder routines with a much more robust algorithm borrowed from [FlashFloppy](https://github.com/keirf/flashfloppy).
+
 ### Fixed
 
 - Memory corruption/crashing caused by faulty ring buffer dequeue implementation.

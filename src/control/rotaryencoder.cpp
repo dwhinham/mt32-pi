@@ -25,7 +25,21 @@
 #include "control/rotaryencoder.h"
 #include "utility.h"
 
-// Based on encoder reading algorithm by Peter Dannegger: https://embdev.net/articles/Rotary_Encoders
+// Based on the rotary encoder reading routines used in FlashFloppy by Kier Fraser
+// https://github.com/keirf/flashfloppy/blob/master/src/main.c
+
+// Returns the previous valid transition in same direction.
+// eg. PreviousTransition(0b0111) == 0b0001
+static constexpr u8 PreviousTransition(u8 nTransition)
+{
+	return (nTransition >> 2) | (((nTransition ^ 3) & 3) << 2);
+}
+
+// Rotary encoder outputs a Gray code, counting clockwise: 00-01-11-10
+static constexpr u32 nTransitions = 0b00100100010000101000000100011000;
+
+// Number of back-to-back transitions we see per detent on various types of rotary encoder
+static constexpr u8 TransitionsPerDetent[] = { 4, 2, 1 };
 
 template <class T, T nMin, T nMax, size_t N>
 class QuadraticLookupTable
@@ -58,41 +72,18 @@ CRotaryEncoder::CRotaryEncoder(TEncoderType Type, bool bReversed, unsigned GPIOP
 
 	  m_Type(Type),
 	  m_bReversed(bReversed),
+
 	  m_nDelta(0),
-	  m_nPreviousState(0),
+	  m_nState(0),
+	  nPreviousTransitions{ 0 },
 
 	  m_nLastReadTime(0)
 {
-	if (m_CLKPin.Read() == LOW)
-		m_nPreviousState = 3;
-
-	if (m_DATPin.Read() == LOW)
-		m_nPreviousState ^= 1;
 }
 
 s8 CRotaryEncoder::Read()
 {
-	s8 nResult = 0;
-
-	switch (m_Type)
-	{
-		case TEncoderType::Full:
-			nResult = m_nDelta;
-			m_nDelta &= 3;
-			nResult >>= 2;
-			break;
-
-		case TEncoderType::Half:
-			nResult = m_nDelta;
-			m_nDelta &= 1;
-			nResult >>= 1;
-			break;
-
-		case TEncoderType::Quarter:
-			nResult  = m_nDelta;
-			m_nDelta = 0;
-			break;
-	}
+	s8 nResult = m_nDelta;
 
 	// Apply acceleration curve
 	if (nResult != 0)
@@ -104,6 +95,8 @@ s8 CRotaryEncoder::Read()
 			nResult *= RotaryAccelLookupTable[nDeltaMillis];
 
 		m_nLastReadTime = nTicks;
+
+		m_nDelta = 0;
 	}
 
 	return m_bReversed ? -nResult : nResult;
@@ -116,20 +109,34 @@ void CRotaryEncoder::ReadGPIOPins()
 
 void CRotaryEncoder::ReadGPIOPins(bool bCLKValue, bool bDATValue)
 {
-	s8 nNewState = 0;
+	m_nState = ((m_nState << 2) | (bDATValue << 1) | bCLKValue) & 0x0F;
 
-	// Convert Gray code to binary
-	if (bCLKValue == LOW)
-		nNewState = 3;
+	// Check if we have seen a valid CW or CCW state transition
+	u8 nRotaryBits = (nTransitions >> (m_nState << 1)) & 3;
+	if (likely(!nRotaryBits))
+		return;
 
-	if (bDATValue == LOW)
-		nNewState ^= 1;
+	// Have we seen the /previous/ transition in this direction?
+	// If not, any previously-recorded transitions are not in a contiguous step-wise
+	// sequence, and should be discarded as switch bounce.
+	u16 nTransition = nPreviousTransitions[nRotaryBits-1];
 
-	const s8 nDiff = m_nPreviousState - nNewState;
+	// Clear any existing bounce transitions
+	if (!(nTransition & (1 << PreviousTransition(m_nState))))
+		nTransition = 0;
 
-	if (nDiff & 1)
+	// Record this transition and check if we have seen enough to get us from one detent to another
+	nTransition |= (1 << m_nState);
+
+	if ((__builtin_popcount(nTransition) < TransitionsPerDetent[static_cast<u8>(m_Type)])
+	   || ((m_Type == TEncoderType::Full) && ((m_nState & 3) != 3)))
 	{
-		m_nPreviousState = nNewState;
-		m_nDelta += (nDiff & 2) - 1;
+		// Not enough transitions yet; remember where we are for next time
+		nPreviousTransitions[nRotaryBits-1] = nTransition;
+		return;
 	}
+
+	// This is a valid movement between detents; clear transition state and accumulate movement
+	nPreviousTransitions[0] = nPreviousTransitions[1] = 0;
+	m_nDelta += (nRotaryBits & 0x01) ? 1 : -1;
 }
