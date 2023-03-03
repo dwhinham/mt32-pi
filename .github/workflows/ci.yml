@@ -42,8 +42,9 @@ jobs:
         board: [pi2, pi3-64, pi4-64]
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+
+    - name: Fetch submodules
+      run: make submodules
 
     - name: Cache ARM toolchains
       id: cache-toolchains
@@ -96,8 +97,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+
+    - name: Fetch submodules
+      run: make submodules
 
     - name: Cache boot files
       id: cache-boot-files
