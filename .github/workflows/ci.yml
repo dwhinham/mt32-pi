@@ -46,6 +46,11 @@ jobs:
     - name: Fetch submodules
       run: make submodules
 
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ env.toolchain-version }}-${{ matrix.board }}
+
     - name: Cache ARM toolchains
       id: cache-toolchains
       uses: actions/cache@v3
@@ -66,8 +71,11 @@ jobs:
 
     - name: Update PATH
       run: |
+        mkdir ~/ccache_bin
         for triplet in arm-none-eabi aarch64-none-elf; do
-          echo "$HOME/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
+          ln -s $(which ccache) ~/ccache_bin/${triplet}-gcc
+          ln -s $(which ccache) ~/ccache_bin/${triplet}-g++
+          echo "$HOME/ccache_bin:$HOME/arm-gnu-toolchain-${{ env.toolchain-version }}-x86_64-${triplet}/bin" >> $GITHUB_PATH
         done
 
     - name: Build
