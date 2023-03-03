@@ -5,7 +5,7 @@
 include Config.mk
 
 .DEFAULT_GOAL=all
-.PHONY: circle-stdlib mt32emu fluidsynth all clean veryclean
+.PHONY: submodules circle-stdlib mt32emu fluidsynth all clean veryclean
 
 #
 # Functions to apply/reverse patches only if not completely applied/reversed already
@@ -25,6 +25,14 @@ REVERSE_PATCH=sh -c '																\
 		echo "Reversing patch $$2 in directory $$1...";											\
 		patch --reverse --strip 1 --no-backup-if-mismatch -r - --directory $$1 < $$2 || (echo "Patch $$2 failed" >&2 && exit 1);	\
 	fi' REVERSE_PATCH
+
+#
+# Get submodules
+#
+submodules:
+	@git submodule update --init --depth 1
+	@git -C external/circle-stdlib submodule update --init --depth 1 libs/circle libs/circle-newlib
+	@git -C external/circle-stdlib/libs/circle submodule update --init --depth 1 addon/wlan/hostap
 
 #
 # Configure circle-stdlib
@@ -69,8 +77,8 @@ $(CIRCLESTDLIBHOME)/.done: $(CIRCLE_STDLIB_CONFIG)
 mt32emu: $(MT32EMUBUILDDIR)/.done
 
 $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
-	@CFLAGS="$(CFLAGS_FOR_TARGET)" \
-	CXXFLAGS="$(CFLAGS_FOR_TARGET)" \
+	@CFLAGS="$(CFLAGS_EXTERNAL)" \
+	CXXFLAGS="$(CFLAGS_EXTERNAL)" \
 	cmake  -B $(MT32EMUBUILDDIR) \
 			$(CMAKE_TOOLCHAIN_FLAGS) \
 			-DCMAKE_CXX_FLAGS_RELEASE="-Ofast" \
@@ -90,7 +98,7 @@ fluidsynth: $(FLUIDSYNTHBUILDDIR)/.done
 $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@${APPLY_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 
-	@CFLAGS="$(CFLAGS_FOR_TARGET)" \
+	@CFLAGS="$(CFLAGS_EXTERNAL)" \
 	cmake  -B $(FLUIDSYNTHBUILDDIR) \
 			$(CMAKE_TOOLCHAIN_FLAGS) \
 			-DCMAKE_C_FLAGS_RELEASE="-Ofast -fopenmp-simd" \
@@ -138,14 +146,14 @@ clean:
 #
 # Clean kernel and all dependencies
 #
-veryclean: clean
+mrproper: clean
 # Reverse patches
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-cp210x-remove-partnum-check.patch
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
 	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 
 # Clean circle-stdlib
-	@$(MAKE) -C $(CIRCLESTDLIBHOME) mrproper
+	@if [ -f $(CIRCLE_STDLIB_CONFIG) ]; then $(MAKE) -C $(CIRCLESTDLIBHOME) mrproper; fi
 	@$(RM) $(CIRCLESTDLIBHOME)/.done
 
 # Clean mt32emu
