@@ -79,14 +79,14 @@ mt32emu: $(MT32EMUBUILDDIR)/.done
 $(MT32EMUBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@CFLAGS="$(CFLAGS_EXTERNAL)" \
 	CXXFLAGS="$(CFLAGS_EXTERNAL)" \
-	cmake  -B $(MT32EMUBUILDDIR) \
-			$(CMAKE_TOOLCHAIN_FLAGS) \
-			-DCMAKE_CXX_FLAGS_RELEASE="-Ofast" \
-			-DCMAKE_BUILD_TYPE=Release \
-			-Dlibmt32emu_C_INTERFACE=FALSE \
-			-Dlibmt32emu_SHARED=FALSE \
-			$(MT32EMUHOME) \
-			>/dev/null
+	cmake -B $(MT32EMUBUILDDIR) \
+		 $(CMAKE_TOOLCHAIN_FLAGS) \
+		 -DCMAKE_CXX_FLAGS_RELEASE="-Ofast" \
+		 -DCMAKE_BUILD_TYPE=Release \
+		 -Dlibmt32emu_C_INTERFACE=FALSE \
+		 -Dlibmt32emu_SHARED=FALSE \
+		 $(MT32EMUHOME) \
+		 >/dev/null
 	@cmake --build $(MT32EMUBUILDDIR)
 	@touch $@
 
@@ -99,35 +99,35 @@ $(FLUIDSYNTHBUILDDIR)/.done: $(CIRCLESTDLIBHOME)/.done
 	@${APPLY_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 
 	@CFLAGS="$(CFLAGS_EXTERNAL)" \
-	cmake  -B $(FLUIDSYNTHBUILDDIR) \
-			$(CMAKE_TOOLCHAIN_FLAGS) \
-			-DCMAKE_C_FLAGS_RELEASE="-Ofast -fopenmp-simd" \
-			-DCMAKE_BUILD_TYPE=Release \
-			-DBUILD_SHARED_LIBS=OFF \
-			-Denable-aufile=OFF \
-			-Denable-dbus=OFF \
-			-Denable-dsound=OFF \
-			-Denable-floats=ON \
-			-Denable-ipv6=OFF \
-			-Denable-jack=OFF \
-			-Denable-ladspa=OFF \
-			-Denable-libinstpatch=OFF \
-			-Denable-libsndfile=OFF \
-			-Denable-midishare=OFF \
-			-Denable-network=OFF \
-			-Denable-oboe=OFF \
-			-Denable-openmp=OFF \
-			-Denable-opensles=OFF \
-			-Denable-oss=OFF \
-			-Denable-pipewire=OFF \
-			-Denable-pulseaudio=OFF \
-			-Denable-readline=OFF \
-			-Denable-sdl2=OFF \
-			-Denable-threads=OFF \
-			-Denable-waveout=OFF \
-			-Denable-winmidi=OFF \
-			$(FLUIDSYNTHHOME) \
-			>/dev/null
+	cmake -B $(FLUIDSYNTHBUILDDIR) \
+		 $(CMAKE_TOOLCHAIN_FLAGS) \
+		 -DCMAKE_C_FLAGS_RELEASE="-Ofast -fopenmp-simd" \
+		 -DCMAKE_BUILD_TYPE=Release \
+		 -DBUILD_SHARED_LIBS=OFF \
+		 -Denable-aufile=OFF \
+		 -Denable-dbus=OFF \
+		 -Denable-dsound=OFF \
+		 -Denable-floats=ON \
+		 -Denable-ipv6=OFF \
+		 -Denable-jack=OFF \
+		 -Denable-ladspa=OFF \
+		 -Denable-libinstpatch=OFF \
+		 -Denable-libsndfile=OFF \
+		 -Denable-midishare=OFF \
+		 -Denable-network=OFF \
+		 -Denable-oboe=OFF \
+		 -Denable-openmp=OFF \
+		 -Denable-opensles=OFF \
+		 -Denable-oss=OFF \
+		 -Denable-pipewire=OFF \
+		 -Denable-pulseaudio=OFF \
+		 -Denable-readline=OFF \
+		 -Denable-sdl2=OFF \
+		 -Denable-threads=OFF \
+		 -Denable-waveout=OFF \
+		 -Denable-winmidi=OFF \
+		 $(FLUIDSYNTHHOME) \
+		 >/dev/null
 	@cmake --build $(FLUIDSYNTHBUILDDIR) --target libfluidsynth
 	@touch $@
 
