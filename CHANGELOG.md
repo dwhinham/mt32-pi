@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Replaced rotary encoder routines with a much more robust algorithm borrowed from [FlashFloppy](https://github.com/keirf/flashfloppy).
+- Kernels are now gzip-compressed, which saves some SD card space and may slightly reduce loading times.
 
 ### Fixed
 

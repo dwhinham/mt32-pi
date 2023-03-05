@@ -1,0 +1,42 @@
+From 596544ca81def86971281594720f22524e7b563d Mon Sep 17 00:00:00 2001
+From: Dale Whinham <daleyo@gmail.com>
+Date: Sun, 5 Mar 2023 18:22:55 +0000
+Subject: [PATCH] Rules.mk: Add option to gzip-compress the kernel
+
+The Raspberry Pi bootloader is capable of booting kernels compressed
+with gzip. This can help improve startup times with larger kernels
+containing static data.
+
+Allow the user to define GZIP_KERNEL = 1 so that the final kernel image
+is replaced with a gzip-compressed file.
+---
+ Rules.mk | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/Rules.mk b/Rules.mk
+index 9f23e7f0..9880488f 100644
+--- a/Rules.mk
++++ b/Rules.mk
+@@ -50,6 +50,9 @@ FLOAT_ABI ?= hard
+ # set this to 1 to enable garbage collection on sections, may cause side effects
+ GC_SECTIONS ?= 0
+ 
++# set this to 1 to gzip-compress the kernel
++GZIP_KERNEL ?= 0
++
+ ifneq ($(strip $(CLANG)),1)
+ CC	= $(PREFIX)gcc
+ CPP	= $(PREFIX)g++
+@@ -215,6 +218,12 @@ endif
+ 	@$(OBJCOPY) $(TARGET).elf -O binary $(TARGET).img
+ 	@echo -n "  WC    $(TARGET).img => "
+ 	@wc -c < $(TARGET).img
++ifeq ($(strip $(GZIP_KERNEL)),1)
++	@gzip -9 -f -n $(TARGET).img
++	@mv $(TARGET).img.gz $(TARGET).img
++	@echo -n "  GZIP  $(TARGET).img => "
++	@wc -c < $(TARGET).img
++endif
+ 
+ clean:
+ 	@echo "  CLEAN " `pwd`

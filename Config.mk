@@ -14,6 +14,9 @@ USERBAUD?=115200
 # Enable section garbage collection
 GC_SECTIONS?=1
 
+# Compress the kernel
+GZIP_KERNEL?=1
+
 # Toolchain setup
 ifeq ($(BOARD), pi2)
 RASPBERRYPI=2
