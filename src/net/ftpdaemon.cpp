@@ -29,7 +29,7 @@
 #include "net/ftpdaemon.h"
 #include "net/ftpworker.h"
 
-const char FTPDaemonName[] = "ftpd";
+LOGMODULE("ftpd");
 
 constexpr u16 ListenPort = 21;
 constexpr u8 MaxConnections = 1;
@@ -50,7 +50,6 @@ CFTPDaemon::~CFTPDaemon()
 
 bool CFTPDaemon::Initialize()
 {
-	CLogger* const pLogger = CLogger::Get();
 	CNetSubSystem* const pNet = CNetSubSystem::Get();
 
 	if ((m_pListenSocket = new CSocket(pNet, IPPROTO_TCP)) == nullptr)
@@ -58,13 +57,13 @@ bool CFTPDaemon::Initialize()
 
 	if (m_pListenSocket->Bind(ListenPort) != 0)
 	{
-		pLogger->Write(FTPDaemonName, LogError, "Couldn't bind to port %d", ListenPort);
+		LOGERR("Couldn't bind to port %d", ListenPort);
 		return false;
 	}
 
 	if (m_pListenSocket->Listen() != 0)
 	{
-		pLogger->Write(FTPDaemonName, LogError, "Failed to listen on control socket");
+		LOGERR("Failed to listen on control socket");
 		return false;
 	}
 
@@ -78,32 +77,31 @@ void CFTPDaemon::Run()
 {
 	assert(m_pListenSocket != nullptr);
 
-	CLogger* const pLogger = CLogger::Get();
-	pLogger->Write(FTPDaemonName, LogNotice, "Listener task spawned");
+	LOGNOTE("Listener task spawned");
 
 	while (true)
 	{
 		CIPAddress ClientIPAddress;
 		u16 nClientPort;
 
-		pLogger->Write(FTPDaemonName, LogDebug, "Listener: waiting for connection");
+		LOGDBG("Listener: waiting for connection");
 		CSocket* pConnection = m_pListenSocket->Accept(&ClientIPAddress, &nClientPort);
 
 		if (pConnection == nullptr)
 		{
-			pLogger->Write(FTPDaemonName, LogError, "Unable to accept connection");
+			LOGERR("Unable to accept connection");
 			continue;
 		}
 
 		CString IPAddressString;
 		ClientIPAddress.Format(&IPAddressString);
-		pLogger->Write(FTPDaemonName, LogNotice, "Incoming connection from %s:%d", static_cast<const char*>(IPAddressString), nClientPort);
+		LOGNOTE("Incoming connection from %s:%d", static_cast<const char*>(IPAddressString), nClientPort);
 
 		if (CFTPWorker::GetInstanceCount() >= MaxConnections)
 		{
 			pConnection->Send("421 Maximum number of connections reached.\r\n", 45, 0);
 			delete pConnection;
-			pLogger->Write(FTPDaemonName, LogWarning, "Maximum number of connections reached");
+			LOGWARN("Maximum number of connections reached");
 			continue;
 		}
 

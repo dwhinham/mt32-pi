@@ -28,7 +28,7 @@
 #include "synth/mt32synth.h"
 #include "utility.h"
 
-const char MT32SynthName[] = "mt32synth";
+LOGMODULE("mt32synth");
 
 constexpr size_t ROMOffsetVersionStringOld  = 0x4015;
 constexpr size_t ROMOffsetVersionString1_07 = 0x4011;
@@ -331,23 +331,23 @@ void CMT32Synth::GetPartLevels(unsigned int nTicks, float PartLevels[9], float P
 
 bool CMT32Synth::onMIDIQueueOverflow()
 {
-	CLogger::Get()->Write(MT32SynthName, LogError, "MIDI queue overflow");
+	LOGERR("MIDI queue overflow");
 	return false;
 }
 
 void CMT32Synth::printDebug(const char* pFmt, va_list pList)
 {
-	//CLogger::Get()->WriteV(MT32SynthName, LogDebug, pFmt, pList);
+	//LOGDBG(pFmt, pList);
 }
 
 void CMT32Synth::showLCDMessage(const char* pMessage)
 {
-	CLogger::Get()->Write(MT32SynthName, LogNotice, "LCD: %s", pMessage);
+	LOGNOTE("LCD: %s", pMessage);
 }
 
 void CMT32Synth::onDeviceReset()
 {
-	CLogger::Get()->Write(MT32SynthName, LogDebug, "MT-32 reset");
+	LOGDBG("MT-32 reset");
 	m_MIDIMonitor.AllNotesOff();
 	m_MIDIMonitor.ResetControllers(false);
 }

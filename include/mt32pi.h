@@ -140,7 +140,6 @@ private:
 	void LEDOn();
 	void LCDLog(TLCDLogType Type, const char* pFormat...);
 
-	CLogger* volatile m_pLogger;
 	CConfig* volatile m_pConfig;
 
 	CTimer* m_pTimer;

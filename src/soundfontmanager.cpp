@@ -30,7 +30,7 @@
 #include "soundfontmanager.h"
 #include "utility.h"
 
-const char SoundFontManagerName[] = "soundfontmanager";
+LOGMODULE("soundfontmanager");
 const char* const Disks[] = { "SD", "USB" };
 const char SoundFontDirectory[] = "soundfonts";
 
@@ -99,10 +99,9 @@ bool CSoundFontManager::ScanSoundFonts()
 		// Sort into lexicographical order
 		Utility::QSort(m_SoundFontList, SoundFontListComparator, 0, m_nSoundFonts - 1);
 
-		CLogger* const pLogger = CLogger::Get();
-		pLogger->Write(SoundFontManagerName, LogNotice, "%d SoundFonts found:", m_nSoundFonts);
+		LOGNOTE("%d SoundFonts found:", m_nSoundFonts);
 		for (size_t i = 0; i < m_nSoundFonts; ++i)
-			pLogger->Write(SoundFontManagerName, LogNotice, "%d: %s (%s)", i, static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
+			LOGNOTE("%d: %s (%s)", i, static_cast<const char*>(m_SoundFontList[i].Path), static_cast<const char*>(m_SoundFontList[i].Name));
 
 		return true;
 	}
@@ -160,7 +159,7 @@ TFXProfile CSoundFontManager::GetSoundFontFXProfile(size_t nIndex) const
 
 	if (f_read(&File, Buffer, nSize, &nRead) != FR_OK)
 	{
-		CLogger::Get()->Write(SoundFontManagerName, LogError, "Error reading effects profile");
+		LOGERR("Error reading effects profile");
 		f_close(&File);
 		return FXProfile;
 	}
@@ -170,7 +169,7 @@ TFXProfile CSoundFontManager::GetSoundFontFXProfile(size_t nIndex) const
 
 	const int nResult = ini_parse_string(Buffer, INIHandler, &FXProfile);
 	if (nResult > 0)
-		CLogger::Get()->Write(SoundFontManagerName, LogWarning, "Effects profile parse error on line %d", nResult);
+		LOGWARN("Effects profile parse error on line %d", nResult);
 
 	f_close(&File);
 	return FXProfile;

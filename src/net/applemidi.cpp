@@ -33,6 +33,8 @@
 
 // #define APPLEMIDI_DEBUG
 
+LOGMODULE("applemidi");
+
 constexpr u16 ControlPort = 5004;
 constexpr u16 MIDIPort    = ControlPort + 1;
 
@@ -53,8 +55,6 @@ constexpr unsigned int SyncTimeout = 60 * 10000;
 
 // Receiver feedback packet frequency (1 second in 100 microsecond units)
 constexpr unsigned int ReceiverFeedbackPeriod = 1 * 10000;
-
-const char AppleMIDIName[] = "applemidi";
 
 constexpr u16 CommandWord(const char Command[2]) { return Command[0] << 8 | Command[1]; }
 
@@ -240,7 +240,7 @@ size_t ParseSysExCommand(const u8* pBuffer, size_t nSize, CAppleMIDIHandler* pHa
 	if (nHead == 0xF0 && nTail == 0xF0)
 	{
 #ifdef APPLEMIDI_DEBUG
-		CLogger::Get()->Write(AppleMIDIName, LogNotice, "Received segmented SysEx (first)");
+		LOGNOTE("Received segmented SysEx (first)");
 #endif
 		--nReceiveLength;
 	}
@@ -249,7 +249,7 @@ size_t ParseSysExCommand(const u8* pBuffer, size_t nSize, CAppleMIDIHandler* pHa
 	else if (nHead == 0xF7 && nTail == 0xF0)
 	{
 #ifdef APPLEMIDI_DEBUG
-		CLogger::Get()->Write(AppleMIDIName, LogNotice, "Received segmented SysEx (middle)");
+		LOGNOTE("Received segmented SysEx (middle)");
 #endif
 		++pBuffer;
 		nBytesParsed -= 2;
@@ -259,7 +259,7 @@ size_t ParseSysExCommand(const u8* pBuffer, size_t nSize, CAppleMIDIHandler* pHa
 	else if (nHead == 0xF7 && nTail == 0xF7)
 	{
 #ifdef APPLEMIDI_DEBUG
-		CLogger::Get()->Write(AppleMIDIName, LogNotice, "Received segmented SysEx (last)");
+		LOGNOTE("Received segmented SysEx (last)");
 #endif
 		++pBuffer;
 		--nReceiveLength;
@@ -269,7 +269,7 @@ size_t ParseSysExCommand(const u8* pBuffer, size_t nSize, CAppleMIDIHandler* pHa
 	else if (nHead == 0xF7 && nTail == 0xF4)
 	{
 #ifdef APPLEMIDI_DEBUG
-		CLogger::Get()->Write(AppleMIDIName, LogNotice, "Received cancelled SysEx");
+		LOGNOTE("Received cancelled SysEx");
 #endif
 		nReceiveLength = 1;
 	}
@@ -277,7 +277,7 @@ size_t ParseSysExCommand(const u8* pBuffer, size_t nSize, CAppleMIDIHandler* pHa
 #ifdef APPLEMIDI_DEBUG
 	else
 	{
-		CLogger::Get()->Write(AppleMIDIName, LogNotice, "Received complete SysEx");
+		LOGNOTE("Received complete SysEx");
 	}
 #endif
 
@@ -396,7 +396,7 @@ bool ParseMIDICommandSection(const u8* pBuffer, size_t nSize, CAppleMIDIHandler*
 
 	if (nMIDICommandLength > nBytesRemaining)
 	{
-		CLogger::Get()->Write(AppleMIDIName, LogError, "Invalid MIDI command length");
+		LOGERR("Invalid MIDI command length");
 		return false;
 	}
 
@@ -507,7 +507,6 @@ bool CAppleMIDIParticipant::Initialize()
 	assert(m_pControlSocket == nullptr);
 	assert(m_pMIDISocket == nullptr);
 
-	CLogger* const pLogger    = CLogger::Get();
 	CNetSubSystem* const pNet = CNetSubSystem::Get();
 
 	if ((m_pControlSocket = new CSocket(pNet, IPPROTO_UDP)) == nullptr)
@@ -518,13 +517,13 @@ bool CAppleMIDIParticipant::Initialize()
 
 	if (m_pControlSocket->Bind(ControlPort) != 0)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Couldn't bind to port %d", ControlPort);
+		LOGERR("Couldn't bind to port %d", ControlPort);
 		return false;
 	}
 
 	if (m_pMIDISocket->Bind(MIDIPort) != 0)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Couldn't bind to port %d", MIDIPort);
+		LOGERR("Couldn't bind to port %d", MIDIPort);
 		return false;
 	}
 
@@ -539,16 +538,15 @@ void CAppleMIDIParticipant::Run()
 	assert(m_pControlSocket != nullptr);
 	assert(m_pMIDISocket != nullptr);
 
-	CLogger* const pLogger       = CLogger::Get();
 	CScheduler* const pScheduler = CScheduler::Get();
 
 	while (true)
 	{
 		if ((m_nControlResult = m_pControlSocket->ReceiveFrom(m_ControlBuffer, sizeof(m_ControlBuffer), MSG_DONTWAIT, &m_ForeignControlIPAddress, &m_nForeignControlPort)) < 0)
-			pLogger->Write(AppleMIDIName, LogError, "Control socket receive error: %d", m_nControlResult);
+			LOGERR("Control socket receive error: %d", m_nControlResult);
 
 		if ((m_nMIDIResult = m_pMIDISocket->ReceiveFrom(m_MIDIBuffer, sizeof(m_MIDIBuffer), MSG_DONTWAIT, &m_ForeignMIDIIPAddress, &m_nForeignMIDIPort)) < 0)
-			pLogger->Write(AppleMIDIName, LogError, "MIDI socket receive error: %d", m_nMIDIResult);
+			LOGERR("MIDI socket receive error: %d", m_nMIDIResult);
 
 		switch (m_State)
 		{
@@ -572,7 +570,6 @@ void CAppleMIDIParticipant::Run()
 
 void CAppleMIDIParticipant::ControlInvitationState()
 {
-	CLogger* const pLogger = CLogger::Get();
 	TAppleMIDISession SessionPacket;
 
 	if (m_nControlResult == 0)
@@ -580,12 +577,12 @@ void CAppleMIDIParticipant::ControlInvitationState()
 
 	if (!ParseInvitationPacket(m_ControlBuffer, m_nControlResult, &SessionPacket))
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Unexpected packet");
+		LOGERR("Unexpected packet");
 		return;
 	}
 
 #ifdef APPLEMIDI_DEBUG
-	pLogger->Write(AppleMIDIName, LogNotice, "<-- Control invitation");
+	LOGNOTE("<-- Control invitation");
 #endif
 
 	// Store initiator details
@@ -598,7 +595,7 @@ void CAppleMIDIParticipant::ControlInvitationState()
 	m_nSSRC = m_pRandom->GetNumber();
 	if (!SendAcceptInvitationPacket(m_pControlSocket, &m_InitiatorIPAddress, m_nInitiatorControlPort))
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Couldn't accept control invitation");
+		LOGERR("Couldn't accept control invitation");
 		return;
 	}
 
@@ -608,7 +605,6 @@ void CAppleMIDIParticipant::ControlInvitationState()
 
 void CAppleMIDIParticipant::MIDIInvitationState()
 {
-	CLogger* const pLogger = CLogger::Get();
 	TAppleMIDISession SessionPacket;
 
 	if (m_nControlResult > 0)
@@ -619,7 +615,7 @@ void CAppleMIDIParticipant::MIDIInvitationState()
 			if (m_ForeignControlIPAddress != m_InitiatorIPAddress || m_nForeignControlPort != m_nInitiatorControlPort)
 				SendRejectInvitationPacket(m_pControlSocket, &m_ForeignControlIPAddress, m_nForeignControlPort, SessionPacket.nInitiatorToken);
 			else
-				pLogger->Write(AppleMIDIName, LogError, "Unexpected packet");
+				LOGERR("Unexpected packet");
 		}
 	}
 
@@ -627,7 +623,7 @@ void CAppleMIDIParticipant::MIDIInvitationState()
 	{
 		if (!ParseInvitationPacket(m_MIDIBuffer, m_nMIDIResult, &SessionPacket))
 		{
-			pLogger->Write(AppleMIDIName, LogError, "Unexpected packet");
+			LOGERR("Unexpected packet");
 			return;
 		}
 
@@ -639,7 +635,7 @@ void CAppleMIDIParticipant::MIDIInvitationState()
 		}
 
 #ifdef APPLEMIDI_DEBUG
-		pLogger->Write(AppleMIDIName, LogNotice, "<-- MIDI invitation");
+		LOGNOTE("<-- MIDI invitation");
 #endif
 
 		m_nInitiatorMIDIPort = m_nForeignMIDIPort;
@@ -648,14 +644,14 @@ void CAppleMIDIParticipant::MIDIInvitationState()
 		{
 			CString IPAddressString;
 			m_InitiatorIPAddress.Format(&IPAddressString);
-			pLogger->Write(AppleMIDIName, LogNotice, "Connection to %s (%s) established", SessionPacket.Name, static_cast<const char*>(IPAddressString));
+			LOGNOTE("Connection to %s (%s) established", SessionPacket.Name, static_cast<const char*>(IPAddressString));
 			m_nLastSyncTime = GetSyncClock();
 			m_State = TState::Connected;
 			m_pHandler->OnAppleMIDIConnect(&m_InitiatorIPAddress, SessionPacket.Name);
 		}
 		else
 		{
-			pLogger->Write(AppleMIDIName, LogError, "Couldn't accept MIDI invitation");
+			LOGERR("Couldn't accept MIDI invitation");
 			Reset();
 		}
 	}
@@ -663,15 +659,13 @@ void CAppleMIDIParticipant::MIDIInvitationState()
 	// Timeout
 	else if ((GetSyncClock() - m_nLastSyncTime) > InvitationTimeout)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "MIDI port invitation timed out");
+		LOGERR("MIDI port invitation timed out");
 		Reset();
 	}
 }
 
 void CAppleMIDIParticipant::ConnectedState()
 {
-	CLogger* const pLogger = CLogger::Get();
-
 	TAppleMIDISession SessionPacket;
 	TRTPMIDI MIDIPacket;
 	TAppleMIDISync SyncPacket;
@@ -681,14 +675,14 @@ void CAppleMIDIParticipant::ConnectedState()
 		if (ParseEndSessionPacket(m_ControlBuffer, m_nControlResult, &SessionPacket))
 		{
 #ifdef APPLEMIDI_DEBUG
-			pLogger->Write(AppleMIDIName, LogNotice, "<-- End session");
+			LOGNOTE("<-- End session");
 #endif
 
 			if (m_ForeignControlIPAddress == m_InitiatorIPAddress &&
 				m_nForeignControlPort == m_nInitiatorControlPort &&
 				SessionPacket.nSSRC == m_nInitiatorSSRC)
 			{
-				pLogger->Write(AppleMIDIName, LogNotice, "Initiator ended session");
+				LOGNOTE("Initiator ended session");
 				m_pHandler->OnAppleMIDIDisconnect(&m_InitiatorIPAddress, SessionPacket.Name);
 				Reset();
 				return;
@@ -700,20 +694,20 @@ void CAppleMIDIParticipant::ConnectedState()
 			if (m_ForeignControlIPAddress != m_InitiatorIPAddress || m_nForeignControlPort != m_nInitiatorControlPort)
 				SendRejectInvitationPacket(m_pControlSocket, &m_ForeignControlIPAddress, m_nForeignControlPort, SessionPacket.nInitiatorToken);
 			else
-				pLogger->Write(AppleMIDIName, LogError, "Unexpected packet");
+				LOGERR("Unexpected packet");
 		}
 	}
 
 	if (m_nMIDIResult > 0)
 	{
 		if (m_ForeignMIDIIPAddress != m_InitiatorIPAddress || m_nForeignMIDIPort != m_nInitiatorMIDIPort)
-			pLogger->Write(AppleMIDIName, LogError, "Unexpected packet");
+			LOGERR("Unexpected packet");
 		else if (ParseMIDIPacket(m_MIDIBuffer, m_nMIDIResult, &MIDIPacket, m_pHandler))
 			m_nSequence = MIDIPacket.nSequence;
 		else if (ParseSyncPacket(m_MIDIBuffer, m_nMIDIResult, &SyncPacket))
 		{
 #ifdef APPLEMIDI_DEBUG
-			pLogger->Write(AppleMIDIName, LogNotice, "<-- Sync %d", SyncPacket.nCount);
+			LOGNOTE("<-- Sync %d", SyncPacket.nCount);
 #endif
 
 			if (SyncPacket.nSSRC == m_nInitiatorSSRC && (SyncPacket.nCount == 0 || SyncPacket.nCount == 2))
@@ -724,7 +718,7 @@ void CAppleMIDIParticipant::ConnectedState()
 				{
 					m_nOffsetEstimate = ((SyncPacket.Timestamps[2] + SyncPacket.Timestamps[0]) / 2) - SyncPacket.Timestamps[1];
 #ifdef APPLEMIDI_DEBUG
-					pLogger->Write(AppleMIDIName, LogNotice, "Offset estimate: %llu", m_nOffsetEstimate);
+					LOGNOTE("Offset estimate: %llu", m_nOffsetEstimate);
 #endif
 				}
 
@@ -732,7 +726,7 @@ void CAppleMIDIParticipant::ConnectedState()
 			}
 			else
 			{
-				pLogger->Write(AppleMIDIName, LogError, "Unexpected sync packet");
+				LOGERR("Unexpected sync packet");
 			}
 		}
 	}
@@ -751,7 +745,7 @@ void CAppleMIDIParticipant::ConnectedState()
 
 	if ((nTicks - m_nLastSyncTime) > SyncTimeout)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Initiator timed out");
+		LOGERR("Initiator timed out");
 		Reset();
 	}
 }
@@ -775,24 +769,22 @@ void CAppleMIDIParticipant::Reset()
 
 bool CAppleMIDIParticipant::SendPacket(CSocket* pSocket, CIPAddress* pIPAddress, u16 nPort, const void* pData, size_t nSize)
 {
-	CLogger* const pLogger = CLogger::Get();
-
 	const int nResult = pSocket->SendTo(pData, nSize, MSG_DONTWAIT, *pIPAddress, nPort);
 
 	if (nResult < 0)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Send failure, error code: %d", nResult);
+		LOGERR("Send failure, error code: %d", nResult);
 		return false;
 	}
 
 	if (static_cast<size_t>(nResult) != nSize)
 	{
-		pLogger->Write(AppleMIDIName, LogError, "Send failure, only %d/%d bytes sent", nResult, nSize);
+		LOGERR("Send failure, only %d/%d bytes sent", nResult, nSize);
 		return false;
 	}
 
 #ifdef APPLEMIDI_DEBUG
-	pLogger->Write(AppleMIDIName, LogNotice, "Sent %d bytes to port %d", nResult, nPort);
+	LOGNOTE("Sent %d bytes to port %d", nResult, nPort);
 #endif
 
 	return true;
@@ -814,7 +806,7 @@ bool CAppleMIDIParticipant::SendAcceptInvitationPacket(CSocket* pSocket, CIPAddr
 	strncpy(AcceptPacket.Name, "mt32-pi", sizeof(AcceptPacket.Name));
 
 #ifdef APPLEMIDI_DEBUG
-	CLogger::Get()->Write(AppleMIDIName, LogNotice, "--> Accept invitation");
+	LOGNOTE("--> Accept invitation");
 #endif
 
 	const size_t nSendSize = NamelessSessionPacketSize + strlen(AcceptPacket.Name) + 1;
@@ -834,7 +826,7 @@ bool CAppleMIDIParticipant::SendRejectInvitationPacket(CSocket* pSocket, CIPAddr
 	};
 
 #ifdef APPLEMIDI_DEBUG
-	CLogger::Get()->Write(AppleMIDIName, LogNotice, "--> Reject invitation");
+	LOGNOTE("--> Reject invitation");
 #endif
 
 	// Send without name
@@ -858,7 +850,7 @@ bool CAppleMIDIParticipant::SendSyncPacket(u64 nTimestamp1, u64 nTimestamp2)
 	};
 
 #ifdef APPLEMIDI_DEBUG
-	CLogger::Get()->Write(AppleMIDIName, LogNotice, "--> Sync 1");
+	LOGNOTE("--> Sync 1");
 #endif
 
 	return SendPacket(m_pMIDISocket, &m_InitiatorIPAddress, m_nInitiatorMIDIPort, &SyncPacket, sizeof(SyncPacket));
@@ -875,7 +867,7 @@ bool CAppleMIDIParticipant::SendFeedbackPacket()
 	};
 
 #ifdef APPLEMIDI_DEBUG
-	CLogger::Get()->Write(AppleMIDIName, LogNotice, "--> Feedback");
+	LOGNOTE("--> Feedback");
 #endif
 
 	return SendPacket(m_pControlSocket, &m_InitiatorIPAddress, m_nInitiatorControlPort, &FeedbackPacket, sizeof(FeedbackPacket));

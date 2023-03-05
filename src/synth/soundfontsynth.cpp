@@ -33,7 +33,7 @@
 #include "utility.h"
 #include "zoneallocator.h"
 
-const char SoundFontSynthName[] = "soundfontsynth";
+LOGMODULE("soundfontsynth");
 const char SoundFontPath[] = "soundfonts";
 
 extern "C"
@@ -154,7 +154,7 @@ CSoundFontSynth::~CSoundFontSynth()
 
 void CSoundFontSynth::FluidSynthLogCallback(int nLevel, const char* pMessage, void* pUser)
 {
-	CLogger::Get()->Write(SoundFontSynthName, static_cast<TLogSeverity>(nLevel), pMessage);
+	CLogger::Get()->Write(From, static_cast<TLogSeverity>(nLevel), pMessage);
 }
 
 bool CSoundFontSynth::Initialize()
@@ -191,7 +191,7 @@ bool CSoundFontSynth::Initialize()
 	m_pSettings = new_fluid_settings();
 	if (!m_pSettings)
 	{
-		CLogger::Get()->Write(SoundFontSynthName, LogError, "Failed to create settings");
+		LOGERR("Failed to create settings");
 		return false;
 	}
 
@@ -370,7 +370,7 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 
 	m_nCurrentSoundFontIndex = nIndex;
 
-	CLogger::Get()->Write(SoundFontSynthName, LogNotice, "Loaded \"%s\"", m_SoundFontManager.GetSoundFontName(nIndex));
+	LOGNOTE("Loaded \"%s\"", m_SoundFontManager.GetSoundFontName(nIndex));
 	if (m_pUI)
 		m_pUI->ClearSpinnerMessage();
 
@@ -380,7 +380,6 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile* pFXProfile)
 {
 	const CConfig* const pConfig = CConfig::Get();
-	CLogger* const pLogger = CLogger::Get();
 
 	m_Lock.Acquire();
 
@@ -392,7 +391,7 @@ bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile*
 	if (!m_pSynth)
 	{
 		m_Lock.Release();
-		pLogger->Write(SoundFontSynthName, LogError, "Failed to create synth");
+		LOGERR("Failed to create synth");
 		return false;
 	}
 
@@ -426,12 +425,12 @@ bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile*
 
 	if (fluid_synth_sfload(m_pSynth, pSoundFontPath, true) == FLUID_FAILED)
 	{
-		pLogger->Write(SoundFontSynthName, LogError, "Failed to load SoundFont");
+		LOGERR("Failed to load SoundFont");
 		return false;
 	}
 
 	const float nLoadTime = (CTimer::GetClockTicks() - nLoadStart) / 1000000.0f;
-	pLogger->Write(SoundFontSynthName, TLogSeverity::LogNotice, "\"%s\" loaded in %0.2f seconds", pSoundFontPath, nLoadTime);
+	LOGNOTE("\"%s\" loaded in %0.2f seconds", pSoundFontPath, nLoadTime);
 
 	return true;
 }
@@ -446,7 +445,6 @@ void CSoundFontSynth::ResetMIDIMonitor()
 #ifndef NDEBUG
 void CSoundFontSynth::DumpFXSettings() const
 {
-	CLogger* const pLogger = CLogger::Get();
 	double nGain, nReverbDamping, nReverbLevel, nReverbRoomSize, nReverbWidth, nChorusDepth, nChorusLevel, nChorusSpeed;
 	int nChorusVoices;
 
@@ -462,18 +460,16 @@ void CSoundFontSynth::DumpFXSettings() const
 	assert(fluid_synth_get_chorus_group_nr(m_pSynth, -1, &nChorusVoices) == FLUID_OK);
 	assert(fluid_synth_get_chorus_group_speed(m_pSynth, -1, &nChorusSpeed) == FLUID_OK);
 
-	pLogger->Write(SoundFontSynthName, LogNotice, "Gain: %.2f", nGain);
+	LOGNOTE("Gain: %.2f", nGain);
 
-	pLogger->Write(SoundFontSynthName, LogNotice,
-		"Reverb: %.2f, %.2f, %.2f, %.2f",
+	LOGNOTE("Reverb: %.2f, %.2f, %.2f, %.2f",
 		nReverbDamping,
 		nReverbLevel,
 		nReverbRoomSize,
 		nReverbWidth
 	);
 
-	pLogger->Write(SoundFontSynthName, LogNotice,
-		"Chorus: %.2f, %.2f, %d, %.2f",
+	LOGNOTE("Chorus: %.2f, %.2f, %d, %.2f",
 		nChorusDepth,
 		nChorusLevel,
 		nChorusVoices,

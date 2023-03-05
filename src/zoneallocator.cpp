@@ -27,12 +27,12 @@
 #include "utility.h"
 #include "zoneallocator.h"
 
-constexpr size_t MallocHeapSize = 32 * MEGABYTE;
-
-const char ZoneAllocatorName[] = "zoneallocator";
-
 // #define ZONE_ALLOCATOR_DEBUG
 // #define ZONE_ALLOCATOR_TRACE
+
+LOGMODULE("zoneallocator");
+
+constexpr size_t MallocHeapSize = 32 * MEGABYTE;
 
 CZoneAllocator* CZoneAllocator::s_pThis = nullptr;
 
@@ -55,7 +55,6 @@ CZoneAllocator::~CZoneAllocator()
 bool CZoneAllocator::Initialize()
 {
 	CMemorySystem* pMemorySystem = CMemorySystem::Get();
-	CLogger* pLogger = CLogger::Get();
 
 #if RASPI >= 4
 	const size_t nHighHeapSize = pMemorySystem->GetHeapFreeSpace(HEAP_HIGH);
@@ -78,24 +77,24 @@ bool CZoneAllocator::Initialize()
 	if (!m_pHeap)
 	{
 		if (m_nHeapSize >= MEGABYTE)
-			pLogger->Write(ZoneAllocatorName, LogError, "Couldn't allocate a %d megabyte heap", m_nHeapSize / MEGABYTE);
+			LOGERR("Couldn't allocate a %d megabyte heap", m_nHeapSize / MEGABYTE);
 		else
-			pLogger->Write(ZoneAllocatorName, LogError, "Couldn't allocate a %d byte heap", m_nHeapSize);
+			LOGERR("Couldn't allocate a %d byte heap", m_nHeapSize);
 		return false;
 	}
 
 	if (m_nHeapSize >= MEGABYTE)
-		pLogger->Write(ZoneAllocatorName, LogNotice, "Allocated a %d megabyte heap at %p", m_nHeapSize / MEGABYTE, m_pHeap);
+		LOGNOTE("Allocated a %d megabyte heap at %p", m_nHeapSize / MEGABYTE, m_pHeap);
 	else
-		pLogger->Write(ZoneAllocatorName, LogNotice, "Allocated a %d byte heap at %p", m_nHeapSize, m_pHeap);
+		LOGNOTE("Allocated a %d byte heap at %p", m_nHeapSize, m_pHeap);
 
 #ifdef ZONE_ALLOCATOR_DEBUG
 	if ((reinterpret_cast<uintptr>(m_pHeap) & 15) == 0)
-		pLogger->Write(ZoneAllocatorName, LogDebug, "Heap is 16-byte aligned");
+		LOGDEBUG("Heap is 16-byte aligned");
 	else
-		pLogger->Write(ZoneAllocatorName, LogDebug, "Heap is NOT 16-byte aligned");
+		LOGDEBUG("Heap is NOT 16-byte aligned");
 
-	pLogger->Write(ZoneAllocatorName, LogDebug, "Size of block header: %d", sizeof(TBlock));
+	LOGDEBUG("Size of block header: %d", sizeof(TBlock));
 #endif
 
 	// Initialize the heap with an empty block
@@ -111,7 +110,7 @@ void* CZoneAllocator::Alloc(size_t nSize, TZoneTag Tag)
 
 	if (Tag == TZoneTag::Free)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Zone allocation failed: tag value of 0 was used");
+		LOGERR("Zone allocation failed: tag value of 0 was used");
 		return nullptr;
 	}
 
@@ -127,7 +126,7 @@ void* CZoneAllocator::Alloc(size_t nSize, TZoneTag Tag)
 		// We've been through the whole linked list and couldn't find a free block
 		if (pNextBlock == pStartBlock)
 		{
-			CLogger::Get()->Write(ZoneAllocatorName, LogError, "Zone allocation failed: couldn't allocate %d bytes", nSize);
+			LOGERR("Zone allocation failed: couldn't allocate %d bytes", nSize);
 			return nullptr;
 		}
 
@@ -169,7 +168,7 @@ void* CZoneAllocator::Alloc(size_t nSize, TZoneTag Tag)
 	m_pCurrentBlock = pCandidateBlock->pNext;
 
 #ifdef ZONE_ALLOCATOR_TRACE
-	CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Allocated %d bytes for tag %x", nSize, Tag);
+	LOGDBG("Allocated %d bytes for tag %x", nSize, Tag);
 #endif
 
 	// Increment alloc counter
@@ -193,13 +192,13 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 
 	if (Tag == TZoneTag::Free)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Zone reallocation failed: tag value of 0 was used");
+		LOGERR("Zone reallocation failed: tag value of 0 was used");
 		return nullptr;
 	}
 
 	if (pBlock->Tag == TZoneTag::Free)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Attempted to reallocate a freed block");
+		LOGERR("Attempted to reallocate a freed block");
 		return nullptr;
 	}
 
@@ -234,7 +233,7 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 			GetEndMagic(pBlock) = BlockMagic;
 
 #ifdef ZONE_ALLOCATOR_TRACE
-			CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Expanded block at %p in-place", pPtr);
+			LOGDBG("Expanded block at %p in-place", pPtr);
 #endif
 
 			return pBlock + 1;
@@ -248,7 +247,7 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 
 			if (!pDest)
 			{
-				CLogger::Get()->Write(ZoneAllocatorName, LogError, "Zone reallocation failed");
+				LOGERR("Zone reallocation failed");
 				return nullptr;
 			}
 
@@ -256,7 +255,7 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 			Free(pPtr);
 
 #ifdef ZONE_ALLOCATOR_TRACE
-			CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Expanded block at %p by allocating new block", pPtr);
+			LOGDBG("Expanded block at %p by allocating new block", pPtr);
 #endif
 
 			return pDest;
@@ -277,7 +276,7 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 				*pNewBlock = *pBlock->pNext;
 				pNewBlock->nSize += nRemain;
 #ifdef ZONE_ALLOCATOR_TRACE
-				CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Shrunk block at %p in-place; adjacent free space expanded", pPtr);
+				LOGDBG("Shrunk block at %p in-place; adjacent free space expanded", pPtr);
 #endif
 			}
 			else
@@ -293,7 +292,7 @@ void* CZoneAllocator::Realloc(void* pPtr, size_t nSize, TZoneTag Tag)
 #endif
 				GetEndMagic(pNewBlock) = BlockMagic;
 #ifdef ZONE_ALLOCATOR_TRACE
-				CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Shrunk block at %p in-place; new free block inserted after", pPtr);
+				LOGDBG("Shrunk block at %p in-place; new free block inserted after", pPtr);
 #endif
 			}
 
@@ -330,13 +329,13 @@ void CZoneAllocator::Free(void* pPtr)
 
 	if (pBlock->Tag == TZoneTag::Free)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Attempted to free an already-freed block");
+		LOGERR("Attempted to free an already-freed block");
 		return;
 	}
 
 	if (pBlock->nMagic != BlockMagic)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Attempted to free a block with a bad magic number (heap corruption?)");
+		LOGERR("Attempted to free a block with a bad magic number (heap corruption?)");
 		return;
 	}
 
@@ -354,7 +353,7 @@ void CZoneAllocator::Free(void* pPtr)
 		if (pBlock == m_pCurrentBlock)
 			m_pCurrentBlock = pAdjacentBlock;
 #ifdef ZONE_ALLOCATOR_TRACE
-		CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Merged freed block at %p with previous block at %p", pPtr, pAdjacentBlock);
+		LOGDBG("Merged freed block at %p with previous block at %p", pPtr, pAdjacentBlock);
 #endif
 		pBlock = pAdjacentBlock;
 	}
@@ -369,7 +368,7 @@ void CZoneAllocator::Free(void* pPtr)
 		if (pAdjacentBlock == m_pCurrentBlock)
 			m_pCurrentBlock = pBlock;
 #ifdef ZONE_ALLOCATOR_TRACE
-		CLogger::Get()->Write(ZoneAllocatorName, LogDebug, "Merged freed block at %p with next block at %p", pPtr, pAdjacentBlock);
+		LOGDBG("Merged freed block at %p with next block at %p", pPtr, pAdjacentBlock);
 #endif
 	}
 
@@ -408,7 +407,7 @@ void CZoneAllocator::FreeTag(u32 Tag)
 {
 	if (Tag == TZoneTag::Free)
 	{
-		CLogger::Get()->Write(ZoneAllocatorName, LogError, "Attempted to free an invalid tag");
+		LOGERR("Attempted to free an invalid tag");
 		return;
 	}
 
@@ -427,23 +426,22 @@ void CZoneAllocator::FreeTag(u32 Tag)
 
 void CZoneAllocator::Dump() const
 {
-	CLogger* pLogger = CLogger::Get();
-	pLogger->Write(ZoneAllocatorName, LogNotice, "Allocation diagnostics:");
+	LOGNOTE("Allocation diagnostics:");
 
 	TBlock* pBlock = m_MainBlock.pNext;
 
 	do
 	{
-		pLogger->Write(ZoneAllocatorName, LogNotice, "Block address %p (%s):", pBlock, pBlock->Tag ? "IN-USE" : "FREE");
+		LOGNOTE("Block address %p (%s):", pBlock, pBlock->Tag ? "IN-USE" : "FREE");
 
 		// If the block is free, it doesn't need a valid tail magic
 		const bool bMagicOK = (pBlock->nMagic == BlockMagic) && (!pBlock->Tag || GetEndMagic(pBlock) == BlockMagic);
 		if (!bMagicOK)
-			pLogger->Write(ZoneAllocatorName, LogWarning, "WARNING: This memory block is probably corrupt!");
+			LOGWARN("WARNING: This memory block is probably corrupt!");
 
-		pLogger->Write(ZoneAllocatorName, LogNotice, "\tSize:  %d bytes", pBlock->nSize);
-		pLogger->Write(ZoneAllocatorName, LogNotice, "\tTag:   0x%x", pBlock->Tag);
-		pLogger->Write(ZoneAllocatorName, LogNotice, "\tMagic: %s", bMagicOK ? "OK" : "BAD");
+		LOGNOTE("\tSize:  %d bytes", pBlock->nSize);
+		LOGNOTE("\tTag:   0x%x", pBlock->Tag);
+		LOGNOTE("\tMagic: %s", bMagicOK ? "OK" : "BAD");
 		pBlock = pBlock->pNext;
 	} while (pBlock != &m_MainBlock);
 }

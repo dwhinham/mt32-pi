@@ -25,7 +25,7 @@
 
 #include "rommanager.h"
 
-const char ROMManagerName[] = "rommanager";
+LOGMODULE("rommanager");
 const char* const Disks[] = { "SD", "USB" };
 const char ROMDirectory[] = "roms";
 
@@ -229,7 +229,7 @@ bool CROMManager::CheckROM(const char* pPath)
 	CROMFile* pFile = new CROMFile();
 	if (!pFile->open(pPath))
 	{
-		CLogger::Get()->Write(ROMManagerName, LogError, "Couldn't open '%s' for reading", pPath);
+		LOGERR("Couldn't open '%s' for reading", pPath);
 		delete pFile;
 		return false;
 	}

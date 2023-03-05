@@ -30,6 +30,10 @@
 #include "config.h"
 #include "utility.h"
 
+LOGMODULE("config");
+const char* TrueStrings[]  = {"true", "on", "1"};
+const char* FalseStrings[] = {"false", "off", "0"};
+
 // Templated function that converts a string to an enum
 template <class T, const char* pEnumStrings[], size_t N> static bool ParseEnum(const char* pString, T* pOut)
 {
@@ -51,10 +55,6 @@ template <class T, const char* pEnumStrings[], size_t N> static bool ParseEnum(c
 	{                                                                                                           \
 		return ParseEnum<ENUM_NAME, ENUM_NAME##Strings, Utility::ArraySize(ENUM_NAME##Strings)>(pString, pOut); \
 	}
-
-const char ConfigName[]    = "config";
-const char* TrueStrings[]  = {"true", "on", "1"};
-const char* FalseStrings[] = {"false", "off", "0"};
 
 // Enum string tables
 CONFIG_ENUM_STRINGS(TSystemDefaultSynth, ENUM_SYSTEMDEFAULTSYNTH);
@@ -85,7 +85,7 @@ bool CConfig::Initialize(const char* pPath)
 	FIL File;
 	if (f_open(&File, pPath, FA_READ) != FR_OK)
 	{
-		CLogger::Get()->Write(ConfigName, LogError, "Couldn't open '%s' for reading", pPath);
+		LOGERR("Couldn't open '%s' for reading", pPath);
 		return false;
 	}
 
@@ -96,7 +96,7 @@ bool CConfig::Initialize(const char* pPath)
 
 	if (f_read(&File, Buffer, nSize, &nRead) != FR_OK)
 	{
-		CLogger::Get()->Write(ConfigName, LogError, "Error reading config file", pPath);
+		LOGERR("Error reading config file", pPath);
 		f_close(&File);
 		return false;
 	}
@@ -106,7 +106,7 @@ bool CConfig::Initialize(const char* pPath)
 
 	const int nResult = ini_parse_string(Buffer, INIHandler, this);
 	if (nResult > 0)
-		CLogger::Get()->Write(ConfigName, LogWarning, "Config parse error on line %d", nResult);
+		LOGWARN("Config parse error on line %d", nResult);
 
 	f_close(&File);
 	return nResult >= 0;
@@ -117,7 +117,7 @@ int CConfig::INIHandler(void* pUser, const char* pSection, const char* pName, co
 {
 	CConfig* const pConfig = static_cast<CConfig*>(pUser);
 
-	//CLogger::Get()->Write(ConfigName, LogDebug, "'%s', '%s', '%s'", pSection, pName,  pValue);
+	//LOGDBG("'%s', '%s', '%s'", pSection, pName,  pValue);
 
 	// Automatically generate ParseOption() calls from macro definition file
 	#define BEGIN_SECTION(SECTION)       \

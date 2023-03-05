@@ -24,7 +24,7 @@
 
 #include "control/mister.h"
 
-const char MisterControlName[] = "mistercontrol";
+LOGMODULE("mistercontrol");
 
 constexpr u8 MisterI2CAddress = 0x45;
 
@@ -50,12 +50,12 @@ void CMisterControl::Update(const TMisterStatus& SystemStatus)
 		return;
 	}
 
-	//CLogger::Get()->Write(MisterControlName, LogDebug, "MiSTer Rx: 0x%02x 0x%02x 0x%02x", static_cast<u8>(MisterStatus.Synth), MisterStatus.MT32ROMSet, MisterStatus.SoundFontIndex);
+	//LOGDBG("MiSTer Rx: 0x%02x 0x%02x 0x%02x", static_cast<u8>(MisterStatus.Synth), MisterStatus.MT32ROMSet, MisterStatus.SoundFontIndex);
 
 	// Core was reset or "Reset Hanging Notes" was selected from OSD; turn off all sound
 	if (MisterStatus.Synth == TMisterSynth::Mute)
 	{
-		CLogger::Get()->Write(MisterControlName, LogNotice, "Stopping synth activity");
+		LOGNOTE("Stopping synth activity");
 		EnqueueAllSoundOffEvent();
 		WriteConfigToMister(SystemStatus);
 		return;
@@ -138,11 +138,11 @@ bool CMisterControl::WriteConfigToMister(const TMisterStatus& NewStatus)
 	// Write config back to MiSTer
 	if (m_pI2CMaster->Write(MisterI2CAddress, &NewStatus, sizeof(NewStatus)) < 0)
 	{
-		CLogger::Get()->Write(MisterControlName, LogError, "MiSTer write failed");
+		LOGERR("MiSTer write failed");
 		return false;
 	}
 
-	//CLogger::Get()->Write(MisterControlName, LogDebug, "MiSTer Tx: 0x%02x 0x%02x 0x%02x", static_cast<u8>(NewStatus.Synth), NewStatus.MT32ROMSet, NewStatus.SoundFontIndex);
+	//LOGDBG("MiSTer Tx: 0x%02x 0x%02x 0x%02x", static_cast<u8>(NewStatus.Synth), NewStatus.MT32ROMSet, NewStatus.SoundFontIndex);
 	return true;
 }
 
@@ -151,7 +151,7 @@ void CMisterControl::ResetState()
 	if (bMisterActive)
 	{
 		// MiSTer has just stopped responding; dispatch an All Sound Off event
-		CLogger::Get()->Write(MisterControlName, LogNotice, "MiSTer stopped responding; turning notes off");
+		LOGNOTE("MiSTer stopped responding; turning notes off");
 		EnqueueAllSoundOffEvent();
 		bMisterActive = false;
 		m_LastSystemStatus = {TMisterSynth::Unknown, 0xFF, 0xFF};
