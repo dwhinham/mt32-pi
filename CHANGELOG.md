@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Memory corruption/crashing caused by faulty ring buffer dequeue implementation.
+- Updater: self-update URL was incorrect after the main git branch was renamed. Please manually re-download `mt32pi_updater.py`.
 
 ## [0.13.0] - 2023-02-23
 

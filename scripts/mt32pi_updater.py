@@ -23,6 +23,9 @@
 # -----------------------------------------------------------------------------
 # Changelog
 # -----------------------------------------------------------------------------
+# 0.2.5 - 2023-03-18
+# - Fixed self-update URL after renaming main git branch.
+#
 # 0.2.4 - 2022-06-15
 # - Backup and update config.txt, merge avoid_warnings setting.
 # - Improved error handling.
@@ -85,8 +88,8 @@ except ImportError:
 
 GITHUB_REPO = "dwhinham/mt32-pi"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/master/scripts/mt32pi_updater.py"
-SCRIPT_VERSION = "0.2.4"
+SCRIPT_URL = f"https://github.com/{GITHUB_REPO}/raw/main/scripts/mt32pi_updater.py"
+SCRIPT_VERSION = "0.2.5"
 
 # Config keys
 K_SECTION = "updater"
