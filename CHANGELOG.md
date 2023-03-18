@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2023-03-18
+
 ### Changed
 
 - Replaced rotary encoder routines with a much more robust algorithm borrowed from [FlashFloppy](https://github.com/keirf/flashfloppy).
@@ -540,7 +542,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version.
 
-[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.13.0..HEAD
+[unreleased]: https://github.com/dwhinham/mt32-pi/compare/v0.13.1..HEAD
+[0.13.1]: https://github.com/dwhinham/mt32-pi/compare/v0.13.0..v0.13.1
 [0.13.0]: https://github.com/dwhinham/mt32-pi/compare/v0.12.1..v0.13.0
 [0.12.1]: https://github.com/dwhinham/mt32-pi/compare/v0.12.0..v0.12.1
 [0.12.0]: https://github.com/dwhinham/mt32-pi/compare/v0.11.3..v0.12.0
