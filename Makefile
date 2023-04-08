@@ -144,7 +144,7 @@ $(LUAHOME)/liblua.a:
 	CC="$(PREFIX)gcc" \
 	AR="$(PREFIX)ar rc" \
 	RANLIB="$(PREFIX)ranlib" \
-	CFLAGS="$(CFLAGS_FOR_TARGET) \$$(MYCFLAGS) -Wall -Werror -O3 -fno-stack-protector -fno-common" \
+	CFLAGS="$(CFLAGS_EXTERNAL) \$$(MYCFLAGS) -Wall -Werror -O3 -fno-stack-protector -fno-common" \
 	MYCFLAGS="\$$(LOCAL)"
 
 #
@@ -180,5 +180,5 @@ mrproper: clean
 # Clean FluidSynth
 	@$(RM) -r $(FLUIDSYNTHBUILDDIR)
 
-	# Clean Lua
+# Clean Lua
 	@$(MAKE) -C $(LUAHOME) clean

@@ -1012,7 +1012,7 @@ void CMT32Pi::UpdateNetwork()
 				LOGNOTE("FTP daemon initialized");
 		}
 
-		if (m_pConfig->NetworkLuaREPL && m_pLuaState)
+		if (m_pConfig->NetworkLuaREPL && m_pLuaState && !m_pLuaREPL)
 		{
 			m_pLuaREPL = new CLuaREPL(m_pLuaState);
 			if (!m_pLuaREPL->Initialize())
@@ -1022,7 +1022,7 @@ void CMT32Pi::UpdateNetwork()
 				m_pLuaREPL = nullptr;
 			}
 			else
-				LOGERR("Lua REPL initialized");
+				LOGNOTE("Lua REPL initialized");
 		}
 	}
 	else if (m_bNetworkReady && !bNetIsRunning)
