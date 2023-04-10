@@ -148,9 +148,25 @@ $(LUAHOME)/liblua.a:
 	MYCFLAGS="\$$(LOCAL)"
 
 #
+# Build LuaJIT
+#
+luajit: $(LUAJITLIB)
+
+$(LUAJITLIB):
+	@${APPLY_PATCH} $(LUAJITHOME) patches/luajit-2.1-circle.patch
+
+	$(MAKE) -C $(LUAJITHOME)/src \
+	CROSS="$(PREFIX)" \
+	HOST_CC="gcc -m$(BITS)" \
+	TARGET_CFLAGS="$(CFLAGS_EXTERNAL)" \
+	XCFLAGS="-DLJ_TARGET_BAREMETAL -DLUAJIT_USE_SYSMALLOC=1 -DLUAJIT_DISABLE_PROFILE=1 -DLUAJIT_SECURITY_PRNG=0" \
+	LJCORE_O=ljamalg.o \
+	libluajit.a
+
+#
 # Build kernel itself
 #
-all: circle-stdlib mt32emu fluidsynth lua
+all: circle-stdlib mt32emu fluidsynth lua luajit
 	@$(MAKE) -f Kernel.mk $(KERNEL).img $(KERNEL).hex
 
 #
@@ -169,6 +185,7 @@ mrproper: clean
 	@${REVERSE_PATCH} $(CIRCLEHOME) patches/circle-45-minimal-usb-drivers.patch
 	@${REVERSE_PATCH} $(FLUIDSYNTHHOME) patches/fluidsynth-2.3.1-circle.patch
 	@${REVERSE_PATCH} $(LUAHOME) patches/lua-5.4.4-circle.patch
+	@${REVERSE_PATCH} $(LUAJITHOME) patches/luajit-2.1-circle.patch
 
 # Clean circle-stdlib
 	@if [ -f $(CIRCLE_STDLIB_CONFIG) ]; then $(MAKE) -C $(CIRCLESTDLIBHOME) mrproper; fi
@@ -182,3 +199,6 @@ mrproper: clean
 
 # Clean Lua
 	@$(MAKE) -C $(LUAHOME) clean
+
+# Clean LuaJIT
+	@$(MAKE) -C $(LUAJITHOME) clean

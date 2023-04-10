@@ -468,7 +468,9 @@ void CMT32Pi::MainTask()
 		// Run scripting engine tasks
 		if (m_pLuaState)
 		{
-			if (lua_getglobal(m_pLuaState, "OnUpdate") != LUA_TFUNCTION)
+			lua_getglobal(m_pLuaState, "OnMIDISysExMessage");
+
+			if (!lua_isfunction(m_pLuaState, 1))
 				lua_pop(m_pLuaState, 1);
 			else
 			{
@@ -700,7 +702,9 @@ void CMT32Pi::OnShortMessage(u32 nMessage)
 		const int nStackSize = lua_gettop(m_pLuaState);
 
 		// Ensure function exists
-		if (lua_getglobal(m_pLuaState, "OnMIDIShortMessage") != LUA_TFUNCTION)
+		lua_getglobal(m_pLuaState, "OnMIDIShortMessage");
+
+		if (!lua_isfunction(m_pLuaState, 1))
 			lua_pop(m_pLuaState, 1);
 		else
 		{
@@ -756,7 +760,9 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 	if (m_pLuaState)
 	{
 		// Ensure function exists
-		if (lua_getglobal(m_pLuaState, "OnMIDISysExMessage") != LUA_TFUNCTION)
+		lua_getglobal(m_pLuaState, "OnMIDISysExMessage");
+
+		if (!lua_isfunction(m_pLuaState, 1))
 			lua_pop(m_pLuaState, 1);
 		else
 		{

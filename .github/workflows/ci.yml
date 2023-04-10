@@ -43,6 +43,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install multilib libc for building 32-bit LuaJIT
+      if: matrix.board == 'pi2'
+      run: |
+        sudo apt-get update
+        sudo apt-get install libc6-dev-i386
+
     - name: Fetch submodules
       run: make submodules
 

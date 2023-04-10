@@ -99,3 +99,6 @@ INIHHOME=$(realpath external/inih)
 
 LUAHOME=$(realpath external/lua)
 LUALIB=$(LUAHOME)/liblua.a
+
+LUAJITHOME=$(realpath external/luajit)
+LUAJITLIB=$(LUAJITHOME)/src/libluajit.a

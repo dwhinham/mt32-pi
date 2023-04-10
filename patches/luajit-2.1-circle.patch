@@ -1,0 +1,29 @@
+diff --git a/src/lj_mcode.c b/src/lj_mcode.c
+index 163aada4..c456da00 100644
+--- a/src/lj_mcode.c
++++ b/src/lj_mcode.c
+@@ -124,6 +124,24 @@ static int mcode_setprot(void *p, size_t sz, int prot)
+   return mprotect(p, sz, prot);
+ }
+ 
++#elif LJ_TARGET_BAREMETAL
++#define MCPROT_RW	(1 << 0)
++#define MCPROT_RX	(1 << 1)
++#define MCPROT_RWX	(1 << 2)
++
++static void *mcode_alloc_at(jit_State *J, uintptr_t hint, size_t sz, int prot)
++{
++	return NULL;
++}
++
++static void mcode_free(jit_State *J, void *p, size_t sz)
++{
++}
++
++static int mcode_setprot(void *p, size_t sz, int prot)
++{
++  return 0;
++}
+ #else
+ 
+ #error "Missing OS support for explicit placement of executable memory"

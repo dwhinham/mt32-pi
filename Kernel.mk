@@ -85,8 +85,8 @@ INCLUDE		+=	-I $(FLUIDSYNTHBUILDDIR)/include \
 			-I $(FLUIDSYNTHHOME)/include
 EXTRALIBS	+=	$(FLUIDSYNTHLIB)
 
-INCLUDE		+=	-I $(LUAHOME)
-EXTRALIBS	+=	$(LUALIB)
+INCLUDE		+=	-I $(LUAJITHOME)/src
+EXTRALIBS	+=	$(LUAJITLIB)
 
 #
 # Generate version string from git tag
