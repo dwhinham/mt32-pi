@@ -18,3 +18,7 @@
 	path = external/lua
 	url = https://github.com/lua/lua.git
 	ignore = dirty
+[submodule "external/luajit"]
+	path = external/luajit
+	url = https://github.com/LuaJIT/LuaJIT.git
+	ignore = dirty
