@@ -47,12 +47,7 @@
 #include <wlan/bcm4343.h>
 #include <wlan/hostap/wpa_supplicant/wpasupplicant.h>
 
-extern "C"
-{
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
-}
+#include <lua.hpp>
 
 #include "config.h"
 #include "control/control.h"
@@ -232,7 +227,9 @@ private:
 	lua_State* m_pLuaState;
 
 	static int LuaPanicHandler(lua_State* pLuaState);
+	static int LuaPrint(lua_State* pLuaState);
 	static int LuaLCDLog(lua_State* pLuaState);
+	static int LuaRegisterMIDIShortMessageFilter(lua_State* pLuaState);
 	static int LuaSetMasterVolume(lua_State* pLuaState);
 	static int LuaSendMIDIShortMessage(lua_State* pLuaState);
 	static int LuaSendMIDISysExMessage(lua_State* pLuaState);
