@@ -112,6 +112,7 @@ private:
 	virtual void OnUDPMIDIDataReceived(const u8* pData, size_t nSize) override { ParseMIDIBytes(pData, nSize); };
 
 	// Initialization
+	bool InitLua();
 	bool InitNetwork();
 	bool InitMT32Synth();
 	bool InitSoundFontSynth();
@@ -225,14 +226,19 @@ private:
 
 	// Scripting engine
 	lua_State* m_pLuaState;
+	int m_nLuaMIDIShortMessageFilterTable;
+	int m_nLuaMIDISysExMessageFilterTable;
 
 	static int LuaPanicHandler(lua_State* pLuaState);
 	static int LuaPrint(lua_State* pLuaState);
 	static int LuaLCDLog(lua_State* pLuaState);
 	static int LuaRegisterMIDIShortMessageFilter(lua_State* pLuaState);
+	static int LuaRegisterMIDISysExMessageFilter(lua_State* pLuaState);
 	static int LuaSetMasterVolume(lua_State* pLuaState);
 	static int LuaSendMIDIShortMessage(lua_State* pLuaState);
 	static int LuaSendMIDISysExMessage(lua_State* pLuaState);
+
+	static void RegisterLuaCallback(lua_State* pLuaState, int nTableRef);
 
 	static void EventHandler(const TEvent& Event);
 	static void USBMIDIDeviceRemovedHandler(CDevice* pDevice, void* pContext);

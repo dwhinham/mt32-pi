@@ -1,27 +1,37 @@
 diff --git a/src/lj_mcode.c b/src/lj_mcode.c
-index 163aada4..c456da00 100644
+index 163aada4..b2a01e95 100644
 --- a/src/lj_mcode.c
 +++ b/src/lj_mcode.c
-@@ -124,6 +124,24 @@ static int mcode_setprot(void *p, size_t sz, int prot)
+@@ -124,6 +124,34 @@ static int mcode_setprot(void *p, size_t sz, int prot)
    return mprotect(p, sz, prot);
  }
  
 +#elif LJ_TARGET_BAREMETAL
-+#define MCPROT_RW	(1 << 0)
-+#define MCPROT_RX	(1 << 1)
-+#define MCPROT_RWX	(1 << 2)
++extern int luadebugprint(const char *fmt, ...);
++
++/* Fallback allocator. This will fail if memory is not executable by default. */
++#define MCPROT_RW	0
++#define MCPROT_RX	0
++#define MCPROT_RWX	0
 +
 +static void *mcode_alloc_at(jit_State *J, uintptr_t hint, size_t sz, int prot)
 +{
-+	return NULL;
++  UNUSED(hint); UNUSED(prot);
++  //void* r = lj_mem_new(J->L, sz);
++  //luadebugprint("Alloc'd %d bytes, hint 0x%08X, got 0x%08X", sz, hint, (uintptr_t)r);
++  //return r;
++  return lj_mem_new(J->L, sz);
 +}
 +
 +static void mcode_free(jit_State *J, void *p, size_t sz)
 +{
++  //luadebugprint("Free'd %d bytes", sz);
++  lj_mem_free(J2G(J), p, sz);
 +}
 +
 +static int mcode_setprot(void *p, size_t sz, int prot)
 +{
++  UNUSED(p); UNUSED(sz); UNUSED(prot);
 +  return 0;
 +}
  #else

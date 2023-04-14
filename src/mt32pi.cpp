@@ -40,6 +40,8 @@ const char MT32PiFullName[] = MT32_PI_NAME " " MT32_PI_VERSION;
 const char WLANFirmwarePath[] = "SD:firmware/";
 const char WLANConfigFile[]   = "SD:wpa_supplicant.conf";
 
+const char LuaMainScript[] = "SD:lua/main.lua";
+
 constexpr u32 LCDUpdatePeriodMillis                = 16;
 constexpr u32 MisterUpdatePeriodMillis             = 50;
 constexpr u32 LEDTimeoutMillis                     = 50;
@@ -62,14 +64,12 @@ const struct luaL_Reg CMT32Pi::s_LuaLib[] =
 {
 	{ "LCDLog",				LuaLCDLog				},
 	{ "RegisterMIDIShortMessageFilter",	LuaRegisterMIDIShortMessageFilter 	},
+	{ "RegisterMIDISysExMessageFilter",	LuaRegisterMIDISysExMessageFilter 	},
 	{ "SetMasterVolume",			LuaSetMasterVolume			},
 	{ "SendMIDIShortMessage",		LuaSendMIDIShortMessage			},
 	{ "SendMIDISysExMessage",		LuaSendMIDISysExMessage			},
 	{ nullptr,				nullptr					},
 };
-
-int LuaFilters[10];
-size_t nLuaFilters = 0;
 
 CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
 	: CMultiCoreSupport(CMemorySystem::Get()),
@@ -135,7 +135,9 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	  m_pMT32Synth(nullptr),
 	  m_pSoundFontSynth(nullptr),
 
-	  m_pLuaState(nullptr)
+	  m_pLuaState(nullptr),
+	  m_nLuaMIDIShortMessageFilterTable(0),
+	  m_nLuaMIDISysExMessageFilterTable(0)
 {
 	s_pThis = this;
 }
@@ -322,25 +324,8 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 	SetPowerSaveTimeout(m_pConfig->SystemPowerSaveTimeout);
 
 	// Init scripting engine
-	m_pLuaState = luaL_newstate();
-	luaL_openlibs(m_pLuaState);
-
-	// Override print() and panic handler
-	lua_atpanic(m_pLuaState, LuaPanicHandler);
-	lua_register(m_pLuaState, "print", LuaPrint);
-
-	// Register mt32-pi API
-	luaL_newlib(m_pLuaState, s_LuaLib);
-	lua_setglobal(m_pLuaState, "mt32pi");
-
-	if (luaL_dofile(m_pLuaState, "SD:mt32-pi.lua") == LUA_OK)
-		LOGNOTE("Loaded Lua script");
-	else
-	{
-		LOGNOTE("Lua script not loaded: %s", lua_tostring(m_pLuaState, -1));
-		lua_close(m_pLuaState);
-		m_pLuaState = nullptr;
-	}
+	LCDLog(TLCDLogType::Startup, "Init Lua");
+	InitLua();
 
 	// Clear LCD
 	if (m_pLCD)
@@ -354,6 +339,41 @@ bool CMT32Pi::Initialize(bool bSerialMIDIAvailable)
 		return false;
 
 	return true;
+}
+
+bool CMT32Pi::InitLua()
+{
+	assert(m_pLuaState == nullptr);
+
+	m_pLuaState = luaL_newstate();
+	luaL_openlibs(m_pLuaState);
+
+	// Override panic handler and print()
+	lua_atpanic(m_pLuaState, LuaPanicHandler);
+	lua_register(m_pLuaState, "print", LuaPrint);
+
+	// Register mt32-pi API
+	luaL_newlib(m_pLuaState, s_LuaLib);
+	lua_setglobal(m_pLuaState, "mt32pi");
+
+	// Create tables for storing callbacks
+	lua_newtable(m_pLuaState);
+	m_nLuaMIDIShortMessageFilterTable = luaL_ref(m_pLuaState, LUA_REGISTRYINDEX);
+	lua_newtable(m_pLuaState);
+	m_nLuaMIDISysExMessageFilterTable = luaL_ref(m_pLuaState, LUA_REGISTRYINDEX);
+	lua_pop(m_pLuaState, 2);
+
+	// Run init.lua
+	if (luaL_dofile(m_pLuaState, LuaMainScript) == LUA_OK)
+		LOGNOTE("Loaded main Lua script");
+	else
+	{
+		LOGNOTE("Lua script not loaded: %s", lua_tostring(m_pLuaState, -1));
+		lua_close(m_pLuaState);
+		m_pLuaState = nullptr;
+	}
+
+	return m_pLuaState != nullptr;
 }
 
 bool CMT32Pi::InitNetwork()
@@ -701,50 +721,86 @@ void CMT32Pi::OnUnderVoltageDetected()
 	LCDLog(TLCDLogType::Warning, "Low voltage! Chk PSU");
 }
 
+// extern "C" {
+// int luadebugprint(const char* pFormat, ...)
+// {
+// 	char Buffer[256];
+
+// 	va_list Args;
+// 	va_start(Args, pFormat);
+// 	vsnprintf(Buffer, sizeof(Buffer), pFormat, Args);
+// 	va_end(Args);
+
+// 	CLogger::Get()->Write("luadebugprint", LogDebug, Buffer);
+
+// 	return 0;
+// }
+// }
+
 void CMT32Pi::OnShortMessage(u32 nMessage)
 {
 	// Filter using scripting engine
 	if (m_pLuaState)
 	{
-		for (size_t i = 0; i < nLuaFilters; ++i)
+		// Push callback table
+		lua_rawgeti(m_pLuaState, LUA_REGISTRYINDEX, m_nLuaMIDIShortMessageFilterTable);
+		assert(lua_istable(m_pLuaState, -1));
+
+		// Push placeholder key
+		lua_pushnil(m_pLuaState);
+
+		while (lua_next(m_pLuaState, -2))
 		{
-			lua_rawgeti(m_pLuaState, LUA_REGISTRYINDEX, LuaFilters[i]);
+			assert(lua_isfunction(m_pLuaState, -1));
 
-			// Ensure function exists
-			if (!lua_isfunction(m_pLuaState, 1))
-				lua_pop(m_pLuaState, 1);
-			else
+			const int nStackSize = lua_gettop(m_pLuaState);
+
+			lua_pushinteger(m_pLuaState, nMessage & 0xFF);
+			lua_pushinteger(m_pLuaState, (nMessage >> 8) & 0xFF);
+			lua_pushinteger(m_pLuaState, (nMessage >> 16) & 0xFF);
+
+			if (lua_pcall(m_pLuaState, 3, LUA_MULTRET, 0) != LUA_OK)
 			{
-				const int nStackSize = lua_gettop(m_pLuaState);
+				const char* const pFormat =  "Lua error: %s";
+				const char* const pMessage = lua_tostring(m_pLuaState, -1);
 
-				lua_pushinteger(m_pLuaState, nMessage & 0xFF);
-				lua_pushinteger(m_pLuaState, (nMessage >> 8) & 0xFF);
-				lua_pushinteger(m_pLuaState, (nMessage >> 16) & 0xFF);
+				// Pop error object and table value
+				lua_pop(m_pLuaState, 2);
 
-				if (lua_pcall(m_pLuaState, 3, LUA_MULTRET, 0) != LUA_OK)
-				{
-					const char* const pFormat =  "Lua error: %s";
-					const char* const pMessage = lua_tostring(m_pLuaState, -1);
-					lua_pop(m_pLuaState, 1);
+				LOGERR(pFormat, pMessage);
+				LCDLog(TLCDLogType::Error, pFormat, pMessage);
+				continue;
+			}
 
-					LOGERR(pFormat, pMessage);
-					LCDLog(TLCDLogType::Error, pFormat, pMessage);
-					return;
-				}
+			const int nReturns = lua_gettop(m_pLuaState) - nStackSize;
+			bool nConsumed = false;
 
-				const int nReturns = lua_gettop(m_pLuaState) - nStackSize;
+			if (nReturns)
+			{
+				nConsumed = lua_toboolean(m_pLuaState, -1);
 
 				// If function returned a MIDI message, update it
-				if (nReturns == 3)
+				if (nReturns == 4)
 				{
-					nMessage = (luaL_checkinteger(m_pLuaState, -3) & 0xFF) |
-						((luaL_checkinteger(m_pLuaState, -2) & 0xFF) << 8) |
-						((luaL_checkinteger(m_pLuaState, -1) & 0xFF) << 16);
+					nMessage = (luaL_checkinteger(m_pLuaState, -4) & 0xFF) |
+						((luaL_checkinteger(m_pLuaState, -3) & 0xFF) << 8) |
+						((luaL_checkinteger(m_pLuaState, -2) & 0xFF) << 16);
 				}
+			}
 
-				lua_pop(m_pLuaState, nReturns);
+			// Pop callback return values and table value
+			lua_pop(m_pLuaState, nReturns + 1);
+
+			// Filter consumed the message, pop table key and break
+			if (nConsumed)
+			{
+				lua_pop(m_pLuaState, 1);
+				break;
 			}
 		}
+
+		// Pop table
+		lua_pop(m_pLuaState, 1);
 	}
 
 	// Active sensing
@@ -769,30 +825,40 @@ void CMT32Pi::OnSysExMessage(const u8* pData, size_t nSize)
 	// Filter using scripting engine
 	if (m_pLuaState)
 	{
-		// Ensure function exists
-		lua_getglobal(m_pLuaState, "OnMIDISysExMessage");
+		// Push callback table
+		lua_rawgeti(m_pLuaState, LUA_REGISTRYINDEX, m_nLuaMIDISysExMessageFilterTable);
+		assert(lua_istable(m_pLuaState, -1));
 
-		if (!lua_isfunction(m_pLuaState, 1))
-			lua_pop(m_pLuaState, 1);
-		else
+		// Push placeholder key
+		lua_pushnil(m_pLuaState);
+
+		while (lua_next(m_pLuaState, -2))
 		{
+			assert(lua_isfunction(m_pLuaState, -1));
 			lua_pushlstring(m_pLuaState, reinterpret_cast<const char*>(pData), nSize);
 
 			if (lua_pcall(m_pLuaState, 1, 1, 0) != LUA_OK)
 			{
 				const char* const pFormat =  "Lua error: %s";
 				const char* const pMessage = lua_tostring(m_pLuaState, -1);
-				lua_pop(m_pLuaState, 1);
+
+				// Pop error object and table value
+				lua_pop(m_pLuaState, 2);
 
 				LOGERR(pFormat, pMessage);
 				LCDLog(TLCDLogType::Error, pFormat, pMessage);
-				return;
+				continue;
 			}
 
 			// If function returned a SysEx message, update it
 			pData = reinterpret_cast<const u8*>(lua_tolstring(m_pLuaState, -1, &nSize));
-			lua_pop(m_pLuaState, 1);
+
+			// Pop table value and callback return value
+			lua_pop(m_pLuaState, 2);
 		}
+
+		// Pop table
+		lua_pop(m_pLuaState, 1);
 	}
 
 	if (!pData || !nSize)
@@ -1432,7 +1498,8 @@ void CMT32Pi::IRQMIDIReceiveHandler(const u8* pData, size_t nSize)
 
 int CMT32Pi::LuaPanicHandler(lua_State* pLuaState)
 {
-	LOGPANIC("Lua error: %s", lua_tostring(pLuaState, -1));
+	LOGERR("Lua panic: %s", lua_tostring(pLuaState, -1));
+	assert(false);
 	return 0;
 }
 
@@ -1486,17 +1553,33 @@ int CMT32Pi::LuaSetMasterVolume(lua_State* pLuaState)
 
 int CMT32Pi::LuaRegisterMIDIShortMessageFilter(lua_State* pLuaState)
 {
-	if (!lua_isfunction(pLuaState, 1))
+	RegisterLuaCallback(pLuaState, s_pThis->m_nLuaMIDIShortMessageFilterTable);
+	return 0;
+}
+
+int CMT32Pi::LuaRegisterMIDISysExMessageFilter(lua_State* pLuaState)
+{
+	RegisterLuaCallback(pLuaState, s_pThis->m_nLuaMIDISysExMessageFilterTable);
+	return 0;
+}
+
+void CMT32Pi::RegisterLuaCallback(lua_State* pLuaState, int nTableRef)
+{
+	if (!lua_isfunction(pLuaState, -1))
 	{
-		LOGERR("RegisterMIDIShortMessageFilter(): argument is not a function");
-		return 0;
+		LOGERR("RegisterLuaCallback(): argument is not a function");
+		return;
 	}
 
-	int nRef = luaL_ref(pLuaState, LUA_REGISTRYINDEX);
-	LuaFilters[nLuaFilters++] = nRef;
+	// Get callback table from registry
+	lua_rawgeti(pLuaState, LUA_REGISTRYINDEX, nTableRef);
 
-	LOGNOTE("Registered Lua function %d", nRef);
-	return 0;
+	// Copy callback function to top of stack and store a reference in the table
+	lua_pushvalue(pLuaState, -2);
+	int nRef = luaL_ref(pLuaState, -2);
+	lua_pop(pLuaState, 1);
+
+	LOGNOTE("Registered Lua callback %d", nRef);
 }
 
 int CMT32Pi::LuaSendMIDIShortMessage(lua_State* pLuaState)
