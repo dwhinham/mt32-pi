@@ -146,9 +146,6 @@ constexpr auto FontDouble = Font<Utility::ArraySize(Font6x8), decltype(DoubleCol
 constexpr auto MT32PiLogo = CSSD1306Image<128, 32>(MT32PiLogo128x32);
 constexpr auto MisterLogo = CSSD1306Image<128, 32>(MisterLogo128x32);
 
-// Drawing constants
-constexpr u8 BarSpacing = 2;
-
 CSSD1306::CSSD1306(CI2CMaster* pI2CMaster, u8 nAddress, u8 nWidth, u8 nHeight, TLCDRotation Rotation, TLCDMirror Mirror)
 	: CLCD(nWidth, nHeight),
 	  m_pI2CMaster(pI2CMaster),
