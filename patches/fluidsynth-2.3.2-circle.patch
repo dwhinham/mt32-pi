@@ -1,24 +1,41 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8699d53c..071856a8 100644
+index 3b12afa..b6349f3 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -329,9 +329,11 @@ if ( WIN32 )
-     endif ()
-   endif  ( MINGW )
- else ( WIN32 )
-+if ( FALSE )
- # Check PThreads, but not in Windows
-   find_package ( Threads REQUIRED )
-   set ( LIBFLUID_LIBS "m" ${CMAKE_THREAD_LIBS_INIT} )
-+endif ( FALSE )
+@@ -353,14 +353,15 @@ if ( WIN32 )
  endif ( WIN32 )
  
+ # Check for threads and math
+-find_package ( Threads REQUIRED )
++# find_package ( Threads REQUIRED )
+ 
+ find_library ( HAS_LIBM NAMES "m" )
+ if ( HAS_LIBM )
+   set ( MATH_LIBRARY "m" )
+ endif ( HAS_LIBM )
+ 
+-set ( LIBFLUID_LIBS ${MATH_LIBRARY} Threads::Threads )
++# set ( LIBFLUID_LIBS ${MATH_LIBRARY} Threads::Threads )
++set ( LIBFLUID_LIBS ${MATH_LIBRARY} )
+ 
  # IBM OS/2
+ unset ( DART_SUPPORT CACHE )
+@@ -522,8 +523,8 @@ if ( CMAKE_VERSION VERSION_GREATER_EQUAL 3.15 AND VCPKG_TOOLCHAIN )
+ endif ()
+ 
+ # Mandatory libraries: glib and gthread
+-find_package ( GLib2 ${GLIB2_MINUMUM_VERSION} REQUIRED )
+-list( APPEND PC_REQUIRES_PRIV "glib-2.0" "gthread-2.0")
++#find_package ( GLib2 ${GLIB2_MINUMUM_VERSION} REQUIRED )
++#list( APPEND PC_REQUIRES_PRIV "glib-2.0" "gthread-2.0")
+ 
+ if ( GLib2_VERSION AND GLib2_VERSION VERSION_LESS "2.26.0" )
+     message ( WARNING "Your version of glib is very old. This may cause problems with fluidsynth's sample cache on Windows. Consider updating to glib 2.26 or newer!" )
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index e86a6429..c8ea31a2 100644
+index 114fa16..b12771b 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -163,23 +163,23 @@ set ( libfluidsynth_SOURCES
+@@ -162,23 +162,23 @@ set ( libfluidsynth_SOURCES
      synth/fluid_tuning.h
      synth/fluid_voice.c
      synth/fluid_voice.h
@@ -59,23 +76,18 @@ index e86a6429..c8ea31a2 100644
  )
  
  set ( public_HEADERS
-@@ -347,12 +347,14 @@ if ( TARGET OpenMP::OpenMP_C AND HAVE_OPENMP )
+@@ -353,7 +353,9 @@ if ( TARGET OpenMP::OpenMP_C AND HAVE_OPENMP )
      target_link_libraries ( libfluidsynth-OBJ PUBLIC OpenMP::OpenMP_C )
  endif()
  
 +if ( FALSE )
- if ( TARGET PkgConfig::GLIB )
-     target_link_libraries ( libfluidsynth-OBJ PUBLIC PkgConfig::GLIB )
- else()
-     target_include_directories ( libfluidsynth-OBJ PUBLIC ${GLIB_INCLUDE_DIRS} )
-     target_link_libraries ( libfluidsynth-OBJ PUBLIC ${GLIB_LIBRARIES} )
- endif()
+ target_link_libraries ( libfluidsynth-OBJ PUBLIC GLib2::glib-2 GLib2::gthread-2 )
 +endif ( FALSE )
  
- if ( TARGET PkgConfig::LIBSNDFILE AND LIBSNDFILE_SUPPORT )
-     target_link_libraries ( libfluidsynth-OBJ PUBLIC PkgConfig::LIBSNDFILE )
+ if ( TARGET SndFile::sndfile AND LIBSNDFILE_SUPPORT )
+     target_link_libraries ( libfluidsynth-OBJ PUBLIC SndFile::sndfile )
 diff --git a/src/sfloader/fluid_sfont.c b/src/sfloader/fluid_sfont.c
-index 26dbac65..7ab9dc09 100644
+index 7b02d2f..52269cd 100644
 --- a/src/sfloader/fluid_sfont.c
 +++ b/src/sfloader/fluid_sfont.c
 @@ -22,6 +22,7 @@
@@ -101,7 +113,7 @@ index 26dbac65..7ab9dc09 100644
  /**
   * Creates a new SoundFont loader.
 diff --git a/src/synth/fluid_synth.c b/src/synth/fluid_synth.c
-index 3a58eb60..af8ffc40 100644
+index 76c4a0f..9821306 100644
 --- a/src/synth/fluid_synth.c
 +++ b/src/synth/fluid_synth.c
 @@ -108,7 +108,9 @@ static int fluid_synth_render_blocks(fluid_synth_t *synth, int blockcount);
@@ -173,7 +185,7 @@ index 3a58eb60..af8ffc40 100644
  /**
   * Create and start voices using an arbitrary preset and a MIDI note on event.
 diff --git a/src/synth/fluid_synth.h b/src/synth/fluid_synth.h
-index cb838e92..b62810bb 100644
+index cb838e9..b62810b 100644
 --- a/src/synth/fluid_synth.h
 +++ b/src/synth/fluid_synth.h
 @@ -127,7 +127,9 @@ struct _fluid_synth_t
@@ -187,7 +199,7 @@ index cb838e92..b62810bb 100644
      float gain;                        /**< master gain */
      fluid_channel_t **channel;         /**< the channels */
 diff --git a/src/utils/fluid_settings.c b/src/utils/fluid_settings.c
-index dbee649b..ec3ab6e8 100644
+index dbee649..ec3ab6e 100644
 --- a/src/utils/fluid_settings.c
 +++ b/src/utils/fluid_settings.c
 @@ -330,11 +330,13 @@ fluid_settings_init(fluid_settings_t *settings)
@@ -205,7 +217,7 @@ index dbee649b..ec3ab6e8 100644
  
  static int
 diff --git a/src/utils/fluid_sys.c b/src/utils/fluid_sys.c
-index 54bd294b..54c45895 100644
+index d5ebd16..c5e698e 100644
 --- a/src/utils/fluid_sys.c
 +++ b/src/utils/fluid_sys.c
 @@ -50,6 +50,7 @@
@@ -270,10 +282,10 @@ index 54bd294b..54c45895 100644
  #endif
 +#endif
 diff --git a/src/utils/fluid_sys.h b/src/utils/fluid_sys.h
-index 8c8284b8..33b8be78 100644
+index cefff4a..1ec76ca 100644
 --- a/src/utils/fluid_sys.h
 +++ b/src/utils/fluid_sys.h
-@@ -157,7 +157,12 @@ typedef gintptr  intptr_t;
+@@ -168,7 +168,12 @@ typedef gintptr  intptr_t;
  #include <gmodule.h>
  #endif
  
@@ -286,7 +298,7 @@ index 8c8284b8..33b8be78 100644
  
  /**
   * Macro used for safely accessing a message from a GError and using a default
-@@ -182,10 +187,17 @@ char* fluid_get_windows_error(void);
+@@ -193,10 +198,17 @@ char* fluid_get_windows_error(void);
  #define FLUID_INT_TO_POINTER(x)   ((void *)(intptr_t)(x))
  
  /* Endian detection */
@@ -304,7 +316,7 @@ index 8c8284b8..33b8be78 100644
  
  #if FLUID_IS_BIG_ENDIAN
  #define FLUID_FOURCC(_a, _b, _c, _d) \
-@@ -237,6 +249,7 @@ typedef int (*fluid_timer_callback_t)(void *data, unsigned int msec);
+@@ -248,6 +260,7 @@ typedef int (*fluid_timer_callback_t)(void *data, unsigned int msec);
  
  typedef struct _fluid_timer_t fluid_timer_t;
  
@@ -312,7 +324,7 @@ index 8c8284b8..33b8be78 100644
  fluid_timer_t *new_fluid_timer(int msec, fluid_timer_callback_t callback,
                                 void *data, int new_thread, int auto_destroy,
                                 int high_priority);
-@@ -250,9 +263,11 @@ long fluid_timer_get_interval(const fluid_timer_t * timer);
+@@ -261,9 +274,11 @@ long fluid_timer_get_interval(const fluid_timer_t * timer);
  // Macros to use for pre-processor if statements to test which Glib thread API we have (pre or post 2.32)
  #define NEW_GLIB_THREAD_API   GLIB_CHECK_VERSION(2,32,0)
  #define OLD_GLIB_THREAD_API  !GLIB_CHECK_VERSION(2,32,0)
@@ -324,7 +336,7 @@ index 8c8284b8..33b8be78 100644
  #if NEW_GLIB_THREAD_API
  
  /* glib 2.32 and newer */
-@@ -389,10 +404,12 @@ typedef GStaticPrivate fluid_private_t;
+@@ -400,10 +415,12 @@ typedef GStaticPrivate fluid_private_t;
  } while(0)
  
  #endif
@@ -337,7 +349,7 @@ index 8c8284b8..33b8be78 100644
  #define fluid_atomic_int_inc(_pi) g_atomic_int_inc(_pi)
  #define fluid_atomic_int_get(_pi) g_atomic_int_get(_pi)
  #define fluid_atomic_int_set(_pi, _val) g_atomic_int_set(_pi, _val)
-@@ -434,10 +451,62 @@ fluid_atomic_float_get(fluid_atomic_float_t *fptr)
+@@ -445,10 +462,62 @@ fluid_atomic_float_get(fluid_atomic_float_t *fptr)
      memcpy(&fval, &ival, 4);
      return fval;
  }
@@ -400,7 +412,7 @@ index 8c8284b8..33b8be78 100644
  /* other thread implementations might change this for their needs */
  typedef void *fluid_thread_return_t;
  /* static return value for thread functions which requires a return value */
-@@ -455,6 +524,9 @@ fluid_thread_t *new_fluid_thread(const char *name, fluid_thread_func_t func, voi
+@@ -466,6 +535,9 @@ fluid_thread_t *new_fluid_thread(const char *name, fluid_thread_func_t func, voi
  void delete_fluid_thread(fluid_thread_t *thread);
  void fluid_thread_self_set_prio(int prio_level);
  int fluid_thread_join(fluid_thread_t *thread);
@@ -410,7 +422,7 @@ index 8c8284b8..33b8be78 100644
  
  /* Dynamic Module Loading, currently only used by LADSPA subsystem */
  #ifdef LADSPA
-@@ -493,6 +565,7 @@ fluid_istream_t fluid_socket_get_istream(fluid_socket_t sock);
+@@ -504,6 +576,7 @@ fluid_istream_t fluid_socket_get_istream(fluid_socket_t sock);
  fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
  
  /* File access */
@@ -418,7 +430,7 @@ index 8c8284b8..33b8be78 100644
  #define fluid_stat(_filename, _statbuf)   g_stat((_filename), (_statbuf))
  #if !GLIB_CHECK_VERSION(2, 26, 0)
      /* GStatBuf has not been introduced yet, manually typedef to what they had at that time:
-@@ -511,6 +584,10 @@ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
+@@ -522,6 +595,10 @@ fluid_ostream_t fluid_socket_get_ostream(fluid_socket_t sock);
  #else
  typedef GStatBuf fluid_stat_buf_t;
  #endif
@@ -430,7 +442,7 @@ index 8c8284b8..33b8be78 100644
  FILE* fluid_file_open(const char* filename, const char** errMsg);
  fluid_long_long_t fluid_file_tell(FILE* f);
 diff --git a/src/utils/fluidsynth_priv.h b/src/utils/fluidsynth_priv.h
-index ce5fb7fd..efe2ba6f 100644
+index fbcbc6f..d7d6630 100644
 --- a/src/utils/fluidsynth_priv.h
 +++ b/src/utils/fluidsynth_priv.h
 @@ -31,7 +31,9 @@
