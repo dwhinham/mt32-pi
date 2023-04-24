@@ -1236,7 +1236,11 @@ void CMT32Pi::LCDLog(TLCDLogType Type, const char* pFormat...)
 
 	// Let LCD task pick up the message in its next update
 	else
+	{
+		// Wake from power saving mode if necessary
+		Awaken();
 		m_UserInterface.ShowSystemMessage(Buffer, Type == TLCDLogType::Spinner);
+	}
 }
 
 const char* CMT32Pi::GetNetworkDeviceShortName() const

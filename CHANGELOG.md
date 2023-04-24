@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Network (re)connect notifications could cause display sleep mode to be desynchronized with system.
+
 ## [0.13.1] - 2023-03-18
 
 ### Changed
