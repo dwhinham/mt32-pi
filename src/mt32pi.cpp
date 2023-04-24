@@ -933,7 +933,7 @@ void CMT32Pi::UpdateMIDI()
 	ParseMIDIBytes(Buffer, nBytes);
 
 	// Reset the Active Sense timer
-	s_pThis->m_nActiveSenseTime = s_pThis->m_pTimer->GetTicks();
+	m_nActiveSenseTime = m_pTimer->GetTicks();
 }
 
 void CMT32Pi::PurgeMIDIBuffers()
