@@ -1,11 +1,21 @@
+## Please note
+
+**It's unlikely that there will be any further releases of mt32-pi.**
+
+I have endured a sustained campaign of abuse from members of the VOGONS forum, been labelled a "clout-chaser", had threats sent to my personal email address, code been used in other projects without proper accreditation, my 3D print designs stolen and sold by faceless eBay/Etsy sellers, personal attacks made towards me when people don't get their feature request... the list goes on and on.
+
+*There is only so much I can take.*
+
+My mental health has been in decline as a direct result of this behavior; the joy of working on this project has pretty much gone. There is nothing to be gained from putting time and hard work into it any more. There is no gratitude, no encouragement - just entitled behavior and grift.
+
+To those who supported this project in the past, especially whilst I was a struggling student who needed all the uplift I could get, thank you sincerely.
+
+---
+
 [![mt32-pi CI](https://github.com/dwhinham/mt32-pi/workflows/mt32-pi%20CI/badge.svg)](https://github.com/dwhinham/mt32-pi/actions?query=workflow:"mt32-pi+CI")
 
 <h1 align="center">
-    <a href="https://donation.dec.org.uk/ukraine-humanitarian-appeal">
-        <img width="90%" title="mt32-pi stands with Ukraine 🇺🇦" src="images/mt32pi_logo.svg">
-        <br />
-        🇺🇦 mt32-pi stands with Ukraine 🇺🇦
-    </a>
+    <img width="90%" title="mt32-pi - Baremetal synthesizer system" src="images/mt32pi_logo.svg">
 </h1>
 
 - A work-in-progress baremetal MIDI synthesizer for the Raspberry Pi 3 or above, based on [Munt], [FluidSynth] and [Circle].
