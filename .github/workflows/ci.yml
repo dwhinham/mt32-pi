@@ -46,6 +46,11 @@ jobs:
     - name: Fetch submodules
       run: make submodules
 
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libglib2.0-dev pkg-config
+
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -82,18 +87,18 @@ jobs:
       run: make -j BOARD=${{ matrix.board }}
 
     - name: Upload built kernel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: kernels
+        name: kernels-${{ matrix.board }}
         path: kernel*.img
 
     - name: Build (HDMI console)
       run: make clean && make -j BOARD=${{ matrix.board }} HDMI_CONSOLE=1
 
     - name: Upload built kernel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: kernels-hdmi
+        name: kernels-hdmi-${{ matrix.board }}
         path: kernel*.img
 
   package:
@@ -197,13 +202,25 @@ jobs:
       if: steps.cache-generaluser-gs.outputs.cache-hit != 'true'
       run: |
         sudo pip install gdown
-        gdown -q https://drive.google.com/uc?id=1ypgJwuHqqXx-jeCXLRFqgBAEemJZnDrj
+        gdown -q https://drive.google.com/uc?id=1omYCHcGymYGZcKe0DgRP1SeB1wTkemtx
         unzip "GeneralUser GS v1.511.zip"
 
-    - name: Retrieve built kernels
-      uses: actions/download-artifact@v3
+    - name: Retrieve built kernels (pi2)
+      uses: actions/download-artifact@v4
       with:
-        name: kernels
+        name: kernels-pi2
+        path: sdcard
+
+    - name: Retrieve built kernels (pi3-64)
+      uses: actions/download-artifact@v4
+      with:
+        name: kernels-pi3-64
+        path: sdcard
+
+    - name: Retrieve built kernels (pi4-64)
+      uses: actions/download-artifact@v4
+      with:
+        name: kernels-pi4-64
         path: sdcard
 
     - name: Add extra files to SD card directory
@@ -216,7 +233,7 @@ jobs:
         cp README.md sdcard/docs
 
     - name: Upload SD card archive
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: sdcard
         path: sdcard
